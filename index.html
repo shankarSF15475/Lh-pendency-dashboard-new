@@ -1,0 +1,2839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadowfax · Pendency & Value-at-Risk Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --ink:#1E1B2E; --pine:#2D2844; --pine2:#3F3866; --moss:#5B4FCF; --leaf:#2563EB;
+  --lime:#FF6B4A; --lime-soft:#FFE1D6;
+  --bg:#EEF1FA; --card:#FFFFFF; --line:#E4E1EE;
+  --text:#221F2E; --mut:#6B667D;
+  --red:#E53E3E; --amber:#E8A13A; --green:#2563EB;
+  --rad:16px; --shadow:0 6px 22px rgba(30,27,46,.09);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--text);font-size:14px;
+  background:
+   radial-gradient(1100px 650px at 92% -8%,#FFE4DA 0%,transparent 55%),
+   radial-gradient(900px 700px at -8% 8%,#E2E7FB 0%,transparent 50%),
+   radial-gradient(1000px 800px at 50% 115%,#E9E4FB 0%,transparent 55%),
+   var(--bg);
+  background-attachment:fixed}
+button{font-family:inherit;cursor:pointer}
+h1,h2,h3{font-weight:700;letter-spacing:-.01em}
+
+/* ---------- LOGIN ---------- */
+#loginScreen{position:fixed;inset:0;display:flex;z-index:200;background:#fff}
+.login-illustration{flex:1.1;min-width:0;background:linear-gradient(155deg,#F4F6FA 0%,#E7EBF3 100%);
+ display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.login-illustration svg{width:min(560px,86%);height:auto}
+.login-panel{flex:1;min-width:340px;max-width:560px;display:flex;align-items:center;justify-content:center;padding:40px}
+.login-card{width:min(380px,100%);color:#1A2130}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.brand .bolt{width:34px;height:34px;border-radius:9px;background:#1B4DDA;display:grid;place-items:center;color:#fff;font-weight:900;font-size:19px}
+.brand b{font-size:17px;letter-spacing:.02em;color:#1A2130}
+.brand small{display:block;color:#8992A6;font-size:10px;font-weight:600;letter-spacing:.06em}
+.login-card h1{font-size:26px;margin:0 0 6px;color:#1A2130}
+.login-card p{color:#8992A6;font-size:12.5px;margin-bottom:26px;line-height:1.5}
+.login-card label{display:block;font-size:12px;color:#5A6478;margin:16px 0 6px;font-weight:600}
+.login-card input{width:100%;padding:12px 14px;border-radius:9px;border:1px solid #E4E7EE;background:#F5F6FA;color:#1A2130;font-size:14px;outline:none;transition:.15s}
+.login-card input:focus{border-color:#1B4DDA;background:#fff;box-shadow:0 0 0 3px rgba(27,77,218,.12)}
+#loginBtn{width:100%;margin-top:26px;padding:13px;border:none;border-radius:10px;background:#1B4DDA;color:#fff;font-weight:700;font-size:14.5px;transition:.15s}
+#loginBtn:hover{background:#1642C4}
+#loginErr{color:#E31A1C;font-size:12px;margin-top:10px;display:none}
+.login-note{margin-top:20px;font-size:11px;color:#9AA2B4;line-height:1.5}
+@media (max-width:760px){.login-illustration{display:none}}
+
+/* ---------- UPLOAD ---------- */
+#uploadScreen{position:fixed;inset:0;display:none;z-index:150;background:var(--bg);overflow:auto}
+.upload-wrap{max-width:680px;margin:7vh auto;padding:0 20px}
+.upload-hero{background:linear-gradient(135deg,var(--pine) 0%,var(--ink) 80%);border-radius:22px;color:#fff;padding:34px;box-shadow:var(--shadow)}
+.upload-hero h1{font-size:26px}.upload-hero h1 span{color:var(--lime)}
+.upload-hero p{color:#C9C2E8;margin-top:8px;font-size:13px;line-height:1.6}
+#dropZone{margin-top:22px;border:2px dashed rgba(225,249,75,.5);border-radius:16px;padding:42px 20px;text-align:center;transition:.2s;background:rgba(255,255,255,.03)}
+#dropZone.drag{background:rgba(225,249,75,.12);border-color:var(--lime)}
+#dropZone .big{font-size:15px;font-weight:700;color:var(--lime-soft)}
+#dropZone .sub{font-size:12px;color:#9DBBAC;margin-top:6px}
+.upload-actions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.btn{padding:11px 18px;border-radius:11px;border:none;font-weight:700;font-size:13px}
+.btn-lime{background:var(--lime);color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--lime);border:1px solid rgba(225,249,75,.5)}
+#parseStatus{margin-top:16px;font-size:12.5px;color:var(--lime-soft);display:none;align-items:center;gap:10px}
+.spinner{width:16px;height:16px;border:2.5px solid rgba(225,249,75,.3);border-top-color:var(--lime);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- APP SHELL ---------- */
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:222px;background:linear-gradient(180deg,var(--pine),#ffffff 0%,var(--ink) 100%);
+ color:#fff;display:flex;flex-direction:column;z-index:60;transition:transform .25s ease;transform:translateX(-105%)}
+.sidebar.open{transform:none}
+.sidebar .brand{padding:20px 18px 14px}
+.nav{padding:8px 12px;flex:1;overflow:auto}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 13px;margin:3px 0;border:none;border-radius:11px;
+ background:transparent;font-size:13px;font-weight:600;text-align:left;transition:.15s}
+.nav button .ic{width:18px;text-align:center;flex:none}
+.nav button:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav button.active{background:#f7faf69c;color:var(--ink)}
+.side-foot{padding:14px;font-size:11px;color:#7E9C8D;border-top:1px solid rgba(255,255,255,.08)}
+.side-foot .btn-ghost{width:100%;margin-top:8px;font-size:12px;padding:9px}
+
+.main{margin-left:0;padding:18px 22px 60px;min-height:100vh}
+.topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar h2{font-size:20px}
+.topbar .crumb{font-size:11.5px;color:var(--mut);margin-top:2px}
+#hamb{display:grid;border:none;background:#f3f8f191;color:var(--lime);width:38px;height:38px;border-radius:10px;font-size:18px;place-items:center}
+.top-right{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--pine);box-shadow:var(--shadow)}
+.pill b{color:var(--ink)}
+#reUpload{background:var(--pine);color:var(--lime);border:none;border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
+#driveRefreshBtn{background:#fff;color:var(--pine);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
+#driveRefreshBtn:hover{background:var(--bg)}
+#driveRefreshBtn:disabled{opacity:.55;cursor:default}
+#uploadWaitMsg{display:none;margin-top:22px;padding:16px 18px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--lime-soft);font-size:13px;line-height:1.6}
+
+/* ---------- FILTER BAR ---------- */
+.filterbar{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:var(--rad);padding:10px 12px;box-shadow:var(--shadow)}
+.filterbar-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filterbar-head .ttl{font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em}
+.filterbar-head .meta{font-size:11.5px;color:var(--mut)}
+#clearAll{margin-left:auto;border:1px solid var(--pine);background:#fff;color:var(--pine);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:700}
+#clearAll:hover{background:var(--pine);color:var(--lime)}
+.msel-row{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.msel{position:relative}
+.msel-btn{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#F7FAF6;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:600;color:var(--text)}
+.msel-btn:hover{border-color:var(--moss)}
+.msel-btn.on{background:var(--ink);color:var(--lime);border-color:var(--ink)}
+.msel-cnt{background:var(--lime);color:var(--ink);border-radius:999px;font-size:10px;font-weight:800;padding:1px 7px}
+.msel-panel{position:absolute;top:calc(100% + 6px);left:0;width:248px;max-height:330px;background:#fff;border:1px solid var(--line);
+ border-radius:13px;box-shadow:0 14px 34px rgba(10,42,30,.18);z-index:80;display:none;flex-direction:column;overflow:hidden}
+.msel.open .msel-panel{display:flex}
+.msel-panel input{margin:9px 9px 5px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:12px;outline:none}
+.msel-acts{display:flex;gap:14px;padding:4px 12px 7px;font-size:11.5px}
+.msel-acts a{color:var(--moss);font-weight:700;cursor:pointer;text-decoration:none}
+.msel-list{overflow:auto;padding:0 6px 8px}
+.msel-list label{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;font-size:12.3px;cursor:pointer}
+.msel-list label:hover{background:#F1F6EF}
+.msel-list input{accent-color:var(--moss);width:15px;height:15px;flex:none}
+.msel-more{padding:6px 12px;font-size:11px;color:var(--mut)}
+
+/* ---------- GRIDS & CARDS ---------- */
+.page{display:none;animation:fade .25s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:14px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi .lab{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.03em;display:flex;align-items:center;gap:6px}
+.kpi .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.kpi .val{font-size:21px;font-weight:800;color:var(--ink);margin-top:7px;letter-spacing:-.02em}
+.kpi .sub{font-size:11px;color:var(--mut);margin-top:5px}
+.kpi .sub b{color:var(--pine)}
+.hero-row{display:grid;grid-template-columns:1.15fr 2fr;gap:12px;margin-top:12px}
+.hero{background:linear-gradient(140deg,var(--pine2) 0%,var(--ink) 75%);border-radius:var(--rad);color:#fff;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.hero .eyebrow{color:#A9C9B9;font-size:12px;font-weight:600}
+.hero .big{font-size:clamp(30px,3.4vw,44px);font-weight:800;color:var(--lime);margin:6px 0 2px;letter-spacing:-.02em}
+.hero .cap{font-size:12.5px;color:#CBE3D7}
+.hero .spark{flex:1;min-height:90px;margin-top:14px;position:relative}
+.hero .spark canvas{position:absolute;inset:0}
+.insights{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow);padding:16px 18px}
+.insights h3{font-size:13.5px;color:var(--pine);display:flex;align-items:center;gap:8px}
+.insights h3 .ai{background:var(--lime);color:var(--ink);font-size:9.5px;font-weight:900;border-radius:6px;padding:2px 7px;letter-spacing:.05em}
+.insights ul{list-style:none;margin-top:11px;display:grid;gap:9px}
+.insights li{font-size:12.6px;line-height:1.55;color:#33473D;padding-left:14px;position:relative}
+.insights li::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--leaf)}
+.insights li b{color:var(--ink)}
+.chart-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.chart-card{padding:14px 16px 12px;position:relative}
+.card-head{display:flex;align-items:flex-start;gap:8px}
+.card-head h3{font-size:13.5px;color:var(--ink)}
+.card-head .sub{display:block;font-size:11px;color:var(--mut);margin-top:3px;font-weight:500}
+.card-tools{margin-left:auto;display:flex;gap:5px;flex:none;align-items:center}
+.mv-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:8px}
+.mv-mcsel{position:relative;font-size:11.5px}
+.mv-mcsel-btn{padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:#F7FAF6;color:var(--text);cursor:pointer;white-space:nowrap;font-size:11.5px;display:flex;align-items:center;gap:4px}
+.mv-mcsel-btn.active{background:var(--pine);color:var(--lime);border-color:var(--pine)}
+.mv-mcsel-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:190px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(10,42,30,.18);z-index:120;padding:6px 0;max-height:260px;overflow-y:auto}
+.mv-mcsel.open .mv-mcsel-panel{display:block}
+.mv-mcsel-panel label{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text);transition:background .1s}
+.mv-mcsel-panel label:hover{background:#F3F8F1}
+.mv-mcsel-panel label input{accent-color:var(--pine);width:14px;height:14px;flex:none}
+.mv-mcsel-panel .mc-actions{display:flex;gap:8px;padding:6px 12px;border-top:1px solid var(--line);margin-top:4px}
+.mv-mcsel-panel .mc-actions button{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:3px 8px;background:#F7FAF6;cursor:pointer;color:var(--text)}
+.mv-mcsel-panel .mc-actions button:hover{background:var(--pine);color:var(--lime)}
+/* MM destination expand row — plain <tr> cells aligned to same columns as header */
+.mv-dest-row{background:#F8F9FE!important}
+.mv-dest-row td{border-bottom:1px solid var(--line)!important;white-space:nowrap}
+.mv-dest-row:hover td{background:#F1F3FB!important}
+.mv-dest-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.mv-dest-chip{background:#D1F0E0;color:#1A5C38;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700}
+/* pivot sub-table kept for any legacy use */
+.mv-pivot-wrap{width:100%;border-collapse:collapse}
+.mv-pivot-wrap td{padding:5px 10px;font-size:12px;border-bottom:1px solid #D9EEE5;white-space:nowrap}
+.mv-pivot-wrap td.num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace;font-weight:600}
+.mv-pivot-wrap td.dest-name{color:#1A5C38;font-weight:700;padding-left:22px}
+.mv-pivot-wrap td.aged-red{background:#FED7D7;color:#C53030;font-weight:800;border-radius:4px}
+.mv-pivot-wrap td.aged-ora{background:#FEEBC8;color:#9C4221;font-weight:700;border-radius:4px}
+.mv-pivot-wrap td.total-col{background:#1a3a28;color:#E1F94B;font-weight:800;border-radius:4px}
+.mv-pivot-wrap tr:hover td{background:#E0F4EC!important;cursor:default}
+/* lane row ageing column headers */
+.lv-mini thead th.age-a{background:#276749}.lv-mini thead th.age-b{background:#2C7A7B}
+.lv-mini thead th.age-c{background:#D69E2E;color:#1a3a28}.lv-mini thead th.age-d{background:#DD6B20}
+.lv-mini thead th.age-e{background:#E53E3E}.lv-mini thead th.age-f{background:#9B2C2C}
+/* lane summary row styling */
+.mv-lane-summary{background:#F3F8F1;font-weight:700}
+.mv-lane-summary td{border-top:2px solid #B7DCC9!important;border-bottom:1px solid #C5E3D5!important}
+.tool{border:1px solid var(--line);background:#F7FAF6;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;font-size:14px;color:var(--pine);transition:.15s;flex:none;line-height:1;padding:0;overflow:hidden}
+.tool:hover{background:var(--pine);color:var(--lime)}
+.tool.lock-on{background:var(--ink);color:var(--lime);border-color:var(--ink)}
+.tool.table-on{background:var(--pine);color:var(--lime);border-color:var(--pine)}
+.tool[data-t="csv"]{font-size:9px;font-weight:800;letter-spacing:-.3px;color:var(--pine)}
+.tool[data-t="jpg"]{font-size:9px;font-weight:800;letter-spacing:-.3px;color:var(--pine)}
+.chart-wrap{position:relative;height:272px;margin-top:12px}
+.chart-wrap canvas{position:absolute;inset:0}
+.chart-card.table-mode .chart-wrap{display:none}
+.chart-table-wrap{display:none;margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:272px;background:#fff}
+.chart-card.table-mode .chart-table-wrap{display:block}
+.chart-data-table{min-width:520px;font-size:11.5px}
+.chart-data-table thead th{cursor:pointer;user-select:none}
+.chart-data-table thead th:hover{background:var(--pine2)}
+.chart-data-table thead th.num,.chart-data-table tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+.chart-data-table .sort-mark{font-size:10px;margin-left:6px;color:#fff}
+.chart-empty{padding:18px;color:var(--mut);font-size:12px;text-align:center}
+.frozen-tag{display:none;position:absolute;top:13px;right:13px;background:var(--ink);color:var(--lime);font-size:10px;font-weight:800;
+ border-radius:999px;padding:4px 10px;letter-spacing:.05em;z-index:5}
+.chart-card.frozen .frozen-tag{display:block}
+.chart-card.frozen{outline:2px solid var(--ink)}
+.hint{font-size:10.5px;color:var(--mut);margin-top:8px}
+
+/* ---------- WHAT-IF ---------- */
+.whatif{padding:18px 20px}
+.whatif h3{font-size:14px;color:var(--ink)}
+.whatif .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:13px;align-items:flex-end}
+.whatif .fld{display:flex;flex-direction:column;gap:5px}
+.whatif label{font-size:11px;font-weight:700;color:var(--mut)}
+.whatif select{padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-size:12.5px;min-width:170px;background:#F7FAF6}
+.whatif input[type=range]{width:220px;accent-color:var(--moss)}
+.wi-pct{font-size:14px;font-weight:800;color:var(--pine);min-width:48px}
+.wi-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.wi-card{background:linear-gradient(135deg,#F4FAF1,#fff);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
+.wi-card .l{font-size:10.8px;font-weight:700;color:var(--mut)}
+.wi-card .v{font-size:19px;font-weight:800;color:var(--ink);margin-top:5px}
+.wi-card.acc{background:var(--ink);border-color:var(--ink)}
+.wi-card.acc .l{color:#9DBBAC}.wi-card.acc .v{color:var(--lime)}
+
+/* ---------- TABLE ---------- */
+.table-card{padding:16px}
+.table-head{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.table-head input{flex:1;min-width:210px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;font-size:13px;outline:none}
+.table-head input:focus{border-color:var(--moss)}
+.tbl-wrap{overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:12px;max-height:560px}
+table{border-collapse:collapse;width:100%;font-size:12px;min-width:1080px}
+thead th{position:sticky;top:0;background:var(--ink);color:var(--lime);text-align:left;padding:9px 11px;font-size:11px;letter-spacing:.04em;white-space:nowrap;z-index:2}
+thead th.num,tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody td{padding:8px 11px;border-bottom:1px solid #EDF2EB;white-space:nowrap}
+tbody tr:hover{background:#F3F8F1}
+.badge{border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:700}
+.b-fwd{background:#E2F4E8;color:#1F7A4D}.b-rev{background:#FCEFD9;color:#A66B12}
+.b-crit{background:#FBE3E3;color:#B23B3B}
+.pager{display:flex;gap:9px;align-items:center;margin-top:12px;font-size:12px;color:var(--mut);flex-wrap:wrap}
+.pager button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font-weight:700;color:var(--pine)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+/* ---------- RESPONSIVE ---------- */
+.overlay{display:none;position:fixed;inset:0;background:rgba(8,25,18,.45);z-index:55}
+.overlay.show{display:block}
+@media(max-width:1180px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:980px){
+  .hero-row{grid-template-columns:1fr}
+  .chart-grid{grid-template-columns:1fr}
+  .wi-out{grid-template-columns:1fr}
+  .main{padding:14px 12px 60px}
+}
+@media(max-width:640px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi .val{font-size:18px}
+  .chart-wrap{height:235px}
+  .msel-panel{width:min(86vw,260px)}
+  .topbar h2{font-size:17px}
+}
+
+/* ---------- LANE VIEW ---------- */
+.lv-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.lv-stat{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow);padding:13px 15px}
+.lv-stat .l{font-size:10.6px;font-weight:700;color:var(--mut);letter-spacing:.03em}
+.lv-stat .v{font-size:19px;font-weight:800;color:var(--ink);margin-top:6px}
+.lv-stat .s{font-size:10.6px;color:var(--mut);margin-top:4px}
+.lv-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:12px;margin-top:12px}
+.lv-sec{padding:14px 16px}
+.lv-sec .card-head{margin-bottom:4px}
+.lv-mini-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px;max-height:430px;margin-top:10px}
+.lv-mini{min-width:auto;font-size:11.5px}
+.lv-mini thead th{background:var(--pine);font-size:10.5px;cursor:pointer;user-select:none}
+.lv-mini thead th.sortable:hover{background:var(--pine2)}
+.lv-mini thead th .arr{opacity:.55;font-size:9px;margin-left:3px}
+.lv-mini td.num,.lv-mini th.num{text-align:right}
+
+
+/* detail table with per-column filters */
+.lv-detail{padding:16px;margin-top:12px}
+.lv-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.lv-toolbar .pill{cursor:default}
+#lvReset{border:1px solid var(--pine);background:#fff;color:var(--pine);border-radius:999px;padding:6px 13px;font-size:11.5px;font-weight:700}
+#lvReset:hover{background:var(--pine);color:var(--lime)}
+.lv-tbl-wrap{overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:12px;max-height:600px}
+table.lv-tbl{min-width:1180px;font-size:12px}
+.lv-tbl thead th{position:sticky;top:0;background:var(--ink);color:var(--lime);text-align:left;padding:8px 10px;font-size:10.5px;
+  letter-spacing:.03em;white-space:nowrap;z-index:3;cursor:pointer;user-select:none}
+.lv-tbl thead th.num{text-align:right}
+.lv-tbl thead th .arr{opacity:.55;font-size:9px;margin-left:3px}
+.lv-tbl thead tr.lv-fltr th{position:sticky;top:31px;background:#0E3324;padding:5px 7px;z-index:3}
+.lv-tbl thead tr.lv-fltr input{width:100%;min-width:74px;padding:5px 7px;border:1px solid #2C5644;border-radius:7px;
+  background:#10402F;color:#EAF6EE;font-size:11px;outline:none}
+.lv-tbl thead tr.lv-fltr input::placeholder{color:#7FA593}
+.lv-tbl thead tr.lv-fltr input:focus{border-color:var(--lime)}
+.lv-rng{display:flex;gap:4px}
+.lv-rng input{min-width:0;width:50%!important}
+.lv-csel{position:relative}
+.lv-csel-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:5px;border:1px solid #2C5644;
+  background:#10402F;color:#EAF6EE;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:600;white-space:nowrap}
+.lv-csel-btn.on{background:var(--lime);color:var(--ink);border-color:var(--lime)}
+.lv-csel-panel{position:absolute;top:calc(100% + 4px);left:0;min-width:160px;max-height:240px;overflow:auto;background:#fff;
+  border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(10,42,30,.22);z-index:9;display:none;padding:5px}
+.lv-csel.open .lv-csel-panel{display:block}
+.lv-csel-panel label{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;font-size:11.8px;color:var(--text);cursor:pointer}
+.lv-csel-panel label:hover{background:#F1F6EF}
+.lv-csel-panel input{accent-color:var(--moss);width:14px;height:14px;flex:none}
+.lv-tbl tbody td{padding:7px 10px;border-bottom:1px solid #EDF2EB;white-space:nowrap}
+.lv-tbl tbody td.num{text-align:right}
+.lv-tbl tbody tr:hover{background:#F3F8F1}
+.lv-tbl .mono{font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px}
+@media(max-width:980px){
+  .lv-cards{grid-template-columns:repeat(2,1fr)}
+  .lv-grid{grid-template-columns:1fr}
+}
+/* ============ HOV / LH Recovery / Lock CSS ============ */
+.hov-stat,.lhr-stat,.lk-stat{display:inline-block;background:#fff;border-radius:10px;padding:16px;margin:8px;min-width:160px;box-shadow:0 2px 8px rgba(10,42,30,.08);border-left:4px solid var(--moss)}
+.hov-stat .l,.lhr-stat .l,.lk-stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;font-weight:600;letter-spacing:0.5px}
+.hov-stat .v,.lhr-stat .v,.lk-stat .v{font-size:22px;font-weight:700;color:var(--text);margin:6px 0}
+.hov-stat .s,.lhr-stat .s,.lk-stat .s{font-size:12px;color:var(--mut)}
+.hov-grid,.lk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin:20px 0}
+.hov-tbl,.lk-tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(10,42,30,.08)}
+.hov-tbl thead,.lk-tbl thead{background:#F3F8F1;font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text)}
+.hov-tbl thead th,.lk-tbl thead th{padding:10px;text-align:left;border-bottom:2px solid var(--line)}
+.hov-tbl tbody tr,.lk-tbl tbody tr{border-bottom:1px solid #EDF2EB}
+.hov-tbl tbody tr:hover,.lk-tbl tbody tr:hover{background:#F9FCFB}
+.hov-tbl tbody td,.lk-tbl tbody td{padding:8px 10px;font-size:13px}
+.hov-tbl .num,.lk-tbl .num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace}
+.hov-export,.lk-export{display:flex;gap:8px;margin-bottom:12px}
+.hov-chart,.lk-chart{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(10,42,30,.08);margin:15px 0}
+.hov-chart canvas,.lk-chart canvas{max-height:300px}
+body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar{display:none}
+.lhr-summary-row{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start}
+.lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
+.lhr-chart-pane{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(10,42,30,.09);height:100%;box-sizing:border-box}
+.lhr-chart-pane canvas{max-height:340px}
+@media(max-width:900px){.lhr-summary-row{grid-template-columns:1fr}}
+.hov-dashboard-head{margin-top:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hov-dashboard-head h3{font-size:16px;color:var(--ink)}
+.hov-dashboard-head .sub{display:block;font-size:11.5px;color:var(--mut);margin-top:4px}
+.hov-source-badge{background:var(--ink);color:var(--lime);border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800}
+.hov-section-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.hov-analysis-card{padding:16px;overflow:hidden}
+.hov-analysis-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.hov-analysis-head h4{font-size:14px;color:var(--ink);text-transform:uppercase}
+.hov-analysis-head .sub{font-size:11px;color:var(--mut);margin-top:3px}
+.hov-pivot-wrap{overflow:auto;border:1px solid #B8C9BD;border-radius:9px;max-height:430px}
+.hov-pivot{min-width:820px;width:100%;font-size:11.5px;border-collapse:separate;border-spacing:0}
+.hov-pivot thead th{background:#A9DCEC;color:#08261C;border-right:1px solid #789AAA;border-bottom:1px solid #789AAA;padding:7px 8px;text-align:right}
+.hov-pivot thead tr:first-child th{background:var(--lime);color:var(--ink);text-align:center;font-size:12px;letter-spacing:.02em}
+.hov-pivot thead th:first-child{text-align:left;min-width:260px}
+.hov-pivot tbody td{padding:7px 8px;border-right:1px solid #D6E0D8;border-bottom:1px solid #D6E0D8;text-align:right;font-variant-numeric:tabular-nums}
+.hov-pivot tbody td:first-child{text-align:left;font-weight:600;color:var(--ink)}
+.hov-pivot tbody tr:nth-child(even){background:#F6FAF5}
+.hov-pivot tbody tr:hover{background:#EEF7F2}
+.hov-pivot tbody tr.hov-total{background:#DCEEDB;font-weight:800;position:sticky;bottom:0}
+.hov-empty{padding:28px;text-align:center;color:var(--mut);font-size:12px}
+.hov-tool{width:auto;padding:0 10px;font-size:10px!important}
+/* ── LH Recovery rich styles ── */
+.lhr-kpi-row{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 20px}
+.lhr-kpi{flex:1;min-width:145px;background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 2px 10px rgba(10,42,30,.09);border-top:4px solid #ccc}
+.lhr-kpi.red{border-top-color:#E53E3E}.lhr-kpi.orange{border-top-color:#DD6B20}
+.lhr-kpi.amber{border-top-color:#D69E2E}.lhr-kpi.green{border-top-color:#276749}
+.lhr-kpi.teal{border-top-color:#2C7A7B}.lhr-kpi.purple{border-top-color:#6B46C1}
+.lhr-kpi .kl{font-size:10px;text-transform:uppercase;font-weight:700;color:var(--mut);letter-spacing:.6px}
+.lhr-kpi .kv{font-size:20px;font-weight:800;color:var(--text);margin:5px 0 2px}
+.lhr-kpi .ks{font-size:11px;color:var(--mut)}
+.lhr-charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px;margin:0 0 20px}
+.lhr-chart-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(10,42,30,.08)}
+.lhr-chart-card h4{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 4px}
+.lhr-chart-card .sub{font-size:11px;color:var(--mut);margin-bottom:12px;display:block}
+.lhr-chart-card canvas{max-height:260px}
+.lhr-chart-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.lhr-tbl-wrap{overflow-x:auto;border-radius:10px;box-shadow:0 2px 10px rgba(10,42,30,.09)}
+.lhr-tbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1050px}
+.lhr-tbl thead tr.hdr th{background:#2D2844;color:#FF6B4A;font-size:10.5px;font-weight:700;text-transform:uppercase;padding:11px 10px;white-space:nowrap;cursor:pointer;user-select:none;border-right:1px solid rgba(255,255,255,.08)}
+.lhr-tbl thead tr.hdr th:hover{background:#221F35}
+.lhr-tbl thead tr.hdr th .si{opacity:.6;font-size:9px;margin-left:3px}
+.lhr-tbl thead tr.hdr th.asc .si::after{content:'▲'}
+.lhr-tbl thead tr.hdr th.desc .si::after{content:'▼'}
+.lhr-tbl thead tr.hdr th:not(.asc):not(.desc) .si::after{content:'⇅'}
+.lhr-tbl thead tr.flt th{background:#EEF5EC;padding:4px 5px;border-bottom:2px solid #C6E0C0}
+.lhr-tbl thead tr.flt th input,.lhr-tbl thead tr.flt th select{width:100%;font-size:11px;border:1px solid #C6D9C2;border-radius:5px;padding:4px 5px;background:#fff;color:var(--text)}
+.lhr-tbl tbody tr{border-bottom:1px solid #EDF2EB;transition:background .1s}
+.lhr-tbl tbody tr:hover{background:#EEF7F2}
+.lhr-tbl tbody td{padding:8px 10px;vertical-align:middle;white-space:nowrap}
+.lhr-tbl .num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace}
+.lhr-tbl .mono{font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px}
+.badge-pct{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-pct.high{background:#FED7D7;color:#C53030}
+.badge-pct.mid{background:#FEEBC8;color:#9C4221}
+.badge-pct.low{background:#C6F6D5;color:#276749}
+.badge-pct.zero{background:#EDF2F7;color:#718096}
+.cn-date{font-size:11px;padding:2px 7px;border-radius:5px;background:#EBF8FF;color:#2B6CB0;font-weight:600}
+.esc-date{font-size:11px;padding:2px 7px;border-radius:5px;background:#FFF5F5;color:#C53030;font-weight:600}
+.no-date{font-size:11px;color:#A0AEC0;font-style:italic}
+.lhr-fb{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#F3F8F1;border-radius:10px;padding:11px 15px;margin-bottom:14px}
+.lhr-fb label{font-size:10.5px;font-weight:700;color:var(--mut);text-transform:uppercase}
+.lhr-fb select,.lhr-fb input[type=text]{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:#fff;color:var(--text);min-width:100px}
+.lhr-fb button{font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:5px 10px;background:#fff;color:var(--text);cursor:pointer}
+.lhr-fb button:hover{background:#2D2844;color:#FF6B4A;border-color:#2D2844}
+.lhr-rowcount{font-size:11px;color:var(--mut);margin-left:auto}
+@media(max-width:980px){
+  .hov-grid,.lk-grid,.lhr-charts-grid{grid-template-columns:1fr}
+  .hov-stat,.lhr-stat,.lk-stat{min-width:140px;padding:12px;font-size:13px}
+  .hov-stat .v,.lhr-stat .v,.lk-stat .v{font-size:18px}
+  .lhr-kpi{min-width:130px}
+}
+</style>
+
+<style id="theme-light">
+/* ============================================================
+   LIGHT THEME OVERRIDE · white + soft indigo (Eena-style)
+   Appended last so it re-skins the original dark theme.
+   ============================================================ */
+:root{
+  --ink:#1E293B; --pine:#4F46E5; --pine2:#6366F1; --moss:#6366F1; --leaf:#3B82F6;
+  --lime:#4F46E5; --lime-soft:#EEF0FF;
+  --bg:#F4F6FB; --card:#FFFFFF; --line:#E7E9F2;
+  --text:#1E293B; --mut:#64748B;
+  --red:#EF4444; --amber:#F59E0B; --green:#22C55E;
+  --shadow:0 4px 16px rgba(30,41,59,.06);
+}
+body{background:#F4F6FB;background-attachment:initial;}
+
+/* ---- SIDEBAR ---- */
+.sidebar{background:#FFFFFF;border-right:1px solid var(--line);color:var(--text);box-shadow:2px 0 16px rgba(30,41,59,.05);}
+.sidebar .brand b{color:var(--ink);}
+.nav button{color:#475569;}
+.nav button:hover{background:#F1F3FB;color:var(--ink);}
+.nav button.active{background:var(--lime-soft);color:var(--pine);}
+.side-foot{color:var(--mut);border-top:1px solid var(--line);}
+.side-foot .btn-ghost{color:var(--pine);border:1px solid #D9DCF0;}
+.side-foot .btn-ghost:hover{background:var(--lime-soft);}
+.brand .bolt{background:#2563EB;}
+
+/* ---- TOPBAR / PILLS ---- */
+#hamb{background:var(--lime-soft);color:var(--pine);}
+#reUpload{background:var(--pine);color:#fff;}
+#reUpload:hover{background:#4338CA;}
+
+/* ---- FILTER BAR ---- */
+.msel-btn.on{background:var(--pine);color:#fff;border-color:var(--pine);}
+.msel-cnt{background:var(--pine);color:#fff;}
+#clearAll:hover{background:var(--pine);color:#fff;}
+
+/* ---- HERO ---- */
+.hero{background:linear-gradient(140deg,#4F46E5 0%,#6366F1 100%);}
+.hero .eyebrow{color:#C7D2FE;}
+.hero .big{color:#fff;}
+.hero .cap{color:#E0E7FF;}
+.insights h3 .ai{background:var(--pine);color:#fff;}
+
+/* ---- UPLOAD SCREEN ---- */
+.upload-hero{background:linear-gradient(135deg,#4F46E5 0%,#6366F1 100%);}
+.upload-hero h1 span{color:#C7D2FE;}
+.upload-hero p{color:#E0E7FF;}
+#dropZone{border-color:rgba(255,255,255,.55);}
+#dropZone.drag{background:rgba(255,255,255,.14);border-color:#fff;}
+#dropZone .big{color:#fff;}
+#dropZone .sub{color:#E0E7FF;}
+.btn-lime{background:#fff;color:#4F46E5;}
+.btn-lime:hover{background:#EEF0FF;}
+.btn-ghost{color:#fff;border:1px solid rgba(255,255,255,.55);}
+#parseStatus{color:#EEF0FF;}
+.spinner{border-color:rgba(255,255,255,.35);border-top-color:#fff;}
+#uploadWaitMsg{background:rgba(255,255,255,.12);color:#EEF0FF;}
+
+/* ---- TABLE HEADERS (all variants → light) ---- */
+thead th{background:#F1F3FB;color:var(--pine);}
+.lv-mini thead th{background:#F1F3FB;color:var(--pine);}
+.lv-mini thead th.sortable:hover{background:#E7E9F5;}
+.lv-tbl thead th{background:#F1F3FB;color:var(--pine);border-bottom:1px solid var(--line);}
+.lv-tbl thead tr.lv-fltr th{background:#F8F9FC;}
+.lv-tbl thead tr.lv-fltr input{background:#fff;color:var(--text);border-color:var(--line);}
+.lv-tbl thead tr.lv-fltr input::placeholder{color:#94A3B8;}
+.lv-tbl thead tr.lv-fltr input:focus{border-color:var(--pine);}
+.lv-csel-btn{background:#fff;color:var(--text);border-color:var(--line);}
+.lv-csel-btn.on{background:var(--pine);color:#fff;border-color:var(--pine);}
+.chart-data-table thead th{color:var(--pine);}
+.chart-data-table thead th:hover{background:#E7E9F5;color:var(--pine);}
+.chart-data-table .sort-mark{color:var(--mut);}
+.lhr-tbl thead tr.hdr th{background:#F1F3FB;color:var(--pine);border-right:1px solid var(--line);}
+.lhr-tbl thead tr.hdr th:hover{background:#E7E9F5;}
+.lhr-fb button:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+
+/* ---- MANIFEST "Top 20 Lanes by Pending Manifest Code" → clean, colourless ---- */
+.lv-mini thead th.age-a,.lv-mini thead th.age-b,.lv-mini thead th.age-c,
+.lv-mini thead th.age-d,.lv-mini thead th.age-e,.lv-mini thead th.age-f{background:#F1F3FB;color:var(--pine);}
+.mv-pivot-wrap td.aged-red{background:transparent;color:var(--text);font-weight:600;}
+.mv-pivot-wrap td.aged-ora{background:transparent;color:var(--text);font-weight:600;}
+.mv-pivot-wrap td.total-col{background:#F1F3FB;color:var(--ink);font-weight:800;}
+.mv-lane-summary{background:#F0F2FA;}
+.mv-lane-summary td{border-top:1px solid #D5D9F0!important;border-bottom:1px solid #D5D9F0!important;}
+.mv-lane-summary.mv-expanded td{border-bottom:none!important;}
+.mv-lane-summary:hover td{background:#E8EAF6!important;}
+.mv-dest-row{background:#F8F9FE!important;}
+.mv-dest-row td{border-bottom:1px solid var(--line)!important;}
+.mv-dest-row:hover td{background:#F1F3FB!important;}
+.mv-pivot-wrap td{border-bottom:1px solid var(--line);}
+.mv-pivot-wrap td.dest-name{color:var(--pine);}
+.mv-pivot-wrap tr:hover td{background:#F1F3FB!important;}
+.mv-dest-chip{background:var(--lime-soft);color:var(--pine);}
+
+/* ---- HOV PIVOT ---- */
+.hov-pivot thead tr:first-child th{background:var(--pine);color:#fff;}
+.hov-pivot thead th{background:#EEF0FF;color:var(--ink);border-color:#D9DCF0;}
+.hov-pivot tbody tr.hov-total{background:var(--lime-soft);}
+.hov-source-badge{background:var(--pine);color:#fff;}
+
+/* ---- TOOLS / TOGGLES / MISC ACCENTS ---- */
+.tool:hover{background:var(--pine);color:#fff;}
+.tool.lock-on{background:var(--pine);color:#fff;border-color:var(--pine);}
+.tool.table-on{background:var(--pine);color:#fff;border-color:var(--pine);}
+.mv-mcsel-btn.active{background:var(--pine);color:#fff;border-color:var(--pine);}
+.mv-mcsel-panel .mc-actions button:hover{background:var(--pine);color:#fff;}
+#lvReset:hover{background:var(--pine);color:#fff;}
+.frozen-tag{background:var(--pine);color:#fff;}
+.chart-card.frozen{outline:2px solid var(--pine);}
+.wi-card.acc{background:var(--pine);}
+.wi-card.acc .l{color:#C7D2FE;}
+.wi-card.acc .v{color:#fff;}
+
+/* ---- LOGIN (clean white + blue, no purple/orange) ---- */
+#loginScreen{background:#fff;}
+.login-illustration{background:#EDEFF3;}
+#loginBtn,#resetBtn{background:#2563EB;}
+#loginBtn:hover,#resetBtn:hover{background:#1D4ED8;}
+.login-card input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+.login-row{display:flex;justify-content:flex-end;margin-top:10px;}
+.login-row a,#forgotLink,#backToLogin{color:#2563EB;font-size:12.5px;font-weight:600;text-decoration:none;}
+.login-row a:hover{text-decoration:underline;}
+#resetMsg{display:none;font-size:12.5px;margin-top:14px;line-height:1.5;}
+#resetBtn{width:100%;margin-top:22px;padding:13px;border:none;border-radius:10px;color:#fff;font-weight:700;font-size:14.5px;}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="login-illustration">
+    <svg viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg">
+      <!-- floor grid -->
+      <g opacity="0.35" stroke="#C7CEDD" stroke-width="1">
+        <path d="M40 300 L280 380 L520 300 L280 220 Z" fill="none"/>
+        <path d="M100 280 L280 340" /><path d="M160 260 L280 300"/>
+        <path d="M220 240 L280 260"/><path d="M340 260 L280 300"/>
+        <path d="M400 240 L280 260"/><path d="M460 280 L280 340"/>
+      </g>
+      <!-- warehouse block -->
+      <g>
+        <polygon points="130,210 250,170 250,270 130,310" fill="#EEF0F6"/>
+        <polygon points="250,170 340,200 340,300 250,270" fill="#DCE0EC"/>
+        <polygon points="130,210 250,170 340,200 220,240" fill="#F8F9FC"/>
+        <rect x="150" y="230" width="26" height="34" fill="#C7CEDD"/>
+        <rect x="190" y="220" width="26" height="34" fill="#C7CEDD"/>
+        <polygon points="255,220 300,235 300,275 255,262" fill="#B9C2D6"/>
+      </g>
+      <!-- delivery truck -->
+      <g>
+        <polygon points="330,250 430,215 430,300 330,335" fill="#FFFFFF" stroke="#DDE1EA" stroke-width="1.5"/>
+        <polygon points="430,215 480,232 480,315 430,300" fill="#E3E7F0"/>
+        <polygon points="330,250 430,215 480,232 380,268" fill="#FBFBFD"/>
+        <rect x="355" y="270" width="24" height="24" fill="#1B4DDA" opacity="0.85"/>
+        <rect x="390" y="258" width="24" height="24" fill="#1B4DDA" opacity="0.6"/>
+        <circle cx="360" cy="330" r="12" fill="#2A3142"/>
+        <circle cx="440" cy="308" r="12" fill="#2A3142"/>
+      </g>
+      <!-- floating boxes -->
+      <g>
+        <polygon points="70,150 110,136 110,166 70,180" fill="#F2F3F8" stroke="#DDE1EA"/>
+        <polygon points="110,136 140,148 140,178 110,166" fill="#E3E7F0"/>
+        <polygon points="70,150 110,136 140,148 100,162" fill="#FBFBFD"/>
+        <polygon points="440,150 470,138 470,160 440,172" fill="#F2F3F8" stroke="#DDE1EA"/>
+        <polygon points="470,138 495,148 495,170 470,160" fill="#E3E7F0"/>
+      </g>
+      <!-- scanner accent -->
+      <g>
+        <rect x="270" y="290" width="18" height="42" rx="3" fill="#EEF0F6" stroke="#DDE1EA"/>
+        <circle cx="279" cy="304" r="4" fill="#1B4DDA"/>
+        <rect x="274" y="314" width="10" height="3" fill="#1B4DDA" opacity="0.7"/>
+      </g>
+    </svg>
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="brand">
+        <div class="bolt">⚡</div>
+        <div><b>SHADOWFAX</b><small>THINK AHEAD!</small></div>
+      </div>
+      <div id="signinView">
+        <h1>Operations Sign-in</h1>
+        <p>Welcome to the Pendency &amp; Product Value-at-Risk Control Tower. Sign in to continue.</p>
+        <label>USERNAME</label>
+        <input id="loginUser" type="text" placeholder="e.g. ops.admin" autocomplete="username">
+        <label>PASSWORD</label>
+        <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+        <div class="login-row"><a href="#" id="forgotLink">Forgot password?</a></div>
+        <button id="loginBtn">Sign in →</button>
+        <div id="loginErr">Enter your username and password.</div>
+        <div class="login-note">Demo gate only — runs fully in your browser. Connect your SSO / auth API here before production rollout. Your Excel data never leaves this device.</div>
+      </div>
+      <div id="resetView" style="display:none">
+        <h1>Reset password</h1>
+        <p>Enter your work email and we'll send reset instructions.</p>
+        <label>WORK EMAIL</label>
+        <input id="resetEmail" type="email" placeholder="you@shadowfax.in" autocomplete="email">
+        <button id="resetBtn">Send reset link</button>
+        <div id="resetMsg"></div>
+        <div class="login-row" style="margin-top:16px"><a href="#" id="backToLogin">&larr; Back to sign in</a></div>
+        <div class="login-note">Password reset is a front-end demo — wire <b>#resetBtn</b> to your auth backend / SSO to actually send emails.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= UPLOAD ================= -->
+<div id="uploadScreen">
+  <div class="upload-wrap">
+    <div class="upload-hero">
+      <h1 id="uploadHeadline">Good morning! <span>Upload today's pendency file.</span></h1>
+      <p id="uploadSub">Drop the daily <b>Dashboard.xlsx</b> export (intransit pendency snapshot). Expected columns: Zone, movement_type, Awb_number, MM_origin/destination (+types), Product_value, flag, Lane Code, HOV_flag, intransit_ageing, vendor_name, POD Name, Volumetric_flag, manifest/trip codes.</p>
+      <div id="uploadControls">
+        <div id="dropZone">
+          <div class="big">⬆ Drag & drop the Excel file here</div>
+          <div class="sub">.xlsx / .xls / .csv — large files (270k+ rows) can take 20–60 seconds to parse</div>
+        </div>
+        <div class="upload-actions">
+          <button class="btn btn-lime" id="browseBtn">Browse file…</button>
+          <button class="btn btn-ghost" id="sampleBtn">Load sample data (preview)</button>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
+        </div>
+      </div>
+      <div id="uploadWaitMsg">Today's data isn't loaded yet. Please check back in a moment, or contact your admin if this persists.</div>
+      <div id="parseStatus"><span class="spinner"></span><span id="parseMsg">Parsing…</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <div class="overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="bolt">⚡</div>
+      <div><b>SHADOWFAX</b><small>THINK AHEAD!</small></div>
+    </div>
+    <nav class="nav">
+      <button data-page="overview" class="active"><span class="ic">🏠</span>Executive Overview</button>
+      <button data-page="pendency"><span class="ic">📦</span>Pendency Analytics</button>
+      <button data-page="value"><span class="ic">💰</span>Value-at-Risk</button>
+      <button data-page="rootcause"><span class="ic">🧭</span>Root Cause & What-If</button>
+      <button data-page="laneview"><span class="ic">🛣️</span>Lane View</button>
+      <button data-page="manifest"><span class="ic">📋</span>Bag wise View</button>
+      <button data-page="investigate"><span class="ic">🔍</span>Base Data</button>
+      <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
+      <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
+      <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
+    </nav>
+    <div class="side-foot">
+      <div>Data refresh: <b id="footRows" style="color:#1E293B">—</b></div>
+      <button class="btn-ghost btn" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button id="hamb">☰</button>
+      <div>
+        <h2 id="pageTitle">Executive Overview</h2>
+        <div class="crumb" id="pageCrumb">Snapshot of all in-transit pendency</div>
+      </div>
+      <div class="top-right">
+        <span class="pill">📅 <b id="todayLbl"></b></span>
+        <span class="pill">Showing <b id="rowCountLbl">0</b> of <b id="rowTotalLbl">0</b> AWBs</span>
+        <button id="driveRefreshBtn" title="Pull the latest file from Google Drive">🔄 Refresh from Drive</button>
+        <button id="reUpload">⬆ New file</button>
+      </div>
+    </div>
+
+    <!-- global multi-checkbox filter bar -->
+    <div class="filterbar">
+      <div class="filterbar-head">
+        <span class="ttl">GLOBAL FILTERS</span>
+        <span class="meta">multi-select checkboxes · apply to all <b>Dynamic</b> charts · 🔒 frozen charts ignore them</span>
+        <button id="clearAll">✕ Clear all filters</button>
+      </div>
+      <div class="msel-row" id="filterRow"></div>
+    </div>
+
+    <!-- ============ PAGE: OVERVIEW ============ -->
+    <section class="page active" id="page-overview">
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="hero-row">
+        <div class="hero">
+          <div class="eyebrow">VALUE CURRENTLY STUCK IN TRANSIT</div>
+          <div class="big" id="heroVal">—</div>
+          <div class="cap" id="heroCap">across the filtered network</div>
+          <div class="spark"><canvas id="heroSpark"></canvas></div>
+        </div>
+        <div class="insights">
+          <h3><span class="ai">AI</span> Smart Insights — auto-generated from the current filter state</h3>
+          <ul id="insightList"></ul>
+        </div>
+      </div>
+      <div class="chart-grid" id="grid-overview"></div>
+    </section>
+
+    <!-- ============ PAGE: PENDENCY ============ -->
+    <section class="page" id="page-pendency">
+      <div class="chart-grid" id="grid-pendency"></div>
+    </section>
+
+    <!-- ============ PAGE: VALUE ============ -->
+    <section class="page" id="page-value">
+      <div class="chart-grid" id="grid-value"></div>
+    </section>
+
+    <!-- ============ PAGE: ROOT CAUSE ============ -->
+    <section class="page" id="page-rootcause">
+      <div class="card whatif" style="margin-top:12px">
+        <h3>🎛 What-If Simulator — recapture value by clearing pendency</h3>
+        <div class="row">
+          <div class="fld"><label>DIMENSION</label>
+            <select id="wiDim">
+              <option value="Zone">Zone</option>
+              <option value="MM_origin">Origin DC</option>
+              <option value="Lane Code">Lane</option>
+              <option value="vendor_name">Vendor</option>
+            </select>
+          </div>
+          <div class="fld"><label>ENTITY (top 30 by value)</label><select id="wiEnt"></select></div>
+          <div class="fld"><label>PENDENCY REDUCTION</label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="range" id="wiPct" min="0" max="60" value="15">
+              <span class="wi-pct" id="wiPctLbl">15%</span>
+            </div>
+          </div>
+        </div>
+        <div class="wi-out">
+          <div class="wi-card"><div class="l">ENTITY VALUE AT RISK</div><div class="v" id="wiBase">—</div></div>
+          <div class="wi-card acc"><div class="l">RECAPTURED PRODUCT VALUE</div><div class="v" id="wiGain">—</div></div>
+          <div class="wi-card"><div class="l">CRITICAL (30+ DAY) VALUE RELEASED</div><div class="v" id="wiCrit">—</div></div>
+        </div>
+        <div class="hint">Logic: recaptured = reduction% × entity pending value; critical released = reduction% × entity value aged 30+ days. Respects current global filters.</div>
+      </div>
+      <div class="chart-grid" id="grid-rootcause"></div>
+    </section>
+
+    <!-- ============ PAGE: LANE VIEW ============ -->
+    <section class="page" id="page-laneview">
+      <div class="lv-cards" id="lvCards"></div>
+
+      <div class="lv-grid">
+        <!-- Top 20 lanes by product value -->
+        <div class="card lv-sec">
+          <div class="card-head">
+            <div><h3>Top 20 Lanes by Pending Product Value</h3>
+              <span class="sub">aggregated by Lane Code · click a header to sort · respects global filters</span></div>
+            <div class="card-tools">
+              <button class="tool" title="Download this table as CSV" id="lvLaneCsv">CSV</button>
+            </div>
+          </div>
+          <div class="lv-mini-wrap">
+            <table class="lv-mini" id="lvLaneTbl">
+              <thead><tr id="lvLaneHead"></tr></thead>
+              <tbody id="lvLaneBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Lane Type rollup: count of AWBs -->
+        <div class="card lv-sec">
+          <div class="card-head">
+            <div><h3>AWB Count by Lane Type</h3>
+              <span class="sub">shipments &amp; ₹ value per lane type · click a row to filter the detail table</span></div>
+            <div class="card-tools">
+              <button class="tool" title="Download this table as CSV" id="lvTypeCsv">CSV</button>
+            </div>
+          </div>
+          <div class="lv-mini-wrap">
+            <table class="lv-mini" id="lvTypeTbl">
+              <thead><tr id="lvTypeHead"></tr></thead>
+              <tbody id="lvTypeBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AWB-level detail with per-column filters -->
+      <div class="card lv-detail">
+        <div class="lv-toolbar">
+          <span class="ttl" style="font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em">LANE DETAIL — AWB LEVEL</span>
+          <span class="pill" id="lvDetailCount">0 rows</span>
+          <button id="lvReset">✕ Clear column filters</button>
+          <span class="hint" style="margin:0">Every column has its own filter below the header — text columns match "contains", value &amp; ageing use min/max, bucket / lane type / flow are multi-select. All combine together (AND).</span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="tool" title="Download filtered detail as CSV" id="lvDetCsv">CSV</button>
+          </div>
+        </div>
+        <div class="lv-tbl-wrap">
+          <table class="lv-tbl">
+            <thead>
+              <tr id="lvDetHead"></tr>
+              <tr class="lv-fltr" id="lvDetFilters"></tr>
+            </thead>
+            <tbody id="lvDetBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button id="lvPrev">← Prev</button>
+          <span id="lvPgLbl">Page 1</span>
+          <button id="lvNext">Next →</button>
+          <span style="margin-left:auto">Showing <b id="lvShown">0</b> filtered AWBs across the current lane selection.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: MANIFEST VS SHIPMENTS ============ -->
+    <section class="page" id="page-manifest">
+      <div class="lv-cards" id="mvCards"></div>
+
+      <div class="lv-grid">
+        <!-- Top 20 Lanes by Pending Manifest Code -->
+        <div class="card lv-sec">
+          <div class="card-head">
+            <div><h3>Top 20 Lanes by Pending Manifest Code</h3>
+              <span class="sub">by Lane Code · click header to sort · click row to see destinations · respects global filters</span></div>
+            <div class="mv-filters">
+              <!-- Ageing Bucket multi-select -->
+              <div class="mv-mcsel" id="mvAgeingMcsel">
+                <button class="mv-mcsel-btn" id="mvAgeingBtn">Ageing Bucket ▾</button>
+                <div class="mv-mcsel-panel" id="mvAgeingPanel">
+                  <div class="mc-actions">
+                    <button id="mvAgeingAll">All</button>
+                    <button id="mvAgeingNone">Clear</button>
+                  </div>
+                </div>
+              </div>
+              <!-- intransit_ageing_bucket multi-select -->
+              <div class="mv-mcsel" id="mvItBktMcsel">
+                <button class="mv-mcsel-btn" id="mvItBktBtn">In-Transit Bucket ▾</button>
+                <div class="mv-mcsel-panel" id="mvItBktPanel">
+                  <div class="mc-actions">
+                    <button id="mvItBktAll">All</button>
+                    <button id="mvItBktNone">Clear</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-tools">
+              <button class="tool" id="mvLaneCsv">CSV</button>
+            </div>
+          </div>
+          <div class="lv-mini-wrap" style="overflow-x:auto">
+            <table class="lv-mini" id="mvLaneTbl" style="min-width:780px">
+              <thead><tr id="mvLaneHead"></tr></thead>
+              <tbody id="mvLaneBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manifest Code Count by Lane Type -->
+        <div class="card lv-sec">
+          <div class="card-head">
+            <div><h3>Manifest Code Count by Lane Type</h3>
+              <span class="sub">unique manifests &amp; ₹ value per lane type · click a row to filter detail</span></div>
+            <div class="card-tools">
+              <button class="tool" id="mvTypeCsv">CSV</button>
+            </div>
+          </div>
+          <div class="lv-mini-wrap">
+            <table class="lv-mini" id="mvTypeTbl">
+              <thead><tr id="mvTypeHead"></tr></thead>
+              <tbody id="mvTypeBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manifest-level detail with per-column filters -->
+      <div class="card lv-detail">
+        <div class="lv-toolbar">
+          <span class="ttl" style="font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em">MANIFEST DETAIL — SHIPMENT LEVEL</span>
+          <span class="pill" id="mvDetailCount">0 rows</span>
+          <button id="mvReset">✕ Clear column filters</button>
+          <span class="hint" style="margin:0">Text = contains · numeric = min/max · Ageing Bucket &amp; Lane Type = multi-select (AND)</span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="tool" id="mvDetCsv">CSV</button>
+          </div>
+        </div>
+        <div class="lv-tbl-wrap">
+          <table class="lv-tbl">
+            <thead>
+              <tr id="mvDetHead"></tr>
+              <tr class="lv-fltr" id="mvDetFilters"></tr>
+            </thead>
+            <tbody id="mvDetBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button id="mvPrev">← Prev</button>
+          <span id="mvPgLbl">Page 1</span>
+          <button id="mvNext">Next →</button>
+          <span style="margin-left:auto">Showing <b id="mvShown">0</b> manifests in current scope.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: INVESTIGATION ============ -->
+    <section class="page" id="page-investigate">
+      <div class="card table-card" style="margin-top:12px">
+        <div class="table-head">
+          <input id="tblSearch" placeholder="🔍 Search AWB / lane / vendor / vehicle / manifest / origin / destination…">
+          <button class="tool" title="Download visible result as CSV" id="tblCsv">CSV</button>
+          <span class="pill" id="tblCount">0 rows</span>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>AWB</th><th>Flow</th><th>Zone</th><th>Origin → Destination</th><th>Lane</th>
+              <th>Movement</th><th>Vendor</th><th>Ageing</th><th>Bucket</th><th>Value ₹</th>
+              <th>HOV</th><th>Vehicle</th><th>Manifest</th><th>Trip</th><th>POD</th>
+            </tr></thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button id="pgPrev">← Prev</button>
+          <span id="pgLbl">Page 1</span>
+          <button id="pgNext">Next →</button>
+          <span style="margin-left:auto">Click any chart bar elsewhere to drill into this table via filters.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: HOV ANALYTICS ============ -->
+    <section class="page" id="page-hov">
+      <div class="card hov-dashboard-head">
+        <div><h3>HOV and Error Scan Analytics</h3><span class="sub">lane ageing and product-value distribution from the workbook's HOV sheet</span></div>
+        <span class="hov-source-badge">SOURCE · HOV SHEET</span>
+      </div>
+      <div class="hov-section-grid" id="hovSectionGrid"></div>
+    </section>
+
+    <!-- ============ PAGE: LH RECOVERY ============ -->
+    <section class="page" id="page-lhrecovery">
+      <div class="card" style="margin-top:12px;padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0">Recovery Amount</h3>
+            <span class="sub">monthly CN Received Value from the CN Working sheet</span>
+          </div>
+          <div class="card-tools"><button class="tool" id="lhrSummaryCsv" title="Download summary CSV">CSV</button></div>
+        </div>
+        <div class="lhr-summary-row">
+          <div class="lhr-tbl-wrap" style="max-width:620px">
+            <table class="lhr-tbl" style="min-width:420px">
+              <thead><tr class="hdr"><th>Month</th><th class="num">CN Received Value</th></tr></thead>
+              <tbody id="lhrSummaryBody"></tbody>
+            </table>
+          </div>
+          <div class="lhr-chart-pane">
+            <span class="sub" style="display:block;margin-bottom:8px">Month vs CN Received Value</span>
+            <canvas id="lhrSummaryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h4 style="margin:0;font-size:15px">CN Working Detail</h4>
+            <span class="sub">sort or filter each column below</span>
+          </div>
+          <div class="card-tools">
+            <span class="lhr-rowcount" id="lhrRowCount"></span>
+            <button class="tool" id="lhrFReset">Clear</button>
+            <button class="tool" id="lhrDetailCsv" title="Download filtered detail as CSV">CSV</button>
+          </div>
+        </div>
+        <div class="lhr-tbl-wrap">
+          <table class="lhr-tbl" id="lhrDetailTbl">
+            <thead>
+              <tr class="hdr" id="lhrTblHdr"></tr>
+              <tr class="flt" id="lhrTblFilters"></tr>
+            </thead>
+            <tbody id="lhrTblBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: LOCK ANALYSIS ============ -->
+    <section class="page" id="page-lock">
+      <div class="card" style="margin-top:12px">
+        <h3>Lock & Seal Status Analysis</h3>
+        <div id="lockStats" style="display:flex;flex-wrap:wrap;gap:10px;margin:15px 0"></div>
+      </div>
+
+      <div class="lk-grid">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h4 style="margin:0">Manifest Integrity by Seal Status</h4>
+            <div class="card-tools">
+              <button class="tool" title="Download as CSV" id="lockSealCsv">CSV</button>
+              <button class="tool" title="Download chart as JPG" id="lockSealJpg">JPG</button>
+            </div>
+          </div>
+          <div class="lk-chart">
+            <canvas id="lockSealChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h4 style="margin:0">Lock Distribution by Movement Type</h4>
+            <div class="card-tools">
+              <button class="tool" title="Download as CSV" id="lockMoveCsv">CSV</button>
+              <button class="tool" title="Download chart as JPG" id="lockMoveJpg">JPG</button>
+            </div>
+          </div>
+          <div class="lk-chart">
+            <canvas id="lockMoveChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:15px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h4 style="margin:0">Lock Distribution by Lane</h4>
+          <div class="card-tools">
+            <button class="tool" title="Download as CSV" id="lockLaneCsv">CSV</button>
+          </div>
+        </div>
+        <table class="lk-tbl">
+          <thead><tr><th>Lane Code</th><th class="num">Total AWBs</th><th class="num">Locked AWBs</th><th class="num">Lock %</th><th class="num">Avg Value (Locked)</th><th class="num">Risk Score</th></tr></thead>
+          <tbody id="lockLaneBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =============================================================
+   CORE STATE, PARSING, FILTERS
+============================================================= */
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+let RAW=[], FILTERED=[];
+const BUCKETS=['2','3','4','5','6','7','8-10','11-15','16-30','30+'];
+const PALETTE=['#14532D','#1F7A4D','#3FA56F','#7CC79B','#BCE6CD','#FF6B4A','#A6C93B','#221F35','#5BBF8B','#D2E8B0'];
+
+/* ── Rich risk-aware colour system ── */
+const CLR={
+  red:'#E53E3E', redL:'rgba(229,62,62,0.18)',
+  orange:'#DD6B20', orangeL:'rgba(221,107,32,0.18)',
+  amber:'#D69E2E', amberL:'rgba(214,158,46,0.18)',
+  yellow:'#C6A000', yellowL:'rgba(198,160,0,0.15)',
+  teal:'#2C7A7B', tealL:'rgba(44,122,123,0.18)',
+  green:'#276749', greenL:'rgba(39,103,73,0.18)',
+  leaf:'#3FA56F', leafL:'rgba(63,165,111,0.15)',
+  sky:'#2B6CB0', skyL:'rgba(43,108,176,0.18)',
+  purple:'#6B46C1', purpleL:'rgba(107,70,193,0.18)',
+  pink:'#B83280', pinkL:'rgba(184,50,128,0.18)',
+};
+/* ── Yellow → Orange → Red heat scale (matches reference swatch): 0=low … 1=high ── */
+const HEAT_STOPS=[
+  [255,255,204],[255,237,160],[254,217,118],[254,178,76],
+  [253,141,60],[252,78,42],[227,26,28],[177,0,38]
+];
+function heatColor(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  const n=HEAT_STOPS.length-1,pos=t*n,idx=Math.min(n-1,Math.floor(pos)),f=pos-idx;
+  const c1=HEAT_STOPS[idx],c2=HEAT_STOPS[idx+1];
+  const r=Math.round(c1[0]+(c2[0]-c1[0])*f),g=Math.round(c1[1]+(c2[1]-c1[1])*f),b=Math.round(c1[2]+(c2[2]-c1[2])*f);
+  return `rgb(${r},${g},${b})`;
+}
+function heatColorHex(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  const n=HEAT_STOPS.length-1,pos=t*n,idx=Math.min(n-1,Math.floor(pos)),f=pos-idx;
+  const c1=HEAT_STOPS[idx],c2=HEAT_STOPS[idx+1];
+  const h=v=>Math.round(v).toString(16).padStart(2,'0');
+  return '#'+h(c1[0]+(c2[0]-c1[0])*f)+h(c1[1]+(c2[1]-c1[1])*f)+h(c1[2]+(c2[2]-c1[2])*f);
+}
+/* readable text colour for a given heat t (dark on pale yellow, white on deep red) */
+function heatText(t){return t>=.6?'#fff':'#4A2F00';}
+/* normalise a value against a min/max range → 0..1 */
+function heatT(v,min,max){if(max===min)return .5;return Math.max(0,Math.min(1,(v-min)/(max-min)));}
+/* inline style string for a table cell, given raw value + column range */
+function heatCellStyle(v,min,max){
+  const t=heatT(v,min,max);
+  return `background:${heatColor(t)};color:${heatText(t)};font-weight:600`;
+}
+/* Semantic colours for ageing buckets */
+const BUCKET_CLR={'2':CLR.teal,'3':CLR.teal,'4':CLR.leaf,'5':CLR.leaf,'6':CLR.leaf,
+  '7':CLR.yellow,'8-10':CLR.amber,'11-15':CLR.orange,'16-30':CLR.orange,'30+':CLR.red};
+BUCKETS.forEach((b,i)=>{BUCKET_CLR[b]=heatColorHex(i/(BUCKETS.length-1));});
+
+/* 0=low … 1=high → smooth yellow-orange-red heat ramp (used by bar charts) */
+function riskRamp(t){return heatColor(t);}
+function riskRampL(t){t=Math.max(0,Math.min(1,+t||0));return heatColor(t).replace('rgb','rgba').replace(')',',0.18)');}
+/* rank-based: i=index in sorted-descending array, n=total bars */
+function rankColor(i,n){return riskRamp(n<=1?1:1-(i/(n-1)));}
+
+/* Diverse multi-series palette (enough for doughnuts/stacked) */
+const MPALET=['#E53E3E','#DD6B20','#D69E2E','#276749','#2C7A7B','#2B6CB0','#6B46C1','#B83280','#3FA56F','#C6A000','#E8A13A','#48BB78'];
+const FLAG_CLR={Forward:CLR.green,Reverse:CLR.amber};
+const fmtN=v=>(+v||0).toLocaleString('en-IN');
+function fmtINR(v){v=+v||0;const a=Math.abs(v);
+  if(a>=1e7)return '₹'+(v/1e7).toFixed(2)+' Cr';
+  if(a>=1e5)return '₹'+(v/1e5).toFixed(2)+' L';
+  return '₹'+fmtN(Math.round(v));}
+const bucketOf=d=>{d=+d||0;if(d<=2)return'2';if(d<=7)return String(d);if(d<=10)return'8-10';if(d<=15)return'11-15';if(d<=30)return'16-30';return'30+';};
+const s=v=>(v==null?'':String(v).trim());
+function excelDate(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date&&!isNaN(v))return v.toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'});
+  if(typeof v==='number'){
+    const d=XLSX.SSF.parse_date_code(v);
+    if(d)return String(d.d).padStart(2,'0')+'-'+String(d.m).padStart(2,'0')+'-'+d.y;
+  }
+  return s(v);
+}
+function excelTime(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date&&!isNaN(v))return v.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  if(typeof v==='number'){
+    const sec=Math.round((v%1)*86400),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),ss=sec%60;
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+  }
+  return s(v);
+}
+function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
+
+function normalize(r){
+  const age=+r['intransit_ageing']||0;
+  let fl=s(r.flag).toLowerCase();
+  fl = fl.includes('rev')?'Reverse':'Forward';
+  return {Zone:s(r.Zone)||'Unknown',movement_type:s(r.movement_type)||'Unknown',
+    Awb_number:s(r.Awb_number),MM_origin:s(r.MM_origin)||'Unknown',MM_origin_type:s(r.MM_origin_type)||'Unknown',
+    MM_destination:s(r.MM_destination)||'Unknown',MM_destination_type:s(r.MM_destination_type)||'Unknown',
+    Product_value:+r.Product_value||0,flag:fl,'Lane Code':s(r['Lane Code'])||'Unknown',
+    HOV_flag:s(r.HOV_flag)||'Non-HOV',intransit_ageing:age,bucket:bucketOf(age),
+    vehicle_number:s(r.vehicle_number),vendor_name:s(r.vendor_name)||'Unknown',
+    'POD Name':s(r['POD Name'])||'Unknown',Volumetric_flag:s(r.Volumetric_flag)||'Normal',
+    Manifest_code:s(r.Manifest_code),trip_code:s(r.trip_code)||s(r.trip_code===0?'':r.trip_code),MM_code:s(r.MM_code),
+    'Lane Type':s(r['Lane Type'])||'Unknown',seal_number:s(r.seal_number),Client:s(r.Client)||'Unknown',
+    'IT Date':excelDate(r['IT Date']),'IT Time':excelTime(r['IT Time']),
+    Manifest_origin:s(r.Manifest_origin)||'Unknown',Manifest_Destination:s(r.Manifest_Destination)||'Unknown',
+    Manifest_status:s(r.Manifest_status)||'Unknown',
+    /* carry real Ageing bucket column directly — "A. 0 to 6 days" etc */
+    'Ageing bucket':s(r['Ageing bucket'])||'',
+    intransit_ageing_bucket:s(r['intransit_ageing_bucket'])||'',
+    /* extra columns present in the real Dashboard sheet */
+    Days:+r['Days']||0,
+    ShipmentInManifest:+r['ShipmentInManifest']||0,
+    CurrentShipmentInManifest:+r['CurrentShipmentInManifest']||0,
+    remarks:s(r['remarks']),
+    manifest_in_transit_time:s(r['manifest_in_transit_time'])};
+}
+
+const FILTER_DEFS=[
+  {col:'Zone',label:'Zone'},
+  {col:'flag',label:'Pendency Flow'},
+  {col:'movement_type',label:'Movement Type'},
+  {col:'bucket',label:'Ageing Bucket',order:BUCKETS},
+  {col:'HOV_flag',label:'HOV'},
+  {col:'vendor_name',label:'Vendor'},
+  {col:'MM_origin',label:'Origin'},
+  {col:'MM_destination',label:'Destination'},
+  {col:'Lane Code',label:'Lane'},
+  {col:'POD Name',label:'POD'},
+  {col:'Volumetric_flag',label:'Volumetric'},
+  {col:'seal_number',label:'Seal Number'},
+  {col:'Client',label:'Client'},
+  {col:'IT Date',label:'IT Date'},
+  {col:'IT Time',label:'IT Time'},
+  {col:'Manifest_code',label:'Manifest Code'},
+  {col:'intransit_ageing',label:'Intransit Ageing'},
+  {col:'MM_origin_type',label:'Origin Type'},
+  {col:'MM_destination_type',label:'Dest Type'},
+];
+let filters={}; // col -> Set(selected) | undefined = all
+
+function applyFilters(){
+  const active=Object.entries(filters).filter(([,v])=>v&&v.size);
+  if(!active.length){FILTERED=RAW;}
+  else FILTERED=RAW.filter(r=>active.every(([c,set])=>set.has(String(r[c]??''))));
+  $('#rowCountLbl').textContent=fmtN(FILTERED.length);
+}
+
+/* ---------- multi-select dropdown builder ---------- */
+function buildFilterBar(){
+  const row=$('#filterRow');row.innerHTML='';
+  FILTER_DEFS.forEach(def=>{
+    const uniq=[...new Set(RAW.map(r=>r[def.col]))].map(v=>v==null?'':String(v)).filter(v=>v!=='');
+    def.values=def.order?def.order.filter(b=>uniq.includes(b)).concat(uniq.filter(u=>!def.order.includes(u)))
+                        :uniq.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+    const w=document.createElement('div');w.className='msel';w.dataset.col=def.col;
+    w.innerHTML=`<button class="msel-btn">${def.label} <span class="msel-cnt" style="display:none">0</span> ▾</button>
+      <div class="msel-panel">
+        ${def.values.length>12?'<input placeholder="Search '+def.label.toLowerCase()+'…">':''}
+        <div class="msel-acts"><a data-a="all">Select all</a><a data-a="clear">Clear</a></div>
+        <div class="msel-list"></div>
+      </div>`;
+    row.appendChild(w);
+    const list=w.querySelector('.msel-list'), search=w.querySelector('input');
+    const renderList=q=>{
+      q=(q||'').toLowerCase();
+      const match=def.values.filter(v=>v.toLowerCase().includes(q));
+      const cap=300, sel=filters[def.col];
+      list.innerHTML=match.slice(0,cap).map(v=>`<label><input type="checkbox" value="${v.replace(/"/g,'&quot;')}" ${sel&&sel.has(v)?'checked':''}><span>${v}</span></label>`).join('')
+        +(match.length>cap?`<div class="msel-more">… ${fmtN(match.length-cap)} more — refine search</div>`:'');
+    };
+    renderList('');
+    w.querySelector('.msel-btn').onclick=e=>{e.stopPropagation();
+      const open=w.classList.contains('open');
+      $$('.msel.open').forEach(m=>m.classList.remove('open'));
+      if(!open)w.classList.add('open');};
+    if(search)search.oninput=()=>renderList(search.value);
+    w.querySelector('.msel-panel').onclick=e=>e.stopPropagation();
+    list.onchange=e=>{
+      const v=e.target.value;
+      if(!filters[def.col])filters[def.col]=new Set();
+      e.target.checked?filters[def.col].add(v):filters[def.col].delete(v);
+      if(!filters[def.col].size)delete filters[def.col];
+      syncMsel(def.col);scheduleUpdate();
+    };
+    w.querySelectorAll('.msel-acts a').forEach(a=>a.onclick=()=>{
+      if(a.dataset.a==='all')filters[def.col]=new Set(def.values);
+      else delete filters[def.col];
+      renderList(search?search.value:'');syncMsel(def.col);scheduleUpdate();
+    });
+    def._w=w; def._renderList=renderList; def._search=search;
+  });
+  document.addEventListener('click',()=>$$('.msel.open').forEach(m=>m.classList.remove('open')));
+  $('#clearAll').onclick=()=>{filters={};FILTER_DEFS.forEach(d=>{d._renderList(d._search?d._search.value:'');syncMsel(d.col);});scheduleUpdate();};
+}
+function syncMsel(col){
+  const def=FILTER_DEFS.find(d=>d.col===col);if(!def||!def._w)return;
+  const n=filters[col]?filters[col].size:0;
+  const btn=def._w.querySelector('.msel-btn'),cnt=def._w.querySelector('.msel-cnt');
+  btn.classList.toggle('on',n>0);cnt.style.display=n?'':'none';cnt.textContent=n;
+}
+function externalToggleFilter(col,val){ // chart click-to-filter
+  if(!filters[col])filters[col]=new Set();
+  filters[col].has(val)?filters[col].delete(val):filters[col].add(val);
+  if(!filters[col].size)delete filters[col];
+  const def=FILTER_DEFS.find(d=>d.col===col);
+  if(def&&def._renderList){def._renderList(def._search?def._search.value:'');syncMsel(col);}
+  scheduleUpdate();
+}
+let updT=null;
+function scheduleUpdate(){clearTimeout(updT);updT=setTimeout(updateAll,180);}
+
+/* =============================================================
+   AGGREGATION HELPERS
+============================================================= */
+function groupSum(data,key,val){const m=new Map();for(const r of data){const k=r[key];m.set(k,(m.get(k)||0)+(val?r[val]:1));}return m;}
+function topEntries(map,n,order){
+  let e=[...map.entries()];
+  if(order)e.sort((a,b)=>order.indexOf(a[0])-order.indexOf(b[0]));
+  else e.sort((a,b)=>b[1]-a[1]);
+  return n?e.slice(0,n):e;
+}
+function groupAvg(data,key,val,minN){
+  const sum=new Map(),cnt=new Map();
+  for(const r of data){const k=r[key];sum.set(k,(sum.get(k)||0)+r[val]);cnt.set(k,(cnt.get(k)||0)+1);}
+  const out=new Map();
+  for(const[k,v]of sum){if(!minN||cnt.get(k)>=minN)out.set(k,v/cnt.get(k));}
+  return {avg:out,cnt};
+}
+function paretoBuild(data,key,n=25){
+  const all=topEntries(groupSum(data,key,'Product_value'));
+  const total=all.reduce((a,[,v])=>a+v,0)||1;
+  let cum=0;const labels=[],vals=[],cums=[];
+  all.slice(0,n).forEach(([k,v])=>{cum+=v;labels.push(k);vals.push(v);cums.push(+(cum/total*100).toFixed(1));});
+  return {labels,series:[{name:'Value at risk (₹)',data:vals,kindOverride:'bar',yAxis:'y'},
+                         {name:'Cumulative %',data:cums,kindOverride:'line',yAxis:'y1'}],pareto:true};
+}
+</script>
+<script>
+/* =============================================================
+   CHART REGISTRY  (every card: lock toggle + swap + CSV/XLSX)
+============================================================= */
+Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
+Chart.defaults.color='#6B667D';
+Chart.defaults.plugins.legend.labels.boxWidth=12;
+
+const CHARTS=[
+/* ---- OVERVIEW ---- */
+{id:'c_zone',page:'overview',title:'Pending Value by Zone',sub:'click a bar to drill the whole dashboard',kind:'bar',swap:['bar','doughnut'],dim:'Zone',
+ build:d=>simple(topEntries(groupSum(d,'Zone','Product_value')),'Value at risk (₹)')},
+{id:'c_flag',page:'overview',title:'Forward vs Reverse Pendency (₹)',sub:'fwd intransit vs rev intransit value',kind:'doughnut',swap:['doughnut','bar'],dim:'flag',
+ build:d=>simple(topEntries(groupSum(d,'flag','Product_value')),'Value (₹)')},
+{id:'c_aging',page:'overview',title:'Value by In-transit Ageing Bucket',sub:'product value locked per ageing band (days)',kind:'bar',swap:['bar','line'],dim:'bucket',
+ build:d=>simple(topEntries(groupSum(d,'bucket','Product_value'),0,BUCKETS),'Value (₹)')},
+{id:'c_lanes',page:'overview',title:'Top 10 Lanes by Value at Risk',sub:'lane-level ₹ exposure — fwd + rev',kind:'hbar',swap:['hbar','bar'],dim:'Lane Code',
+ build:d=>simple(topEntries(groupSum(d,'Lane Code','Product_value'),10),'Value (₹)')},
+/* ---- PENDENCY ---- */
+{id:'c_move',page:'pendency',title:'Pendency by Movement Type',sub:'AWB count — zonal, intracity, national…',kind:'bar',swap:['bar','doughnut'],dim:'movement_type',
+ build:d=>simple(topEntries(groupSum(d,'movement_type',null)),'Pending AWBs')},
+{id:'c_agingmix',page:'pendency',title:'Ageing Mix — Shipments vs Value',sub:'are old buckets few-but-expensive?',kind:'bar',swap:['bar','line'],dim:'bucket',
+ build:d=>{const c=groupSum(d,'bucket',null),v=groupSum(d,'bucket','Product_value');
+   const labels=BUCKETS.filter(b=>c.has(b));
+   return {labels,series:[{name:'AWBs',data:labels.map(l=>c.get(l)||0),yAxis:'y'},
+                          {name:'Value (₹)',data:labels.map(l=>v.get(l)||0),yAxis:'y1'}]};}},
+{id:'c_orig',page:'pendency',title:'Top Origins by Pending Shipments',sub:'where freight starts piling up',kind:'hbar',swap:['hbar','bar'],dim:'MM_origin',
+ build:d=>simple(topEntries(groupSum(d,'MM_origin',null),12),'Pending AWBs')},
+{id:'c_dest',page:'pendency',title:'Top Destinations by Pending Shipments',sub:'inbound congestion points',kind:'hbar',swap:['hbar','bar'],dim:'MM_destination',
+ build:d=>simple(topEntries(groupSum(d,'MM_destination',null),12),'Pending AWBs')},
+{id:'c_zoneflag',page:'pendency',title:'Forward / Reverse Split by Zone',sub:'stacked ₹ value',kind:'stacked',swap:['stacked','bar'],dim:'Zone',
+ build:d=>{const zones=topEntries(groupSum(d,'Zone','Product_value')).map(e=>e[0]);
+   const f=groupSum(d.filter(r=>r.flag==='Forward'),'Zone','Product_value');
+   const v=groupSum(d.filter(r=>r.flag==='Reverse'),'Zone','Product_value');
+   return {labels:zones,series:[{name:'Forward (₹)',data:zones.map(z=>f.get(z)||0)},{name:'Reverse (₹)',data:zones.map(z=>v.get(z)||0)}]};}},
+/* ---- VALUE ---- */
+{id:'c_vpareto',page:'value',title:'Vendor Trends — 80/20 of Value at Risk',sub:'which carriers hold the money',kind:'pareto',swap:['pareto'],dim:'vendor_name',
+ build:d=>paretoBuild(d,'vendor_name',25)},
+{id:'c_hov',page:'value',title:'HOV vs Non-HOV Value',sub:'high-value shipments concentration',kind:'doughnut',swap:['doughnut','bar'],dim:'HOV_flag',
+ build:d=>simple(topEntries(groupSum(d,'HOV_flag','Product_value')),'Value (₹)')},
+{id:'c_abc',page:'value',title:'ABC Classification of Pending AWBs',sub:'A = top 70% of value · B next 20% · C tail 10%',kind:'bar',swap:['bar'],
+ build:d=>{const sorted=[...d].sort((a,b)=>b.Product_value-a.Product_value);
+   const tot=sorted.reduce((a,r)=>a+r.Product_value,0)||1;let cum=0;
+   const out={A:{v:0,c:0},B:{v:0,c:0},C:{v:0,c:0}};
+   for(const r of sorted){cum+=r.Product_value;const cls=cum<=tot*.7?'A':cum<=tot*.9?'B':'C';out[cls].v+=r.Product_value;out[cls].c++;}
+   return {labels:['A — premium','B — medium','C — tail'],
+     series:[{name:'Value (₹)',data:[out.A.v,out.B.v,out.C.v],yAxis:'y'},
+             {name:'AWB count',data:[out.A.c,out.B.c,out.C.c],yAxis:'y1'}]};}},
+{id:'c_pod',page:'value',title:'Value at Risk by POD',sub:'proof-of-delivery clusters',kind:'hbar',swap:['hbar','bar'],dim:'POD Name',
+ build:d=>simple(topEntries(groupSum(d,'POD Name','Product_value'),12),'Value (₹)')},
+/* ---- ROOT CAUSE ---- */
+{id:'c_lpareto',page:'rootcause',title:'Lane Trends — Value Concentration',sub:'the vital-few lanes to attack first',kind:'pareto',swap:['pareto'],dim:'Lane Code',
+ build:d=>paretoBuild(d,'Lane Code',25)},
+{id:'c_worstorig',page:'rootcause',title:'Slowest Origins (Avg Ageing, ≥300 AWBs)',sub:'systemic delay sources',kind:'hbar',swap:['hbar','bar'],dim:'MM_origin',
+ build:d=>{const{avg}=groupAvg(d,'MM_origin','intransit_ageing',300);
+   return simple(topEntries(avg,12).map(([k,v])=>[k,+v.toFixed(1)]),'Avg ageing (days)');}},
+{id:'c_worstvend',page:'rootcause',title:'Slowest Vendors (Avg Ageing, ≥200 AWBs)',sub:'carrier accountability view',kind:'hbar',swap:['hbar','bar'],dim:'vendor_name',
+ build:d=>{const{avg}=groupAvg(d,'vendor_name','intransit_ageing',200);
+   return simple(topEntries(avg,12).map(([k,v])=>[k,+v.toFixed(1)]),'Avg ageing (days)');}},
+{id:'c_volm',page:'rootcause',title:'Volumetric vs Normal — Ageing Pressure',sub:'does bulky freight wait longer?',kind:'bar',swap:['bar','doughnut'],dim:'Volumetric_flag',
+ build:d=>{const{avg,cnt}=groupAvg(d,'Volumetric_flag','intransit_ageing');
+   const labels=[...avg.keys()];
+   return {labels,series:[{name:'Avg ageing (days)',data:labels.map(l=>+avg.get(l).toFixed(1)),yAxis:'y'},
+                          {name:'AWBs',data:labels.map(l=>cnt.get(l)),yAxis:'y1'}]};}},
+];
+function simple(entries,name){return {labels:entries.map(e=>e[0]),series:[{name,data:entries.map(e=>e[1])}]};}
+
+/* ---------- card factory ---------- */
+function mountCharts(){
+  CHARTS.forEach(def=>{
+    const grid=$('#grid-'+def.page);
+    const card=document.createElement('div');card.className='card chart-card';card.id='card-'+def.id;
+    card.innerHTML=`<div class="card-head">
+        <div><h3>${def.title}</h3><span class="sub">${def.sub||''}</span></div>
+        <div class="card-tools">
+          <button class="tool" data-t="swap" title="Show table view">⇄</button>
+          <button class="tool" data-t="lock" title="Static/Dynamic toggle — freeze this chart">🔓</button>
+          <button class="tool" data-t="csv" title="Download chart data as CSV">CSV</button>
+          <button class="tool" data-t="jpg" title="Download chart as JPG image">JPG</button>
+        </div></div>
+      <span class="frozen-tag">🔒 STATIC — ignoring filters</span>
+      <div class="chart-wrap"><canvas></canvas></div>
+      <div class="chart-table-wrap"></div>
+      ${def.dim?'<div class="hint">Tip: click an element to filter every dynamic chart by that '+def.dim.replace(/_/g,' ')+'.</div>':''}`;
+    grid.appendChild(card);
+    def.canvas=card.querySelector('canvas');def.card=card;def.tableWrap=card.querySelector('.chart-table-wrap');
+    def.locked=false;def.snapshot=null;def.tableMode=false;def.tableSort={key:null,dir:1};
+    card.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{
+      const t=b.dataset.t;
+      if(t==='lock'){def.locked=!def.locked;b.textContent=def.locked?'🔒':'🔓';
+        b.classList.toggle('lock-on',def.locked);card.classList.toggle('frozen',def.locked);
+        b.title=def.locked?'Chart is STATIC (frozen). Click to make it Dynamic again.':'Static/Dynamic toggle — freeze this chart';
+        if(!def.locked)renderChart(def,def.build(FILTERED),true);}
+      else if(t==='swap'){toggleChartTable(def,b);}
+      else if(t==='csv')exportChart(def,'csv');
+      else if(t==='jpg'){const c=def.canvas;if(!c)return;const url=c.toDataURL('image/jpeg',0.95);const a=document.createElement('a');a.href=url;a.download=def.id+'_chart.jpg';a.click();}
+    });
+  });
+}
+function chartRows(def){
+  const b=def.locked?def.snapshot:def.snapshot; // snapshot always holds current displayed data
+  if(!b)return[];
+  return b.labels.map((l,i)=>{const row={[def.dim||'Label']:l};b.series.forEach(s=>row[s.name]=s.data[i]);return row;});
+}
+function toggleChartTable(def,btn){
+  def.tableMode=!def.tableMode;
+  def.card.classList.toggle('table-mode',def.tableMode);
+  btn.classList.toggle('table-on',def.tableMode);
+  btn.title=def.tableMode?'Show chart view':'Show table view';
+  if(def.tableMode)renderChartTable(def);
+  else if(def.chart)def.chart.resize();
+}
+function renderChartTable(def){
+  if(!def.tableWrap)return;
+  const rows=chartRows(def);
+  if(!rows.length){def.tableWrap.innerHTML='<div class="chart-empty">No data available</div>';return;}
+  const cols=Object.keys(rows[0]);
+  const sort=def.tableSort||{key:null,dir:1};
+  const sorted=[...rows];
+  if(sort.key){
+    sorted.sort((a,b)=>{
+      const av=a[sort.key],bv=b[sort.key];
+      const an=typeof av==='number'?av:parseFloat(String(av).replace(/,/g,''));
+      const bn=typeof bv==='number'?bv:parseFloat(String(bv).replace(/,/g,''));
+      if(!Number.isNaN(an)&&!Number.isNaN(bn))return (an-bn)*sort.dir;
+      return String(av).localeCompare(String(bv),undefined,{numeric:true,sensitivity:'base'})*sort.dir;
+    });
+  }
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const numCols=cols.filter(c=>sorted.some(r=>typeof r[c]==='number'));
+  const ranges={};numCols.forEach(c=>{const vs=sorted.map(r=>+r[c]||0);ranges[c]=[Math.min(...vs),Math.max(...vs)];});
+  def.tableWrap.innerHTML=`<table class="chart-data-table"><thead><tr>${cols.map(c=>{
+    const mark=sort.key===c?(sort.dir===1?'▲':'▼'):'↕';
+    return `<th data-k="${esc(c)}">${esc(c)}<span class="sort-mark">${mark}</span></th>`;
+  }).join('')}</tr></thead><tbody>${sorted.map(r=>`<tr>${cols.map(c=>{
+    const v=r[c],num=typeof v==='number';
+    const style=num&&ranges[c]?` style="${heatCellStyle(v,ranges[c][0],ranges[c][1])}"`:'';
+    return `<td class="${num?'num':''}"${style}>${num?fmtN(v):esc(v)}</td>`;
+  }).join('')}</tr>`).join('')}</tbody></table>`;
+  def.tableWrap.querySelectorAll('th').forEach(th=>th.onclick=()=>{
+    const key=th.dataset.k;
+    def.tableSort={key,dir:sort.key===key?-sort.dir:1};
+    renderChartTable(def);
+  });
+}
+function exportChart(def,fmt){
+  const rows=chartRows(def);if(!rows.length)return;
+  const name=def.id+'_'+(def.locked?'static':'dynamic');
+  if(fmt==='csv'){
+    const cols=Object.keys(rows[0]);
+    const csv=[cols.join(',')].concat(rows.map(r=>cols.map(c=>'"'+String(r[c]).replace(/"/g,'""')+'"').join(','))).join('\n');
+    dl(new Blob([csv],{type:'text/csv'}),name+'.csv');
+  }else{
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'chart');XLSX.writeFile(wb,name+'.xlsx');
+  }
+}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+
+/* ---------- chart render ---------- */
+function chartLabelColor(def,label,index){
+  if(def.id==='c_flag'&&FLAG_CLR[label])return FLAG_CLR[label];
+  return MPALET[index%MPALET.length];
+}
+function renderChart(def,built,force){
+  if(!built)return;
+  def.snapshot=built;
+  const horiz=def.kind==='hbar';
+  const isD=def.kind==='doughnut';
+  const isBucket=def.dim==='bucket'||def.id==='c_aging'||def.id==='c_agingmix';
+  const isAgeing=/(ageing|age|slow|delay)/i.test(def.id+def.title); // higher=worse
+  const n=built.labels.length;
+
+  const datasets=built.series.map((sr,i)=>{
+    const base={label:sr.name,data:sr.data,borderRadius:8,maxBarThickness:46,borderSkipped:false};
+    const lineLike=(sr.kindOverride==='line')||def.kind==='line';
+
+    /* ── Doughnut: diverse colourful palette ── */
+    if(isD)return{...base,
+      backgroundColor:built.labels.map((l,j)=>chartLabelColor(def,l,j)),
+      borderWidth:2,borderColor:'#fff',
+      hoverBackgroundColor:built.labels.map((l,j)=>chartLabelColor(def,l,j)+'CC'),
+      hoverBorderWidth:3};
+
+    /* ── Line: coloured lines ── */
+    if(lineLike){
+      const lc=i===0?CLR.teal:(i===1?CLR.orange:CLR.purple);
+      return{...base,type:'line',borderColor:lc,backgroundColor:lc.replace(')',',0.12)').replace('rgb','rgba'),
+        fill:def.kind==='line',tension:.4,pointRadius:4,pointHoverRadius:7,
+        pointBackgroundColor:lc,pointBorderColor:'#fff',pointBorderWidth:2,
+        yAxisID:sr.yAxis||'y'};}
+
+    /* ── Bar: rank-based risk heat ── */
+    const vals=sr.data;
+    const max=Math.max(...vals.map(Math.abs))||1;
+
+    let bgColors;
+    if(def.id==='c_flag'){
+      bgColors=built.labels.map((l,j)=>chartLabelColor(def,l,j));
+    } else if(isBucket){
+      // bucket chart: semantic colours per bucket
+      bgColors=built.labels.map(l=>BUCKET_CLR[l]||CLR.leaf);
+    } else if(built.series.length>1){
+      // multi-series stacked/grouped: distinct series colours
+      const sc=[CLR.teal,CLR.orange,CLR.amber,CLR.purple,CLR.sky,CLR.pink];
+      bgColors=vals.map(()=>sc[i%sc.length]);
+    } else if(isAgeing){
+      // ageing charts: higher = worse → red
+      bgColors=vals.map(v=>riskRamp(v/max));
+    } else {
+      // value/count charts: rank position → top=red, rest fade
+      const sorted=[...vals].sort((a,b)=>b-a);
+      bgColors=vals.map(v=>rankColor(sorted.indexOf(v),n));
+    }
+
+    // border: slightly darker shade of fill
+    const borders=bgColors.map(c=>c+'CC');
+
+    return{...base,type:'bar',
+      backgroundColor:bgColors,
+      borderColor:borders,
+      borderWidth:1.5,
+      hoverBackgroundColor:bgColors.map(c=>c+'EE'),
+      hoverBorderColor:'#fff',hoverBorderWidth:2,
+      yAxisID:sr.yAxis||'y'};
+  });
+
+  const dual=built.series.some(sr=>sr.yAxis==='y1');
+  const cfg={type:isD?'doughnut':(def.kind==='line'?'line':'bar'),
+    data:{labels:built.labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:horiz?'y':'x',
+      animation:{duration:500,easing:'easeOutQuart'},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:isD||built.series.length>1,position:'bottom',
+          labels:{padding:14,usePointStyle:true,pointStyleWidth:10}},
+        tooltip:{
+          backgroundColor:'rgba(30,41,59,0.94)',padding:12,cornerRadius:10,
+          titleColor:'#4F46E5',titleFont:{weight:'700',size:12},
+          bodyColor:'#E2E8F0',bodyFont:{size:12},
+          borderColor:'rgba(79,70,229,0.25)',borderWidth:1,
+          callbacks:{label:c=>{
+            const v=c.parsed[horiz?'x':'y']??c.parsed;
+            const isMoney=/₹|Value/i.test(c.dataset.label||'');
+            const isPct=/%/.test(c.dataset.label||'');
+            return ' '+(c.dataset.label||'')+': '+(isPct?v+'%':(isMoney?fmtINR(v):fmtN(v)));
+          }}}},
+      scales:isD?{}:{
+        x:{stacked:def.kind==='stacked',
+           grid:{display:horiz,color:'rgba(0,0,0,0.04)'},
+           ticks:{autoSkip:true,maxRotation:45,color:'#6B667D',
+             callback(v){if(horiz)return fmtShort(v);const l=this.getLabelForValue(v);return String(l).length>14?String(l).slice(0,13)+'…':l;}}},
+        y:{stacked:def.kind==='stacked',
+           grid:{color:'rgba(0,0,0,0.05)'},
+           ticks:{color:'#6B667D',callback(v){if(!horiz)return fmtShort(v);const l=this.getLabelForValue(v);return String(l).length>20?String(l).slice(0,19)+'…':l;}}},
+        ...(dual?{y1:{position:'right',grid:{display:false},
+          ticks:{color:CLR.orange,callback:v=>def.kind==='pareto'?v+'%':fmtShort(v)},
+          ...(def.kind==='pareto'?{min:0,max:100}:{})}}:{})},
+      onClick:(e,els)=>{
+        if(!def.dim||def.locked||!els.length)return;
+        const lbl=def.chart.data.labels[els[0].index];
+        externalToggleFilter(def.dim,lbl);
+      }}};
+  if(def.chart&&!force){def.chart.data=cfg.data;def.chart.options=cfg.options;def.chart.update();}
+  else{if(def.chart)def.chart.destroy();def.chart=new Chart(def.canvas,cfg);}
+  if(def.tableMode)renderChartTable(def);
+}
+function fmtShort(v){if(typeof v!=='number')return v;const a=Math.abs(v);
+  if(a>=1e7)return (v/1e7).toFixed(1)+'Cr';if(a>=1e5)return (v/1e5).toFixed(1)+'L';
+  if(a>=1e3)return (v/1e3).toFixed(0)+'k';return v;}
+</script>
+<script>
+/* =============================================================
+   KPIs · HERO · INSIGHTS
+============================================================= */
+const KPIS=[
+ {id:'k1',lab:'PENDING SHIPMENTS',fn:d=>fmtN(d.length),sub:d=>pct(d.length,RAW.length)+' of file',light:()=> 'g'},
+ {id:'k2',lab:'PENDING VALUE',fn:d=>fmtINR(sumV(d)),sub:d=>pct(sumV(d),sumV(RAW))+' of total value',light:()=> 'g'},
+ {id:'k3',lab:'AVG AGEING (DAYS)',fn:d=>avgAge(d).toFixed(1),sub:()=> 'target ≤ 5 days',light:d=>avgAge(d)<=5?'g':avgAge(d)<=10?'a':'r'},
+ {id:'k4',lab:'CRITICAL 30+ DAY VALUE',fn:d=>fmtINR(sumV(d.filter(r=>r.intransit_ageing>30))),sub:d=>fmtN(d.filter(r=>r.intransit_ageing>30).length)+' AWBs stuck 30+ days',light:d=>{const p=sumV(d.filter(r=>r.intransit_ageing>30))/(sumV(d)||1);return p<.05?'g':p<.15?'a':'r';}},
+ {id:'k5',lab:'SLA BREACH % (>7 DAYS)',fn:d=>pct(d.filter(r=>r.intransit_ageing>7).length,d.length),sub:d=>fmtN(d.filter(r=>r.intransit_ageing>7).length)+' breached AWBs',light:d=>{const p=d.filter(r=>r.intransit_ageing>7).length/(d.length||1);return p<.15?'g':p<.3?'a':'r';}},
+ {id:'k6',lab:'HOV VALUE EXPOSURE',fn:d=>fmtINR(sumV(d.filter(r=>r.HOV_flag==='HOV'))),sub:d=>pct(sumV(d.filter(r=>r.HOV_flag==='HOV')),sumV(d))+' of pending value',light:()=> 'a'},
+];
+const sumV=d=>{let t=0;for(const r of d)t+=r.Product_value;return t;};
+const avgAge=d=>{if(!d.length)return 0;let t=0;for(const r of d)t+=r.intransit_ageing;return t/d.length;};
+const pct=(a,b)=>b?((a/b*100).toFixed(1)+'%'):'0%';
+const LIGHT={g:'var(--green)',a:'var(--amber)',r:'var(--red)'};
+
+function renderKPIs(){
+  const g=$('#kpiGrid');
+  g.innerHTML=KPIS.map(k=>`<div class="kpi">
+    <div class="lab"><span class="dot" style="background:${LIGHT[k.light(FILTERED)]}"></span>${k.lab}</div>
+    <div class="val">${k.fn(FILTERED)}</div>
+    <div class="sub">${k.sub(FILTERED)}</div></div>`).join('');
+}
+let heroChart=null;
+function renderHero(){
+  $('#heroVal').textContent=fmtINR(sumV(FILTERED));
+  $('#heroCap').textContent=fmtN(FILTERED.length)+' in-transit AWBs · '+fmtN(new Set(FILTERED.map(r=>r['Lane Code'])).size)+' lanes · '+fmtN(new Set(FILTERED.map(r=>r.vendor_name)).size)+' vendors';
+  const v=groupSum(FILTERED,'bucket','Product_value');
+  const labels=BUCKETS.filter(b=>v.has(b));
+  const data=labels.map(l=>v.get(l));
+  const cfg={type:'line',data:{labels,datasets:[{data,borderColor:'#C7D2FE',backgroundColor:'rgba(199,210,254,.18)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#C7D2FE'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)+' in '+c.label+' day bucket'}}},
+      scales:{x:{ticks:{color:'#C7D2FE',font:{size:10}},grid:{display:false}},
+              y:{ticks:{color:'#C7D2FE',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'rgba(255,255,255,.12)'}}}}};
+  if(heroChart){heroChart.data=cfg.data;heroChart.update();}else heroChart=new Chart($('#heroSpark'),cfg);
+}
+function renderInsights(){
+  const d=FILTERED,L=[];
+  if(!d.length){$('#insightList').innerHTML='<li>No rows match the current filters — clear some checkboxes to widen the view.</li>';return;}
+  const tv=sumV(d);
+  const zone=topEntries(groupSum(d,'Zone','Product_value'),1)[0];
+  if(zone)L.push(`<b>${zone[0]} zone</b> holds <b>${pct(zone[1],tv)}</b> of pending value (${fmtINR(zone[1])}) — the single biggest geographic exposure right now.`);
+  const {avg}=groupAvg(d,'Zone','intransit_ageing',500);
+  const worstZ=topEntries(avg,1)[0];
+  if(worstZ)L.push(`<b>${worstZ[0]}</b> is the slowest zone at <b>${worstZ[1].toFixed(1)} days</b> average ageing — prioritise clearance drives here.`);
+  const vend=topEntries(groupSum(d,'vendor_name','Product_value'),1)[0];
+  if(vend)L.push(`<b>${vend[0]}</b> alone carries <b>${pct(vend[1],tv)}</b> of value at risk (${fmtINR(vend[1])}). Escalate with this partner first.`);
+  const crit=d.filter(r=>r.intransit_ageing>30);
+  L.push(`<b>${fmtN(crit.length)} AWBs (${fmtINR(sumV(crit))})</b> have crossed <b>30 days</b> in transit — flag as business-critical for write-off prevention.`);
+  const hov=d.filter(r=>r.HOV_flag==='HOV');
+  if(hov.length)L.push(`HOV shipments are only <b>${pct(hov.length,d.length)}</b> of AWBs but <b>${pct(sumV(hov),tv)}</b> of value — a classic Pareto: secure these ${fmtN(hov.length)} consignments first.`);
+  const lane=topEntries(groupSum(d,'Lane Code','Product_value'),1)[0];
+  if(lane)L.push(`Top lane <b>${lane[0]}</b> = ${fmtINR(lane[1])} at risk. Clearing it alone recovers ${pct(lane[1],tv)} of exposure.`);
+  $('#insightList').innerHTML=L.map(x=>'<li>'+x+'</li>').join('');
+}
+
+/* =============================================================
+   WHAT-IF SIMULATOR
+============================================================= */
+function refreshWhatIfEntities(){
+  const dim=$('#wiDim').value;
+  const top=topEntries(groupSum(FILTERED,dim,'Product_value'),30);
+  const sel=$('#wiEnt');const cur=sel.value;
+  sel.innerHTML=top.map(([k,v])=>`<option value="${k.replace(/"/g,'&quot;')}">${k} — ${fmtINR(v)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+  runWhatIf();
+}
+function runWhatIf(){
+  const dim=$('#wiDim').value,ent=$('#wiEnt').value,p=+$('#wiPct').value/100;
+  $('#wiPctLbl').textContent=Math.round(p*100)+'%';
+  const rows=FILTERED.filter(r=>r[dim]===ent);
+  const base=sumV(rows), crit=sumV(rows.filter(r=>r.intransit_ageing>30));
+  $('#wiBase').textContent=fmtINR(base);
+  $('#wiGain').textContent=fmtINR(base*p);
+  $('#wiCrit').textContent=fmtINR(crit*p);
+}
+$('#wiDim') && null;
+
+/* =============================================================
+   INVESTIGATION TABLE
+============================================================= */
+let tblPage=1;const PAGE=20;let tblRows=[];
+function tableData(){
+  const q=$('#tblSearch').value.trim().toLowerCase();
+  if(!q)return FILTERED;
+  return FILTERED.filter(r=>r.Awb_number.toLowerCase().includes(q)||r['Lane Code'].toLowerCase().includes(q)
+    ||r.vendor_name.toLowerCase().includes(q)||r.vehicle_number.toLowerCase().includes(q)
+    ||r.Manifest_code.toLowerCase().includes(q)||r.MM_origin.toLowerCase().includes(q)||r.MM_destination.toLowerCase().includes(q));
+}
+function renderTable(reset){
+  if(reset)tblPage=1;
+  tblRows=tableData();
+  const pages=Math.max(1,Math.ceil(tblRows.length/PAGE));
+  if(tblPage>pages)tblPage=pages;
+  const slice=tblRows.slice((tblPage-1)*PAGE,tblPage*PAGE);
+  $('#tblBody').innerHTML=slice.map(r=>`<tr>
+    <td><b>${r.Awb_number}</b></td>
+    <td><span class="badge ${r.flag==='Forward'?'b-fwd':'b-rev'}">${r.flag}</span></td>
+    <td>${r.Zone}</td><td>${r.MM_origin} → ${r.MM_destination}</td><td>${r['Lane Code']}</td>
+    <td>${r.movement_type}</td><td>${r.vendor_name}</td>
+    <td>${r.intransit_ageing>30?'<span class="badge b-crit">'+r.intransit_ageing+'d</span>':r.intransit_ageing+'d'}</td>
+    <td>${r.bucket}</td><td>${fmtN(r.Product_value)}</td><td>${r.HOV_flag}</td>
+    <td>${r.vehicle_number}</td><td>${r.Manifest_code}</td><td>${r.trip_code||'—'}</td><td>${r['POD Name']}</td></tr>`).join('')
+    ||'<tr><td colspan="15" style="text-align:center;padding:26px;color:var(--mut)">No shipments match — widen filters or change the search.</td></tr>';
+  $('#tblCount').textContent=fmtN(tblRows.length)+' rows';
+  $('#pgLbl').textContent='Page '+tblPage+' / '+pages;
+  $('#pgPrev').disabled=tblPage<=1;$('#pgNext').disabled=tblPage>=pages;
+}
+function exportTable(fmt){
+  const cap=60000;
+  const rows=tblRows.slice(0,cap).map(r=>({AWB:r.Awb_number,Flow:r.flag,Zone:r.Zone,Origin:r.MM_origin,Destination:r.MM_destination,
+    Lane:r['Lane Code'],Movement:r.movement_type,Vendor:r.vendor_name,Ageing_days:r.intransit_ageing,Bucket:r.bucket,
+    Product_value:r.Product_value,HOV:r.HOV_flag,Vehicle:r.vehicle_number,Manifest:r.Manifest_code,Trip:r.trip_code,POD:r['POD Name']}));
+  if(!rows.length)return;
+  if(tblRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows. Apply filters to narrow the set.');
+  if(fmt==='csv'){const cols=Object.keys(rows[0]);
+    const csv=[cols.join(',')].concat(rows.map(r=>cols.map(c=>'"'+String(r[c]).replace(/"/g,'""')+'"').join(','))).join('\n');
+    dl(new Blob([csv],{type:'text/csv'}),'investigation_export.csv');}
+  else{const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'shipments');XLSX.writeFile(wb,'investigation_export.xlsx');}
+}
+
+/* =============================================================
+   MASTER UPDATE
+============================================================= */
+function updateAll(){
+  applyFilters();
+  renderKPIs();renderHero();renderInsights();
+  CHARTS.forEach(def=>{if(!def.locked)renderChart(def,def.build(FILTERED));});
+  refreshWhatIfEntities();
+  renderTable(true);
+  renderLaneView();
+  renderManifestView();
+  renderHOV();
+  renderLHRecovery();
+  renderLock();
+}
+</script>
+<script>
+/* =============================================================
+   LANE VIEW  — Top-20 lanes, Lane-Type rollup, per-column AWB table
+============================================================= */
+const LV_DETAIL_COLS=[
+  {k:'Awb_number',  label:'AWB',       type:'text', cls:'mono'},
+  {k:'Lane Code',   label:'Lane Code', type:'text'},
+  {k:'Lane Type',   label:'Lane Type', type:'cat'},
+  {k:'flag',        label:'Flow',      type:'cat'},
+  {k:'intransit_ageing', label:'Ageing (d)', type:'num'},
+  {k:'bucket',      label:'Bucket',    type:'cat', order:BUCKETS},
+  {k:'Product_value', label:'Value ₹', type:'num'},
+  {k:'Manifest_code', label:'Manifest', type:'text', cls:'mono'},
+  {k:'trip_code',   label:'Trip Code', type:'text', cls:'mono'},
+  {k:'seal_number', label:'Seal No',   type:'text', cls:'mono'},
+];
+let lvColF={};                              // column filters: text {q} | num {min,max} | cat Set
+let lvSort={k:'Product_value',dir:-1};
+let lvLaneSort={k:'value',dir:-1};
+let lvTypeSort={k:'value',dir:-1};
+let lvPage=1; const LV_PAGE=25;
+let lvBuilt=false, lvDetailRows=[], lvLaneExport=[], lvTypeExport=[];
+
+function lvCatOptions(c){
+  const u=[...new Set(RAW.map(r=>r[c.k]))].filter(x=>x!=='');
+  if(c.order)return c.order.filter(o=>u.includes(o)).concat(u.filter(x=>!c.order.includes(x)));
+  return u.sort((a,b)=>String(a).localeCompare(String(b)));
+}
+
+/* ---- build sortable header + per-column filter row (once) ---- */
+function lvBuildHeaders(){
+  $('#lvDetHead').innerHTML=LV_DETAIL_COLS.map(c=>
+    `<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="arr"></span></th>`).join('');
+  $('#lvDetFilters').innerHTML=LV_DETAIL_COLS.map(c=>{
+    if(c.type==='text')return `<th><input data-k="${c.k}" data-ft="text" placeholder="contains…"></th>`;
+    if(c.type==='num') return `<th><div class="lv-rng"><input data-k="${c.k}" data-ft="min" type="number" placeholder="min"><input data-k="${c.k}" data-ft="max" type="number" placeholder="max"></div></th>`;
+    const opts=lvCatOptions(c);
+    return `<th><div class="lv-csel" data-k="${c.k}"><button class="lv-csel-btn">All ▾</button>
+      <div class="lv-csel-panel">${opts.map(o=>`<label><input type="checkbox" value="${o.replace(/"/g,'&quot;')}"><span>${o}</span></label>`).join('')}</div></div></th>`;
+  }).join('');
+
+  $$('#lvDetHead th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k, col=LV_DETAIL_COLS.find(c=>c.k===k);
+    lvSort.dir = lvSort.k===k ? -lvSort.dir : (col.type==='text'?1:-1);
+    lvSort.k=k; lvRenderDetail(true);
+  });
+  $$('#lvDetFilters input[data-ft]').forEach(inp=>inp.oninput=()=>{
+    const k=inp.dataset.k, ft=inp.dataset.ft, v=inp.value.trim();
+    if(ft==='text'){ if(v) lvColF[k]={q:v.toLowerCase()}; else delete lvColF[k]; }
+    else { lvColF[k]=lvColF[k]||{}; if(v==='') delete lvColF[k][ft]; else lvColF[k][ft]=+v;
+           if(lvColF[k].min==null && lvColF[k].max==null) delete lvColF[k]; }
+    lvSchedule();
+  });
+  $$('#lvDetFilters .lv-csel').forEach(cs=>{
+    const k=cs.dataset.k, btn=cs.querySelector('.lv-csel-btn');
+    btn.onclick=e=>{e.stopPropagation();const open=cs.classList.contains('open');
+      $$('.lv-csel.open').forEach(o=>o.classList.remove('open')); if(!open)cs.classList.add('open');};
+    cs.querySelector('.lv-csel-panel').onclick=e=>e.stopPropagation();
+    cs.querySelectorAll('input').forEach(ch=>ch.onchange=()=>{
+      const sel=new Set([...cs.querySelectorAll('input:checked')].map(x=>x.value));
+      if(sel.size)lvColF[k]=sel; else delete lvColF[k];
+      btn.textContent=(sel.size?sel.size+' sel ':'All ')+'▾'; btn.classList.toggle('on',sel.size>0);
+      lvSchedule();
+    });
+  });
+  document.addEventListener('click',()=>$$('.lv-csel.open').forEach(o=>o.classList.remove('open')));
+  $('#lvReset').onclick=lvClearCols;
+  lvBuilt=true;
+}
+function lvClearCols(){
+  lvColF={};
+  $$('#lvDetFilters input').forEach(i=>{ if(i.type==='checkbox')i.checked=false; else i.value=''; });
+  $$('#lvDetFilters .lv-csel-btn').forEach(b=>{b.textContent='All ▾';b.classList.remove('on');});
+  lvRenderDetail(true);
+}
+/* programmatic drill from summary tables -> detail column filters */
+function lvFilterByLaneCode(code){
+  const inp=document.querySelector('#lvDetFilters input[data-k="Lane Code"][data-ft="text"]'); if(!inp)return;
+  inp.value=code; lvColF['Lane Code']={q:code.toLowerCase()};
+  lvRenderDetail(true); document.querySelector('.lv-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function lvFilterByLaneType(t){
+  const cs=document.querySelector('#lvDetFilters .lv-csel[data-k="Lane Type"]'); if(!cs)return;
+  cs.querySelectorAll('input').forEach(ch=>ch.checked=(ch.value===t));
+  lvColF['Lane Type']=new Set([t]);
+  const btn=cs.querySelector('.lv-csel-btn'); btn.textContent='1 sel ▾'; btn.classList.add('on');
+  lvRenderDetail(true); document.querySelector('.lv-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ---- detail filtering / rendering ---- */
+function lvFilterRows(){
+  return FILTERED.filter(r=>{
+    for(const c of LV_DETAIL_COLS){
+      const f=lvColF[c.k]; if(!f)continue;
+      if(c.type==='text'){ if(!String(r[c.k]).toLowerCase().includes(f.q))return false; }
+      else if(c.type==='num'){ const v=r[c.k]; if(f.min!=null&&v<f.min)return false; if(f.max!=null&&v>f.max)return false; }
+      else { if(!f.has(r[c.k]))return false; }
+    }
+    return true;
+  });
+}
+let lvT=null; function lvSchedule(){clearTimeout(lvT);lvT=setTimeout(()=>lvRenderDetail(true),160);}
+function lvRenderDetail(reset){
+  if(reset)lvPage=1;
+  let rows=lvFilterRows();
+  const col=LV_DETAIL_COLS.find(x=>x.k===lvSort.k);
+  rows.sort((a,b)=>{ const av=a[lvSort.k],bv=b[lvSort.k];
+    if(col&&col.type==='num')return (av-bv)*lvSort.dir;
+    if(col&&col.order)return (col.order.indexOf(av)-col.order.indexOf(bv))*lvSort.dir;
+    return String(av).localeCompare(String(bv))*lvSort.dir;
+  });
+  lvDetailRows=rows;
+  const pages=Math.max(1,Math.ceil(rows.length/LV_PAGE));
+  if(lvPage>pages)lvPage=pages;
+  const slice=rows.slice((lvPage-1)*LV_PAGE,lvPage*LV_PAGE);
+  $('#lvDetBody').innerHTML=slice.map(r=>'<tr>'+LV_DETAIL_COLS.map(c=>{
+    const v=r[c.k];
+    if(c.k==='flag')return `<td><span class="badge ${v==='Forward'?'b-fwd':'b-rev'}">${v}</span></td>`;
+    if(c.k==='intransit_ageing')return `<td class="num">${r.intransit_ageing>30?'<span class="badge b-crit">'+v+'d</span>':v+'d'}</td>`;
+    if(c.k==='Product_value')return `<td class="num">${fmtN(v)}</td>`;
+    return `<td class="${c.cls||''}">${v||'—'}</td>`;
+  }).join('')+'</tr>').join('')
+    || `<tr><td colspan="${LV_DETAIL_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No AWBs match the column filters.</td></tr>`;
+  $$('#lvDetHead th').forEach(th=>{const a=th.querySelector('.arr');a.textContent=th.dataset.k===lvSort.k?(lvSort.dir<0?'▼':'▲'):'';});
+  $('#lvDetailCount').textContent=fmtN(rows.length)+' rows';
+  $('#lvShown').textContent=fmtN(rows.length);
+  $('#lvPgLbl').textContent='Page '+lvPage+' / '+pages;
+  $('#lvPrev').disabled=lvPage<=1; $('#lvNext').disabled=lvPage>=pages;
+}
+
+/* ---- Top-20 lanes aggregate ---- */
+function lvLaneAgg(){
+  const m=new Map();
+  for(const r of FILTERED){
+    const k=r['Lane Code']; let o=m.get(k);
+    if(!o){o={lane:k,value:0,awbs:0,v30:0,ageSum:0,types:{}};m.set(k,o);}
+    o.value+=r.Product_value; o.awbs++; o.ageSum+=r.intransit_ageing;
+    if(r.intransit_ageing>30)o.v30+=r.Product_value;
+    o.types[r['Lane Type']]=(o.types[r['Lane Type']]||0)+1;
+  }
+  const arr=[...m.values()];
+  arr.forEach(o=>{o.avg=o.awbs?o.ageSum/o.awbs:0;
+    o.type=Object.entries(o.types).sort((a,b)=>b[1]-a[1])[0][0];});
+  return arr;
+}
+function lvRenderLaneTbl(){
+  const cols=[{k:'lane',label:'Lane Code'},{k:'type',label:'Lane Type'},{k:'awbs',label:'AWBs',num:true},
+    {k:'value',label:'Value ₹',num:true},{k:'share',label:'% Val',num:true},{k:'avg',label:'Avg Age',num:true},{k:'v30',label:'30+ ₹',num:true}];
+  let arr=lvLaneAgg();
+  const tot=arr.reduce((a,o)=>a+o.value,0)||1;
+  arr.sort((a,b)=>b.value-a.value); arr=arr.slice(0,20);
+  arr.forEach(o=>o.share=o.value/tot*100);
+  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
+  arr.sort((a,b)=>{const av=a[lvLaneSort.k],bv=b[lvLaneSort.k];
+    return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*lvLaneSort.dir;});
+  $('#lvLaneHead').innerHTML=cols.map(c=>`<th data-k="${c.k}" class="sortable ${c.num?'num':''}">${c.label}<span class="arr">${c.k===lvLaneSort.k?(lvLaneSort.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  $('#lvLaneBody').innerHTML=arr.map(o=>`<tr style="cursor:pointer" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click to drill into the detail table">
+    <td>${o.lane}</td><td>${o.type}</td><td class="num">${fmtN(o.awbs)}</td>
+    <td class="num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>
+    <td class="num">${o.share.toFixed(1)}%</td><td class="num">${o.avg.toFixed(1)}</td><td class="num">${fmtINR(o.v30)}</td></tr>`).join('')
+    || `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
+  $$('#lvLaneHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;
+    lvLaneSort.dir=lvLaneSort.k===k?-lvLaneSort.dir:(k==='lane'||k==='type'?1:-1);lvLaneSort.k=k;lvRenderLaneTbl();});
+  $$('#lvLaneBody tr[data-lane]').forEach(tr=>tr.onclick=()=>lvFilterByLaneCode(tr.dataset.lane));
+  lvLaneExport=arr.map(o=>({Lane_Code:o.lane,Lane_Type:o.type,AWB_count:o.awbs,Product_value:Math.round(o.value),
+    Pct_of_value:+o.share.toFixed(2),Avg_ageing_days:+o.avg.toFixed(1),Value_30plus:Math.round(o.v30)}));
+}
+
+/* ---- AWB count by Lane Type ---- */
+function lvRenderTypeTbl(){
+  const cols=[{k:'type',label:'Lane Type'},{k:'awbs',label:'AWBs',num:true},{k:'value',label:'Value ₹',num:true},{k:'share',label:'% Val',num:true},{k:'avg',label:'Avg Age',num:true}];
+  const m=new Map();
+  for(const r of FILTERED){const k=r['Lane Type'];let o=m.get(k);if(!o){o={type:k,awbs:0,value:0,ageSum:0};m.set(k,o);}o.awbs++;o.value+=r.Product_value;o.ageSum+=r.intransit_ageing;}
+  let arr=[...m.values()];const tot=arr.reduce((a,o)=>a+o.value,0)||1;
+  arr.forEach(o=>{o.avg=o.awbs?o.ageSum/o.awbs:0;o.share=o.value/tot*100;});
+  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
+  arr.sort((a,b)=>{const av=a[lvTypeSort.k],bv=b[lvTypeSort.k];return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*lvTypeSort.dir;});
+  $('#lvTypeHead').innerHTML=cols.map(c=>`<th data-k="${c.k}" class="sortable ${c.num?'num':''}">${c.label}<span class="arr">${c.k===lvTypeSort.k?(lvTypeSort.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  $('#lvTypeBody').innerHTML=arr.map(o=>`<tr style="cursor:pointer" data-type="${o.type.replace(/"/g,'&quot;')}" title="Click to filter the detail table by this lane type">
+    <td>${o.type}</td><td class="num">${fmtN(o.awbs)}</td>
+    <td class="num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>
+    <td class="num">${o.share.toFixed(1)}%</td><td class="num">${o.avg.toFixed(1)}</td></tr>`).join('')
+    || `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
+  $$('#lvTypeHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;lvTypeSort.dir=lvTypeSort.k===k?-lvTypeSort.dir:(k==='type'?1:-1);lvTypeSort.k=k;lvRenderTypeTbl();});
+  $$('#lvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>lvFilterByLaneType(tr.dataset.type));
+  lvTypeExport=arr.map(o=>({Lane_Type:o.type,AWB_count:o.awbs,Product_value:Math.round(o.value),Pct_of_value:+o.share.toFixed(2),Avg_ageing_days:+o.avg.toFixed(1)}));
+}
+
+/* ---- summary cards ---- */
+function lvRenderCards(){
+  const d=FILTERED, tot=sumV(d);
+  const lanes=new Set(d.map(r=>r['Lane Code'])).size;
+  const types=new Set(d.map(r=>r['Lane Type'])).size;
+  const top=lvLaneAgg().sort((a,b)=>b.value-a.value)[0];
+  const cards=[
+    {l:'LANES IN SCOPE',v:fmtN(lanes),s:'distinct lane codes'},
+    {l:'LANE TYPES',v:fmtN(types),s:'movement classes present'},
+    {l:'PENDING VALUE',v:fmtINR(tot),s:fmtN(d.length)+' AWBs'},
+    {l:'TOP LANE SHARE',v:top?pct(top.value,tot):'0%',s:top?top.lane:'—'},
+  ];
+  $('#lvCards').innerHTML=cards.map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+}
+
+function renderLaneView(){
+  if(!RAW.length)return;
+  if(!lvBuilt)lvBuildHeaders();
+  lvRenderCards(); lvRenderLaneTbl(); lvRenderTypeTbl(); lvRenderDetail(true);
+}
+
+/* ---- exports ---- */
+function lvExport(rows,fmt,name,sheet){
+  if(!rows||!rows.length)return;
+  if(fmt==='csv'){const cols=Object.keys(rows[0]);
+    const csv=[cols.join(',')].concat(rows.map(r=>cols.map(c=>'"'+String(r[c]).replace(/"/g,'""')+'"').join(','))).join('\n');
+    dl(new Blob([csv],{type:'text/csv'}),name+'.csv');}
+  else{const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheet);XLSX.writeFile(wb,name+'.xlsx');}
+}
+function lvDetailExport(){
+  const cap=80000;
+  if(lvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows. Tighten the column filters to narrow the set.');
+  return lvDetailRows.slice(0,cap).map(r=>({AWB:r.Awb_number,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],Flow:r.flag,
+    Ageing_days:r.intransit_ageing,Bucket:r.bucket,Product_value:r.Product_value,Manifest:r.Manifest_code,
+    Trip_code:r.trip_code,Seal_number:r.seal_number}));
+}
+</script>
+<script>
+/* =============================================================
+   MANIFEST VS SHIPMENTS  — lane→manifest pivots + detail
+   Real Ageing bucket values: A. 0 to 6 days … F. 35+ Days
+============================================================= */
+const MV_DETAIL_COLS=[
+  {k:'Manifest_code',            label:'Manifest Code',           type:'text', cls:'mono'},
+  {k:'Lane Code',                label:'Lane Code',               type:'text'},
+  {k:'Lane Type',                label:'Lane Type',               type:'cat'},
+  {k:'Manifest_origin',          label:'Origin',                  type:'text'},
+  {k:'Manifest_Destination',     label:'Destination',             type:'text'},
+  {k:'Manifest_status',          label:'Status',                  type:'cat'},
+  {k:'Ageing bucket',            label:'Ageing Bucket',           type:'cat'},
+  {k:'intransit_ageing',         label:'IT Ageing (d)',           type:'num'},
+  {k:'Days',                     label:'Days',                    type:'num'},
+  {k:'ShipmentInManifest',       label:'Shipments in Manifest',   type:'num'},
+  {k:'CurrentShipmentInManifest',label:'Current Shipments',       type:'num'},
+  {k:'Product_value',            label:'Product Value ₹',         type:'num'},
+  {k:'remarks',                  label:'Remarks',                 type:'text'},
+  {k:'Manifest_code',            label:'_dup',                    skip:true},   // placeholder — hidden
+];
+/* Real Ageing bucket labels as they appear in the data column */
+const ABKT=[
+  'A. 0 to 6 days',
+  'B. 7 to 13 days',
+  'C. 14 to 20 days',
+  'D. 21 to 27 days',
+  'E. 28 to 34 days',
+  'F. 35+ Days',
+];
+/* Short header labels for the pivot table columns (matches screenshot) */
+const ABKT_LABELS=['0–6 DAYS','7–13 DAYS','14–20 DAYS','21–27 DAYS','28–34 DAYS','35+ DAYS'];
+/* CSS class for old/red buckets */
+const ABKT_CLS={
+  'A. 0 to 6 days':'','B. 7 to 13 days':'','C. 14 to 20 days':'',
+  'D. 21 to 27 days':'aged-ora','E. 28 to 34 days':'aged-ora','F. 35+ Days':'aged-red',
+};
+
+let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'value',dir:-1}, mvTypeSort={k:'value',dir:-1};
+let mvPage=1; const MV_PAGE=25;
+let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
+let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvExpandedLane=null;
+
+/* one row per Manifest_code: sum value, max ageing, keep first-seen metadata */
+function mvBuildManifestRows(data){
+  const m=new Map();
+  for(const r of data){
+    const code=r.Manifest_code||''; if(!code)continue;
+    let o=m.get(code);
+    if(!o){
+      o={Manifest_code:code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
+        Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
+        Manifest_status:r.Manifest_status,
+        'Ageing bucket':r['Ageing bucket']||'',   // use real column — don't derive
+        intransit_ageing:r.intransit_ageing,
+        Days:r.Days||0,
+        ShipmentInManifest:r.ShipmentInManifest||0,
+        CurrentShipmentInManifest:r.CurrentShipmentInManifest||0,
+        remarks:r.remarks||'',
+        Product_value:0,_awbs:0};
+      m.set(code,o);
+    }
+    o.Product_value+=r.Product_value;
+    o._awbs++;
+    if(r.intransit_ageing>o.intransit_ageing){
+      o.intransit_ageing=r.intransit_ageing;
+      // update ageing bucket to the worst one seen
+      if(r['Ageing bucket'])o['Ageing bucket']=r['Ageing bucket'];
+    }
+  }
+  return [...m.values()];
+}
+
+function mvCatOptions(c,rows){
+  const u=[...new Set(rows.map(r=>String(r[c.k]||'')))].filter(x=>x!=='');
+  if(c.k==='Ageing bucket'||c.k==='Lane Type'||c.k==='Manifest_status')
+    return ABKT.filter(o=>u.includes(o)).concat(u.filter(x=>!ABKT.includes(x)));
+  return u.sort((a,b)=>String(a).localeCompare(String(b)));
+}
+
+function mvBuildHeaders(){
+  const rows=mvBuildManifestRows(RAW);
+  const visibleCols=MV_DETAIL_COLS.filter(c=>!c.skip);
+  $('#mvDetHead').innerHTML=visibleCols.map(c=>
+    `<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="arr"></span></th>`).join('');
+  $('#mvDetFilters').innerHTML=visibleCols.map(c=>{
+    if(c.type==='text')return `<th><input data-k="${c.k}" data-ft="text" placeholder="contains…"></th>`;
+    if(c.type==='num') return `<th><div class="lv-rng"><input data-k="${c.k}" data-ft="min" type="number" placeholder="min"><input data-k="${c.k}" data-ft="max" type="number" placeholder="max"></div></th>`;
+    const opts=mvCatOptions(c,rows);
+    return `<th><div class="lv-csel" data-k="${c.k}"><button class="lv-csel-btn">All ▾</button>
+      <div class="lv-csel-panel">${opts.map(o=>`<label><input type="checkbox" value="${String(o).replace(/"/g,'&quot;')}"><span>${o}</span></label>`).join('')}</div></div></th>`;
+  }).join('');
+
+  $$('#mvDetHead th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k, col=visibleCols.find(c=>c.k===k);
+    mvSort.dir = mvSort.k===k ? -mvSort.dir : (col&&col.type==='text'?1:-1);
+    mvSort.k=k; mvRenderDetail(true);
+  });
+  $$('#mvDetFilters input[data-ft]').forEach(inp=>inp.oninput=()=>{
+    const k=inp.dataset.k, ft=inp.dataset.ft, v=inp.value.trim();
+    if(ft==='text'){ if(v) mvColF[k]={q:v.toLowerCase()}; else delete mvColF[k]; }
+    else { mvColF[k]=mvColF[k]||{}; if(v==='') delete mvColF[k][ft]; else mvColF[k][ft]=+v;
+           if(mvColF[k].min==null && mvColF[k].max==null) delete mvColF[k]; }
+    mvSchedule();
+  });
+  $$('#mvDetFilters .lv-csel').forEach(cs=>{
+    const k=cs.dataset.k, btn=cs.querySelector('.lv-csel-btn');
+    btn.onclick=e=>{e.stopPropagation();const open=cs.classList.contains('open');
+      $$('.lv-csel.open').forEach(o=>o.classList.remove('open')); if(!open)cs.classList.add('open');};
+    cs.querySelector('.lv-csel-panel').onclick=e=>e.stopPropagation();
+    cs.querySelectorAll('input').forEach(ch=>ch.onchange=()=>{
+      const sel=new Set([...cs.querySelectorAll('input:checked')].map(x=>x.value));
+      if(sel.size)mvColF[k]=sel; else delete mvColF[k];
+      btn.textContent=(sel.size?sel.size+' sel ':'All ')+'▾'; btn.classList.toggle('on',sel.size>0);
+      mvSchedule();
+    });
+  });
+  $('#mvReset').onclick=mvClearCols;
+
+  /* Ageing bucket + in-transit bucket top filters */
+  const abopts=ABKT.slice();
+  $('#mvAgeingPanel').insertAdjacentHTML('afterbegin',
+    abopts.map(o=>`<label><input type="checkbox" value="${o}"><span>${o}</span></label>`).join(''));
+  $$('#mvAgeingPanel input[type=checkbox]').forEach(ch=>ch.onchange=()=>{
+    mvAgeingSel=new Set([...$$('#mvAgeingPanel input:checked')].map(x=>x.value));
+    $('#mvAgeingBtn').classList.toggle('active',mvAgeingSel.size>0);
+    $('#mvAgeingBtn').textContent=(mvAgeingSel.size?mvAgeingSel.size+' sel':'Ageing Bucket')+' ▾';
+    mvRenderLaneTbl();mvRenderDetail(true);
+  });
+  $('#mvAgeingBtn').onclick=e=>{e.stopPropagation();$('#mvAgeingMcsel').classList.toggle('open');$('#mvItBktMcsel').classList.remove('open');};
+  $('#mvAgeingAll').onclick=()=>{$$('#mvAgeingPanel input').forEach(c=>c.checked=true);$$('#mvAgeingPanel input')[0].onchange();};
+  $('#mvAgeingNone').onclick=()=>{$$('#mvAgeingPanel input').forEach(c=>c.checked=false);mvAgeingSel=new Set();$('#mvAgeingBtn').classList.remove('active');$('#mvAgeingBtn').textContent='Ageing Bucket ▾';mvRenderLaneTbl();mvRenderDetail(true);};
+
+  const itopts=[...new Set(RAW.map(r=>r.intransit_ageing_bucket))].filter(x=>x!=='').sort();
+  $('#mvItBktPanel').insertAdjacentHTML('afterbegin',
+    itopts.map(o=>`<label><input type="checkbox" value="${String(o).replace(/"/g,'&quot;')}"><span>${o}</span></label>`).join('')||'<div class="msel-more">No in-transit bucket column</div>');
+  $$('#mvItBktPanel input[type=checkbox]').forEach(ch=>ch.onchange=()=>{
+    mvItBktSel=new Set([...$$('#mvItBktPanel input:checked')].map(x=>x.value));
+    $('#mvItBktBtn').classList.toggle('active',mvItBktSel.size>0);
+    $('#mvItBktBtn').textContent=(mvItBktSel.size?mvItBktSel.size+' sel':'In-Transit Bucket')+' ▾';
+    mvRenderLaneTbl();mvRenderDetail(true);
+  });
+  $('#mvItBktBtn').onclick=e=>{e.stopPropagation();$('#mvItBktMcsel').classList.toggle('open');$('#mvAgeingMcsel').classList.remove('open');};
+  $('#mvItBktAll').onclick=()=>{$$('#mvItBktPanel input').forEach(c=>c.checked=true);const f=$$('#mvItBktPanel input')[0];if(f)f.onchange();};
+  $('#mvItBktNone').onclick=()=>{$$('#mvItBktPanel input').forEach(c=>c.checked=false);mvItBktSel=new Set();$('#mvItBktBtn').classList.remove('active');$('#mvItBktBtn').textContent='In-Transit Bucket ▾';mvRenderLaneTbl();mvRenderDetail(true);};
+
+  document.addEventListener('click',()=>{$$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));$$('.lv-csel.open').forEach(o=>o.classList.remove('open'));});
+  mvBuilt=true;
+}
+function mvClearCols(){
+  mvColF={};
+  $$('#mvDetFilters input').forEach(i=>{ if(i.type==='checkbox')i.checked=false; else i.value=''; });
+  $$('#mvDetFilters .lv-csel-btn').forEach(b=>{b.textContent='All ▾';b.classList.remove('on');});
+  mvRenderDetail(true);
+}
+
+/* Base manifest rows for detail table + type rollup:
+   apply top filters then dedupe to one row per manifest code */
+function mvBaseRows(){
+  let d=FILTERED;
+  if(mvItBktSel.size)d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
+  if(mvAgeingSel.size)d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
+  return mvBuildManifestRows(d);
+}
+
+function mvDrillByLane(lane){ mvExpandedLane = mvExpandedLane===lane ? null : lane; mvRenderLaneTbl(); }
+function mvFilterDetailByLane(lane){
+  const inp=document.querySelector('#mvDetFilters input[data-k="Lane Code"][data-ft="text"]'); if(!inp)return;
+  inp.value=lane; mvColF['Lane Code']={q:lane.toLowerCase()};
+  mvRenderDetail(true); document.querySelector('#page-manifest .lv-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function mvFilterByType(t){
+  const cs=document.querySelector('#mvDetFilters .lv-csel[data-k="Lane Type"]'); if(!cs)return;
+  cs.querySelectorAll('input').forEach(ch=>ch.checked=(ch.value===t));
+  mvColF['Lane Type']=new Set([t]);
+  const btn=cs.querySelector('.lv-csel-btn'); btn.textContent='1 sel ▾'; btn.classList.add('on');
+  mvRenderDetail(true); document.querySelector('#page-manifest .lv-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ---- detail filter / render ---- */
+function mvFilterRows(){
+  const rows=mvBaseRows();
+  return rows.filter(r=>{
+    for(const c of MV_DETAIL_COLS){
+      const f=mvColF[c.k]; if(!f)continue;
+      if(c.type==='text'){ if(!String(r[c.k]).toLowerCase().includes(f.q))return false; }
+      else if(c.type==='num'){ const v=r[c.k]; if(f.min!=null&&v<f.min)return false; if(f.max!=null&&v>f.max)return false; }
+      else { if(!f.has(String(r[c.k])))return false; }
+    }
+    return true;
+  });
+}
+let mvT=null; function mvSchedule(){clearTimeout(mvT);mvT=setTimeout(()=>mvRenderDetail(true),160);}
+function mvRenderDetail(reset){
+  if(reset)mvPage=1;
+  let rows=mvFilterRows();
+  const visibleCols=MV_DETAIL_COLS.filter(c=>!c.skip);
+  const col=visibleCols.find(x=>x.k===mvSort.k);
+  rows.sort((a,b)=>{ const av=a[mvSort.k]??'',bv=b[mvSort.k]??'';
+    if(col&&col.type==='num')return ((+av||0)-(+bv||0))*mvSort.dir;
+    if(col&&col.k==='Ageing bucket'){return (ABKT.indexOf(String(av))-ABKT.indexOf(String(bv)))*mvSort.dir;}
+    return String(av).localeCompare(String(bv))*mvSort.dir;
+  });
+  mvDetailRows=rows;
+  const pages=Math.max(1,Math.ceil(rows.length/MV_PAGE));
+  if(mvPage>pages)mvPage=pages;
+  const slice=rows.slice((mvPage-1)*MV_PAGE,mvPage*MV_PAGE);
+  $('#mvDetBody').innerHTML=slice.map(r=>'<tr>'+visibleCols.map(c=>{
+    const v=r[c.k];
+    if(c.type==='num'){
+      if(c.k==='intransit_ageing'||c.k==='Days')
+        return `<td class="num">${+v>30?`<span class="badge b-crit">${v}d</span>`:(v!=null?v+'d':'—')}</td>`;
+      return `<td class="num">${v!=null&&v!==''?fmtN(+v||0):'—'}</td>`;
+    }
+    if(c.k==='Ageing bucket'){
+      const cls=ABKT_CLS[v]||'';
+      const bdgCls=cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd';
+      return `<td><span class="badge ${bdgCls}" style="font-size:10px">${v||'—'}</span></td>`;
+    }
+    return `<td class="${c.cls||''}" style="white-space:nowrap">${v!=null&&v!==''?v:'—'}</td>`;
+  }).join('')+'</tr>').join('')
+    || `<tr><td colspan="${visibleCols.length}" style="text-align:center;padding:24px;color:var(--mut)">No manifests match the filters.</td></tr>`;
+  $$('#mvDetHead th').forEach(th=>{const a=th.querySelector('.arr');if(a)a.textContent=th.dataset.k===mvSort.k?(mvSort.dir<0?'▼':'▲'):'';});
+  $('#mvDetailCount').textContent=fmtN(rows.length)+' rows';
+  $('#mvShown').textContent=fmtN(rows.length);
+  $('#mvPgLbl').textContent='Page '+mvPage+' / '+pages;
+  $('#mvPrev').disabled=mvPage<=1; $('#mvNext').disabled=mvPage>=pages;
+}
+
+/* ---- Top-20 lanes by manifest count (with ageing-bucket breakdown) ---- */
+function mvLaneAgg(){
+  /* Aggregate AWB-level rows by Lane Code, summing Product_value per real Ageing bucket.
+     Destination breakdown uses MM_destination (actual shipment dest, e.g. "NCR Tauru DC")
+     NOT Manifest_Destination (bag-level field). */
+  const base=mvItBktSel.size?FILTERED.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket)):FILTERED;
+  const filtered=mvAgeingSel.size?base.filter(r=>mvAgeingSel.has(r['Ageing bucket'])):base;
+  const m=new Map();
+  for(const r of filtered){
+    const k=r['Lane Code']||'Unknown'; let e=m.get(k);
+    if(!e){
+      const bkts={};ABKT.forEach(b=>bkts[b]=0);
+      e={lane:k,type:r['Lane Type']||'Unknown',value:0,manifests:new Set(),bkts,
+         dests:new Map()};
+      m.set(k,e);
+    }
+    const ab=r['Ageing bucket']||'';
+    if(ab in e.bkts)e.bkts[ab]+=r.Product_value;
+    e.value+=r.Product_value;
+    if(r.Manifest_code)e.manifests.add(r.Manifest_code);
+    /* MM_destination = actual shipment destination (matches image: "NCR Tauru DC" etc) */
+    const dk=r.MM_destination||'Unknown';
+    const destEntry=e.dests.get(dk)||{value:0,bkts:Object.fromEntries(ABKT.map(b=>[b,0]))};
+    destEntry.value+=r.Product_value;
+    if(ab in destEntry.bkts)destEntry.bkts[ab]+=r.Product_value;
+    e.dests.set(dk,destEntry);
+  }
+  return [...m.values()].map(e=>({...e,manifests:e.manifests.size,
+    dests:[...e.dests.entries()].map(([d,v])=>({dest:d,...v})).sort((a,b)=>b.value-a.value)}));
+}
+function mvRenderLaneTbl(){
+  let arr=mvLaneAgg();
+  const tot=arr.reduce((a,o)=>a+o.value,0)||1;
+  /* Default: sort top-20 by total value descending */
+  arr.sort((a,b)=>b.value-a.value);
+  arr=arr.slice(0,20);
+  /* Apply user sort */
+  if(mvLaneSort.k&&mvLaneSort.k!=='value'){
+    arr.sort((a,b)=>{
+      const ak=mvLaneSort.k,ad=mvLaneSort.dir;
+      if(ABKT.includes(ak))return ((a.bkts[ak]||0)-(b.bkts[ak]||0))*ad;
+      return (typeof a[ak]==='number'?(a[ak]-b[ak]):String(a[ak]).localeCompare(String(b[ak])))*ad;
+    });
+  } else if(mvLaneSort.k==='value'){
+    arr.sort((a,b)=>(a.value-b.value)*mvLaneSort.dir);
+  }
+  const NCOLS=1+ABKT.length+1; // Lane + 6 buckets + Total
+  const AGE_CLS=['age-a','age-b','age-c','age-d','age-e','age-f'];
+  const sortMark=k=>mvLaneSort.k===k?(mvLaneSort.dir<0?'▼':'▲'):'';
+  const sortClick=k=>()=>{
+    mvLaneSort.dir=mvLaneSort.k===k?-mvLaneSort.dir:-1;
+    mvLaneSort.k=k; mvRenderLaneTbl();
+  };
+  /* colgroup ensures pixel-perfect column alignment between header, lane rows and dest rows */
+  const colgroup=`<colgroup>`+
+    `<col style="width:220px;min-width:180px">`+
+    ABKT.map(()=>`<col style="width:100px;min-width:80px">`).join('')+
+    `<col style="width:140px;min-width:110px">`+
+    `</colgroup>`;
+  /* inject colgroup into the table */
+  const tbl=document.getElementById('mvLaneTbl');
+  if(tbl&&!tbl.querySelector('colgroup')){tbl.insertAdjacentHTML('afterbegin',colgroup);}
+
+  $('#mvLaneHead').innerHTML=
+    `<th class="sortable" style="cursor:pointer;text-align:left" data-sk="lane">LANE CODE <span class="arr">${sortMark('lane')}</span></th>`+
+    ABKT.map((b,i)=>`<th class="sortable num ${AGE_CLS[i]}" style="cursor:pointer" data-sk="${b}">${ABKT_LABELS[i]} <span class="arr">${sortMark(b)}</span></th>`).join('')+
+    `<th class="sortable num" data-sk="value" style="background:#F1F3FB;color:#4F46E5;cursor:pointer">PRODUCT VALUE ₹ <span class="arr">${sortMark('value')}</span></th>`;
+  $$('#mvLaneHead th[data-sk]').forEach(th=>th.onclick=sortClick(th.dataset.sk));
+
+  const body=[];
+  arr.forEach(o=>{
+    const expanded=mvExpandedLane===o.lane;
+    /* ---- parent lane row ---- */
+    body.push(
+      `<tr class="mv-lane-summary${expanded?' mv-expanded':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" style="cursor:pointer" title="Click to expand/collapse destinations">`+
+      `<td style="padding-left:10px"><span style="font-size:10px;color:var(--pine);margin-right:6px;display:inline-block;width:10px">${expanded?'▼':'▶'}</span><b>${o.lane}</b></td>`+
+      ABKT.map(b=>{const v=o.bkts[b]||0;const cls=ABKT_CLS[b];return `<td class="num ${cls}">${v>0?fmtINR(v):'—'}</td>`;}).join('')+
+      `<td class="num total-col"><b>${fmtINR(o.value)}</b></td></tr>`
+    );
+    /* ---- destination child rows — real <tr><td> cells aligned to the same columns ---- */
+    if(expanded){
+      if(o.dests.length===0){
+        body.push(`<tr class="mv-dest-row"><td colspan="${NCOLS}" style="padding:6px 10px 6px 36px;font-style:italic;color:var(--mut);font-size:11.5px">No destination data for this lane.</td></tr>`);
+      } else {
+        o.dests.forEach(d=>{
+          body.push(
+            `<tr class="mv-dest-row">`+
+            `<td style="padding:5px 8px 5px 30px;white-space:nowrap;font-size:12px"><span style="color:var(--pine);margin-right:4px">↳</span><span style="color:var(--pine);font-weight:600">${d.dest}</span></td>`+
+            ABKT.map(b=>{const v=d.bkts[b]||0;const cls=ABKT_CLS[b];return `<td class="num ${v&&cls?cls:''}" style="padding:5px 8px;font-size:12px">${v>0?fmtINR(v):'—'}</td>`;}).join('')+
+            `<td class="num" style="padding:5px 8px;font-size:12px;font-weight:700;color:var(--ink)">${fmtINR(d.value)}</td>`+
+            `</tr>`
+          );
+        });
+      }
+    }
+  });
+  $('#mvLaneBody').innerHTML=body.join('')
+    ||`<tr><td colspan="${NCOLS}" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
+  $$('#mvLaneBody tr[data-lane]').forEach(tr=>tr.onclick=()=>mvDrillByLane(tr.dataset.lane));
+  mvLaneExport=arr.map(o=>{
+    const row={Lane_Code:o.lane,Lane_Type:o.type,Manifests:o.manifests};
+    ABKT.forEach((b,i)=>row['Age_'+ABKT_LABELS[i].replace(/[^A-Z0-9]/gi,'_')]=Math.round(o.bkts[b]||0));
+    row.Product_value=Math.round(o.value);
+    return row;
+  });
+}
+
+/* ---- manifest count by lane type ---- */
+function mvRenderTypeTbl(){
+  /* aggregate from AWB-level filtered rows for accurate value sums */
+  let d=FILTERED;
+  if(mvItBktSel.size)d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
+  if(mvAgeingSel.size)d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
+  const cols=[{k:'type',label:'Lane Type'},{k:'manifests',label:'Manifests',num:true},{k:'value',label:'Value ₹',num:true},{k:'share',label:'% Val',num:true}];
+  const m=new Map();
+  for(const r of d){
+    const k=r['Lane Type']||'Unknown';let e=m.get(k);
+    if(!e){e={type:k,manifests:new Set(),value:0};m.set(k,e);}
+    if(r.Manifest_code)e.manifests.add(r.Manifest_code);
+    e.value+=r.Product_value;
+  }
+  let arr=[...m.values()].map(o=>({...o,manifests:o.manifests.size}));
+  const tot=arr.reduce((a,o)=>a+o.value,0)||1;
+  arr.forEach(o=>o.share=o.value/tot*100);
+  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
+  arr.sort((a,b)=>{const av=a[mvTypeSort.k],bv=b[mvTypeSort.k];return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*mvTypeSort.dir;});
+  $('#mvTypeHead').innerHTML=cols.map(c=>`<th data-k="${c.k}" class="sortable ${c.num?'num':''}">${c.label}<span class="arr">${c.k===mvTypeSort.k?(mvTypeSort.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  $('#mvTypeBody').innerHTML=arr.map(o=>`<tr style="cursor:pointer" data-type="${o.type.replace(/"/g,'&quot;')}" title="Click to filter detail by lane type">
+    <td>${o.type}</td><td class="num">${fmtN(o.manifests)}</td>
+    <td class="num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>
+    <td class="num">${o.share.toFixed(1)}%</td></tr>`).join('')
+    || `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
+  $$('#mvTypeHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;mvTypeSort.dir=mvTypeSort.k===k?-mvTypeSort.dir:(k==='type'?1:-1);mvTypeSort.k=k;mvRenderTypeTbl();});
+  $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
+  mvTypeExport=arr.map(o=>({Lane_Type:o.type,Manifests:o.manifests,Product_value:Math.round(o.value),Pct_of_value:+o.share.toFixed(2)}));
+}
+
+/* ---- summary cards ---- */
+function mvRenderCards(){
+  const d=FILTERED;
+  const manifests=new Set(d.map(r=>r.Manifest_code).filter(Boolean)).size;
+  const lanes=new Set(d.map(r=>r['Lane Code'])).size;
+  const tot=sumV(d);
+  const crit35=d.filter(r=>(r['Ageing bucket']||'').startsWith('F'));
+  const cards=[
+    {l:'MANIFESTS IN SCOPE',v:fmtN(manifests),s:'unique manifest codes'},
+    {l:'LANES IN SCOPE',v:fmtN(lanes),s:'distinct lane codes'},
+    {l:'PENDING VALUE',v:fmtINR(tot),s:fmtN(d.length)+' AWBs'},
+    {l:'35+ DAY VALUE',v:fmtINR(sumV(crit35)),s:fmtN(crit35.length)+' AWBs aged 35+ days'},
+  ];
+  $('#mvCards').innerHTML=cards.map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+}
+
+function renderManifestView(){
+  if(!RAW.length)return;
+  if(!mvBuilt)mvBuildHeaders();
+  mvRenderCards(); mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderDetail(true);
+}
+function mvDetailExport(){
+  const cap=80000;
+  if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
+  return mvDetailRows.slice(0,cap).map(r=>({
+    Manifest_Code:r.Manifest_code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
+    Manifest_Origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
+    Manifest_Status:r.Manifest_status,'Ageing Bucket':r['Ageing bucket'],
+    IT_Ageing_Days:r.intransit_ageing,Days:r.Days,
+    Shipments_in_Manifest:r.ShipmentInManifest,Current_Shipments:r.CurrentShipmentInManifest,
+    Product_Value:r.Product_value,Remarks:r.remarks}));
+}
+</script>
+<script>
+/* =============================================================
+   HOV ANALYTICS — reads the workbook's HOV sheet (6 pivot blocks)
+============================================================= */
+const HOV_SECTIONS=[
+  {key:'zone_age',   title:'Zone × Ageing Bucket',        sub:'manifest counts by zone across ageing bands'},
+  {key:'zone_val',   title:'Zone × Product Value',        sub:'value distribution by zone and ageing'},
+  {key:'lane_age',   title:'Lane × Ageing Bucket',        sub:'top lanes across ageing bands'},
+  {key:'lane_val',   title:'Lane × Product Value',        sub:'value at risk by lane'},
+  {key:'vendor_age', title:'Vendor × Ageing Bucket',      sub:'carrier ageing profile'},
+  {key:'vendor_val', title:'Vendor × Product Value',      sub:'value concentration by carrier'},
+];
+let HOV_DATA={};   // key -> {cols:[], rows:[{label, vals:[], total}]}
+
+/* Parse the HOV sheet as array-of-arrays: locate section titles, read each block's header + rows */
+function parseHOVAOA(aoa){
+  const out={}; if(!aoa||!aoa.length)return out;
+  const norm=s=>String(s==null?'':s).trim().toLowerCase();
+  // find rows that look like section markers
+  const markers=[
+    {key:'zone_age',   re:/zone.*age/},
+    {key:'zone_val',   re:/zone.*(value|val)/},
+    {key:'lane_age',   re:/lane.*age/},
+    {key:'lane_val',   re:/lane.*(value|val)/},
+    {key:'vendor_age', re:/vendor.*age/},
+    {key:'vendor_val', re:/vendor.*(value|val)/},
+  ];
+  const hits=[];
+  aoa.forEach((row,ri)=>{
+    const joined=norm(row.join(' '));
+    markers.forEach(m=>{ if(m.re.test(joined)&&!hits.some(h=>h.key===m.key))hits.push({key:m.key,ri}); });
+  });
+  hits.sort((a,b)=>a.ri-b.ri);
+  hits.forEach((h,idx)=>{
+    const startR=h.ri+1;
+    const endR=idx+1<hits.length?hits[idx+1].ri:aoa.length;
+    // header row = first non-empty row after the marker
+    let hr=startR; while(hr<endR && aoa[hr] && aoa[hr].every(c=>c===''||c==null))hr++;
+    const header=(aoa[hr]||[]).map(c=>String(c==null?'':c).trim());
+    const cols=header.slice(1).filter(c=>c!=='');
+    const rows=[];
+    for(let r=hr+1;r<endR;r++){
+      const raw=aoa[r]; if(!raw||raw.every(c=>c===''||c==null))continue;
+      const label=String(raw[0]==null?'':raw[0]).trim(); if(!label)continue;
+      if(/grand total|total/i.test(label)){
+        const vals=cols.map((_,i)=>+raw[i+1]||0);
+        rows.push({label:'Grand Total',vals,total:vals.reduce((a,b)=>a+b,0),isTotal:true});
+        continue;
+      }
+      const vals=cols.map((_,i)=>+raw[i+1]||0);
+      rows.push({label,vals,total:vals.reduce((a,b)=>a+b,0)});
+    }
+    out[h.key]={cols,rows};
+  });
+  return out;
+}
+function setHOVData(aoa){ HOV_DATA=parseHOVAOA(aoa); renderHOV(); }
+
+function hovSectionHTML(sec){
+  const d=HOV_DATA[sec.key];
+  if(!d||!d.rows.length){
+    return `<div class="card hov-analysis-card"><div class="hov-analysis-head"><div><h4>${sec.title}</h4><div class="sub">${sec.sub}</div></div></div>
+      <div class="hov-empty">No <b>${sec.title}</b> block found in the HOV sheet. Upload a workbook whose HOV sheet contains this pivot.</div></div>`;
+  }
+  const isVal=/val/.test(sec.key);
+  const body=d.rows.map(r=>{
+    const cls=r.isTotal?'hov-total':'';
+    const cells=r.vals.map(v=>`<td>${isVal?fmtINR(v):fmtN(v)}</td>`).join('');
+    return `<tr class="${cls}"><td>${r.label}</td>${cells}<td><b>${isVal?fmtINR(r.total):fmtN(r.total)}</b></td></tr>`;
+  }).join('');
+  return `<div class="card hov-analysis-card">
+    <div class="hov-analysis-head">
+      <div><h4>${sec.title}</h4><div class="sub">${sec.sub}</div></div>
+      <button class="tool hov-tool" data-hov="${sec.key}" title="Download this block as CSV">CSV</button>
+    </div>
+    <div class="hov-pivot-wrap"><table class="hov-pivot">
+      <thead><tr><th>${sec.title.split('×')[0].trim()}</th>${d.cols.map(c=>`<th>${c}</th>`).join('')}<th>Total</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+  </div>`;
+}
+function renderHOV(){
+  const grid=$('#hovSectionGrid'); if(!grid)return;
+  const anyData=Object.keys(HOV_DATA).length>0;
+  if(!anyData){
+    grid.innerHTML=`<div class="card hov-analysis-card"><div class="hov-empty">
+      The HOV sheet wasn't detected in this workbook. If your file has a sheet named <b>HOV</b> containing the six pivot tables
+      (Zone/Lane/Vendor × Ageing &amp; Value), re-upload it and this section will populate automatically.</div></div>`;
+    return;
+  }
+  grid.innerHTML=HOV_SECTIONS.map(hovSectionHTML).join('');
+  grid.querySelectorAll('[data-hov]').forEach(b=>b.onclick=()=>hovExport(b.dataset.hov));
+}
+function hovExport(key){
+  const d=HOV_DATA[key]; if(!d)return;
+  const sec=HOV_SECTIONS.find(s=>s.key===key);
+  const header=[sec.title.split('×')[0].trim(),...d.cols,'Total'];
+  const lines=[header.join(',')].concat(d.rows.map(r=>[r.label,...r.vals,r.total].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')));
+  dl(new Blob([lines.join('\n')],{type:'text/csv'}),'hov_'+key+'.csv');
+}
+</script>
+<script>
+/* =============================================================
+   LH RECOVERY - CN Working sheet tables
+============================================================= */
+const LHR_DETAIL_COLS=[
+  {k:'email_subject',label:'Email Subject',src:'Email Subject',type:'text'},
+  {k:'lane',label:'Lane',src:'Lane',type:'text'},
+  {k:'zone',label:'Zone',src:'Zone',type:'text'},
+  {k:'type',label:'Type',src:'Type',type:'text'},
+  {k:'email_escalation',label:'Email Escalation (DD-MM-YYYY)',src:'Email Escalation (DD-MM-YYYY)',type:'date'},
+  {k:'impacted_awb',label:'Impacted awb',src:'Impacted awb',type:'text'},
+  {k:'impacted_product_value',label:'Impacted Product value',src:'Impacted Product value',type:'num'},
+  {k:'cn_received_value',label:'CN Received Value',src:'CN Received Value',type:'num'},
+  {k:'cn_received_date',label:'CN Received Date( DD-MM-YYYY)',src:'CN Received Date( DD-MM-YYYY)',type:'date'},
+  {k:'pending_at',label:'Pending at ?',src:'Pending at ?',type:'text'},
+  {k:'remarks',label:'Remarks if any',src:'Remarks if any',type:'text'}
+];
+let LHR_DATA=[],lhrFiltered=[],lhrSortKey='cn_received_date',lhrSortDir=1,lhrColF={};
+function normHeader(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();}
+function pickField(row,label){if(Object.prototype.hasOwnProperty.call(row,label))return row[label];const want=normHeader(label);const key=Object.keys(row).find(k=>normHeader(k)===want);return key?row[key]:'';}
+function parseCNDate(v){if(v==null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);return d?new Date(d.y,d.m-1,d.d):null;}const s0=String(v).trim();let iso=s0.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);if(iso)return new Date(+iso[1],+iso[2]-1,+iso[3]);let m=s0.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}const d=new Date(s0);return isNaN(d)?null:d;}
+function lhrDateText(v){const d=parseCNDate(v);if(!d)return s(v);return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();}
+function lhrMonthLabel(v){const d=parseCNDate(v);if(!d)return 'Blank';return d.toLocaleString('en-US',{month:'short'})+"'"+String(d.getFullYear()).slice(-2);}
+function lhrMonthKey(v){const d=parseCNDate(v);return d?d.getFullYear()*100+d.getMonth()+1:999999;}
+function normalizeLHR(row){const out={};LHR_DETAIL_COLS.forEach(c=>{const val=pickField(row,c.src);out[c.k]=c.type==='num'?+String(val||0).replace(/,/g,'')||0:c.type==='date'?lhrDateText(val):s(val);});out.month=lhrMonthLabel(pickField(row,'CN Received Date( DD-MM-YYYY)'));out.monthKey=lhrMonthKey(pickField(row,'CN Received Date( DD-MM-YYYY)'));return out;}
+function setLHRecoveryData(rows){LHR_DATA=(rows||[]).map(normalizeLHR).filter(r=>LHR_DETAIL_COLS.some(c=>r[c.k]!==''&&r[c.k]!==0));lhrFiltered=[...LHR_DATA];lhrColF={};}
+function lhrBuildHeaders(){
+  $('#lhrTblHdr').innerHTML=LHR_DETAIL_COLS.map(c=>`<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="si"></span></th>`).join('');
+  $('#lhrTblFilters').innerHTML=LHR_DETAIL_COLS.map(c=>`<th><input data-k="${c.k}" data-type="${c.type}" placeholder="filter"></th>`).join('');
+  $$('#lhrTblHdr th[data-k]').forEach(th=>th.onclick=()=>lhrSort(th.dataset.k));
+  $$('#lhrTblFilters input').forEach(inp=>inp.oninput=()=>{lhrColF[inp.dataset.k]=inp.value.trim().toLowerCase();lhrApplyFilter();});
+}
+function lhrApplyFilter(){lhrFiltered=LHR_DATA.filter(r=>LHR_DETAIL_COLS.every(c=>{const q=lhrColF[c.k];if(!q)return true;return String(r[c.k]??'').toLowerCase().includes(q);}));lhrSort(lhrSortKey,true);}
+function lhrSort(k,keepDir=false){if(!keepDir){if(lhrSortKey===k)lhrSortDir*=-1;else{lhrSortKey=k;lhrSortDir=1;}}const col=LHR_DETAIL_COLS.find(c=>c.k===k);lhrFiltered.sort((a,b)=>{let va=a[k]??'',vb=b[k]??'';if(col&&col.type==='num')return ((+va||0)-(+vb||0))*lhrSortDir;if(col&&col.type==='date')return ((parseCNDate(va)?.getTime()||0)-(parseCNDate(vb)?.getTime()||0))*lhrSortDir;return String(va).localeCompare(String(vb),undefined,{numeric:true})*lhrSortDir;});$$('#lhrTblHdr th').forEach(th=>{th.classList.remove('asc','desc');if(th.dataset.k===k)th.classList.add(lhrSortDir===1?'asc':'desc');});lhrRenderAll();}
+function lhrRenderSummary(){if(!LHR_DATA.length){$('#lhrSummaryBody').innerHTML='<tr><td colspan="2" style="text-align:center;padding:22px;color:var(--mut)">Upload a workbook that includes the CN Working sheet.</td></tr>';return;}const m=new Map();for(const r of lhrFiltered){const o=m.get(r.month)||{month:r.month,key:r.monthKey,value:0};o.value+=r.cn_received_value;m.set(r.month,o);}const arr=[...m.values()].sort((a,b)=>a.key-b.key);$('#lhrSummaryBody').innerHTML=arr.map(r=>`<tr><td><b>${r.month}</b></td><td class="num">${fmtN(r.value)}</td></tr>`).join('')||'<tr><td colspan="2" style="text-align:center;padding:22px;color:var(--mut)">No rows match the filters.</td></tr>';lhrRenderSummaryChart(arr);}
+let lhrSummaryChart=null;
+function lhrRenderSummaryChart(arr){
+  const cv=$('#lhrSummaryChart');if(!cv)return;
+  const labels=arr.map(r=>r.month),data=arr.map(r=>r.value);
+  const cfg={type:'line',data:{labels,datasets:[{label:'CN Received Value',data,borderColor:'#1F7A4D',backgroundColor:'rgba(31,122,77,.14)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#1F7A4D',pointHoverRadius:5,borderWidth:2.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtN(c.parsed.y)}}},
+      scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>fmtN(v)}}}}};
+  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.update();}else lhrSummaryChart=new Chart(cv,cfg);
+}
+function lhrRenderTable(){$('#lhrRowCount').textContent=lhrFiltered.length+' of '+LHR_DATA.length+' records';$('#lhrTblBody').innerHTML=lhrFiltered.map(r=>`<tr>${LHR_DETAIL_COLS.map(c=>`<td class="${c.type==='num'?'num':''}" title="${String(r[c.k]??'').replace(/"/g,'&quot;')}">${c.type==='num'?fmtN(r[c.k]):(r[c.k]||'')}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${LHR_DETAIL_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No CN Working rows match the filters.</td></tr>`;}
+function lhrRenderAll(){lhrRenderSummary();lhrRenderTable();}
+function renderLHRecovery(){if(!$('#lhrTblHdr').children.length)lhrBuildHeaders();lhrApplyFilter();}
+
+/* =============================================================
+   LOCK ANALYSIS
+============================================================= */
+let lockCharts={}, lockSealData=[], lockMoveData=[], lockLaneData=[];
+function renderLock(){
+  if(!RAW.length)return;
+  const sealed=new Map(),unsealed=new Map();
+  for(const r of FILTERED){
+    const hasSeal=r.seal_number && r.seal_number.trim()!=='',m=r.movement_type;
+    if(hasSeal){sealed.set(m,(sealed.get(m)||0)+1);}else{unsealed.set(m,(unsealed.get(m)||0)+1);}
+  }
+  const moves=[...new Set(FILTERED.map(r=>r.movement_type))].sort();
+  lockMoveData=moves.map(m=>({move:m,locked:sealed.get(m)||0,unlocked:unsealed.get(m)||0}));
+  lockSealData=[{status:'Sealed',count:FILTERED.filter(r=>r.seal_number&&r.seal_number.trim()).length},
+    {status:'Unsealed',count:FILTERED.filter(r=>!r.seal_number||!r.seal_number.trim()).length}];
+  const lm=new Map();
+  for(const r of FILTERED){
+    const lc=r['Lane Code'],hasSeal=r.seal_number&&r.seal_number.trim();
+    if(!lm.has(lc))lm.set(lc,{total:0,locked:0,value:0});
+    const o=lm.get(lc);o.total++;
+    if(hasSeal){o.locked++;o.value+=r.Product_value;}
+  }
+  lockLaneData=Array.from(lm.entries()).map(([lc,o])=>({Lane_Code:lc,Total:o.total,Locked:o.locked,Unlocked:o.total-o.locked,
+    Lock_pct:o.total?(o.locked/o.total*100).toFixed(1):'0',Avg_Value_Locked:o.locked?(o.value/o.locked).toFixed(0):'0',
+    Risk_Score:(o.total-o.locked).toFixed(0)})).sort((a,b)=>b.Locked-a.Locked);
+  const sx=lockSealData.map(d=>d.status),sy=lockSealData.map(d=>d.count);
+  if(lockCharts.seal){lockCharts.seal.destroy();}
+  lockCharts.seal=new Chart($('#lockSealChart'),{type:'doughnut',data:{labels:sx,datasets:[
+    {data:sy,backgroundColor:['#22A06B','#E31A1C']}]},options:{responsive:true,plugins:{legend:{position:'top'}}}});
+  const mx=lockMoveData.map(d=>d.move),my1=lockMoveData.map(d=>d.locked),my2=lockMoveData.map(d=>d.unlocked);
+  if(lockCharts.move){lockCharts.move.destroy();}
+  lockCharts.move=new Chart($('#lockMoveChart'),{type:'bar',data:{labels:mx,datasets:[
+    {label:'Sealed',data:my1,backgroundColor:'#22A06B'},{label:'Unsealed',data:my2,backgroundColor:'#E31A1C'}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{position:'top'}},scales:{x:{beginAtZero:true}}}});
+  const riskVals=lockLaneData.map(r=>+r.Risk_Score);
+  const rMin=Math.min(...riskVals,0),rMax=Math.max(...riskVals,1);
+  $('#lockLaneBody').innerHTML=lockLaneData.map(r=>`<tr><td>${r.Lane_Code}</td><td class="num">${fmtN(r.Total)}</td><td class="num">${fmtN(r.Locked)}</td><td class="num">${r.Lock_pct}%</td><td class="num">${fmtINR(r.Avg_Value_Locked)}</td><td class="num" style="${heatCellStyle(+r.Risk_Score,rMin,rMax)}">${r.Risk_Score}</td></tr>`).join('');
+  const totalSealed=lockSealData.find(d=>d.status==='Sealed').count;
+  $('#lockStats').innerHTML=[
+    {l:'Sealed Manifests',v:fmtN(totalSealed),s:'with locks'},
+    {l:'Seal %',v:((totalSealed/FILTERED.length)*100).toFixed(1)+'%',s:'of all AWBs'},
+    {l:'Unsealed Risk',v:fmtN(FILTERED.length-totalSealed),s:'AWBs at risk'}
+  ].map(c=>`<div class="lk-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+}
+function exportChartAsJPG(canvasId,filename){
+  const canvas=document.querySelector('#'+canvasId);
+  if(!canvas)return;
+  const url=canvas.toDataURL('image/jpeg',0.95);
+  const a=document.createElement('a');a.href=url;a.download=filename+'.jpg';a.click();
+}
+</script>
+<script>
+/* =============================================================
+   LOGIN · UPLOAD · NAV · BOOT
+   (original working architecture, + password-reset additions)
+============================================================= */
+
+/* ---- credential gate ---- */
+const AUTH_USERS={
+ 'gowri.shankar@shadowfax.in':{pass:'garask123',lhRecovery:true,isAdmin:true},
+ 'anup.pandey1@shadowfax.in':{pass:'Anupsk123',lhRecovery:true},
+ 'sachin.r1@shadowfax.in':{pass:'Sachinsk123',lhRecovery:true},
+ 'indrajeet.chouhan@shadowfax.in':{pass:'Indrask123',lhRecovery:false},
+ 'anna.roy@shadowfax.in':{pass:'Annask123',lhRecovery:false},
+ 'saikat.ghosh@shadowfax.in':{pass:'Saikatsk123',lhRecovery:false},
+ 'anupam.sharma@shadowfax.in':{pass:'Anupamsk123',lhRecovery:false},
+ 'isham.dawood@shadowfax.in':{pass:'Ishamsk123',lhRecovery:false},
+ 'idharmraj.kumar@shadowfax.in':{pass:'Dharmrajsk123',lhRecovery:false},
+ 'raj.singh1@shadowfax.in':{pass:'Rajsk123',lhRecovery:false},
+ 'gaurav.khati@shadowfax.in':{pass:'Gauravsk123',lhRecovery:false},
+ 'paswan.hiteshkumar@shadowfax.in':{pass:'Paswansk123',lhRecovery:false},
+ 'karan.solanki@shadowfax.in':{pass:'karanSK123',lhRecovery:false},
+ 'shyamkumar.raj@shadowfax.in':{pass:'Shyamkumarsk123',lhRecovery:false}
+};
+
+function applyLHRecoveryAccess(allowed){
+  const existing=document.querySelector('.nav button[data-page="lhrecovery"]');
+  if(existing)existing.remove();
+  if(!allowed)return;
+  const nav=document.querySelector('.nav'),lockBtn=document.querySelector('.nav button[data-page="lock"]');
+  const b=document.createElement('button');
+  b.dataset.page='lhrecovery';b.innerHTML='<span class="ic">💰</span>LH Recovery';
+  b.onclick=navClickHandler;
+  if(lockBtn)nav.insertBefore(b,lockBtn);else nav.appendChild(b);
+}
+let IS_ADMIN=false;
+function applyAdminAccess(isAdmin){
+  IS_ADMIN=!!isAdmin;
+  const reUploadBtn=$('#reUpload');
+  if(reUploadBtn)reUploadBtn.style.display=IS_ADMIN?'':'none';
+  if(IS_ADMIN){
+    $('#uploadHeadline').innerHTML='Good morning! <span>Upload today\'s pendency file.</span>';
+    $('#uploadSub').innerHTML='Drop the daily <b>Dashboard.xlsx</b> export (intransit pendency snapshot). Expected columns: Zone, movement_type, Awb_number, MM_origin/destination (+types), Product_value, flag, Lane Code, HOV_flag, intransit_ageing, vendor_name, POD Name, Volumetric_flag, manifest/trip codes.';
+    $('#uploadControls').style.display='';
+    $('#uploadWaitMsg').style.display='none';
+  }else{
+    $('#uploadHeadline').innerHTML='Good morning! <span>Loading today\'s data…</span>';
+    $('#uploadSub').textContent='Pulling the latest pendency snapshot from Google Drive.';
+    $('#uploadControls').style.display='none';
+    $('#uploadWaitMsg').style.display='none';
+  }
+}
+function navClickHandler(){
+  const b=this;
+  $$('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  const p=b.dataset.page;
+  document.body.classList.toggle('hov-page',p==='hov');
+  document.body.classList.toggle('lhrecovery-page',p==='lhrecovery');
+  document.body.classList.toggle('manifest-page',p==='manifest');
+  $$('.page').forEach(pg=>pg.classList.remove('active'));
+  $('#page-'+p).classList.add('active');
+  $('#pageTitle').textContent=PAGE_META[p][0];$('#pageCrumb').textContent=PAGE_META[p][1];
+  $('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');
+  requestAnimationFrame(()=>{CHARTS.filter(c=>c.page===p).forEach(c=>c.chart&&c.chart.resize());
+    if(heroChart&&p==='overview')heroChart.resize();
+    if(lhrSummaryChart&&p==='lhrecovery')lhrSummaryChart.resize();});
+}
+function doLogin(){
+  const u=$('#loginUser').value.trim(),p=$('#loginPass').value;
+  const rec=AUTH_USERS[u.toLowerCase()];
+  if(!u||!p||!rec||rec.pass!==p){
+    $('#loginErr').textContent='Invalid username or password.';
+    $('#loginErr').style.display='block';
+    return;
+  }
+  $('#loginErr').style.display='none';
+  sessionStorage.setItem('sfx_user',u.toLowerCase());
+  sessionStorage.setItem('sfx_lhr',rec.lhRecovery?'1':'0');
+  sessionStorage.setItem('sfx_admin',rec.isAdmin?'1':'0');
+  applyLHRecoveryAccess(rec.lhRecovery);
+  applyAdminAccess(rec.isAdmin);
+  $('#loginScreen').style.display='none';
+  $('#uploadScreen').style.display='block';
+  loadFromDriveBridge(false);
+}
+$('#loginBtn').onclick=doLogin;
+$('#loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* ---- password reset (front-end demo) ---- */
+function showReset(){$('#signinView').style.display='none';$('#resetView').style.display='block';
+  $('#resetMsg').style.display='none';$('#resetEmail').value=($('#loginUser').value||'').trim();}
+function showSignin(){$('#resetView').style.display='none';$('#signinView').style.display='block';}
+$('#forgotLink').onclick=e=>{e.preventDefault();showReset();};
+$('#backToLogin').onclick=e=>{e.preventDefault();showSignin();};
+$('#resetBtn').onclick=()=>{
+  const email=($('#resetEmail').value||'').trim().toLowerCase(),msg=$('#resetMsg');
+  msg.style.display='block';
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){msg.style.color='#DC2626';msg.textContent='Enter a valid work email address.';return;}
+  msg.style.color='#15803D';
+  msg.textContent='If an account exists for '+email+', password reset instructions have been sent. Contact your admin if you don\'t receive them.';
+};
+$('#resetEmail').addEventListener('keydown',e=>{if(e.key==='Enter')$('#resetBtn').click();});
+
+$('#logoutBtn').onclick=()=>{sessionStorage.removeItem('sfx_user');sessionStorage.removeItem('sfx_lhr');sessionStorage.removeItem('sfx_admin');location.reload();};
+if(sessionStorage.getItem('sfx_user')&&AUTH_USERS[sessionStorage.getItem('sfx_user')]){
+  $('#loginScreen').style.display='none';$('#uploadScreen').style.display='block';
+  applyLHRecoveryAccess(sessionStorage.getItem('sfx_lhr')==='1');
+  applyAdminAccess(sessionStorage.getItem('sfx_admin')==='1');
+  loadFromDriveBridge(false);
+}else{
+  sessionStorage.removeItem('sfx_user');sessionStorage.removeItem('sfx_lhr');sessionStorage.removeItem('sfx_admin');
+}
+
+/* ---------- upload & parse ---------- */
+const dz=$('#dropZone');
+$('#browseBtn').onclick=()=>$('#fileInput').click();
+$('#fileInput').onchange=e=>{if(e.target.files[0])parseFile(e.target.files[0]);};
+['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)parseFile(f);});
+$('#reUpload').onclick=()=>{if(!IS_ADMIN)return;$('#app').style.display='none';$('#uploadScreen').style.display='block';};
+
+function setStatus(msg){$('#parseStatus').style.display='flex';$('#parseMsg').textContent=msg;}
+
+/* ---------- Google Drive auto-load bridge ---------- */
+const DRIVE_BRIDGE_URL='https://script.google.com/macros/s/AKfycbwUMaFV8zcRp6QNk9St7LC3pF5mZQklDpmlwZu9sbA48pXexT1oDiIkbX-q4-TdaVfdLA/exec';
+
+function driveBridgeConfigured(){
+  return DRIVE_BRIDGE_URL && !DRIVE_BRIDGE_URL.includes('PASTE_YOUR');
+}
+
+async function loadFromDriveBridge(manual){
+  if(!driveBridgeConfigured())return false;
+  const btn=$('#driveRefreshBtn');
+  if(btn)btn.disabled=true;
+  try{
+    if(manual){$('#app').style.display='none';$('#uploadScreen').style.display='block';}
+    $('#uploadWaitMsg').style.display='none';
+    setStatus('Checking Google Drive for the latest file…');
+    const metaRes=await fetch(DRIVE_BRIDGE_URL+'?action=meta');
+    const meta=await metaRes.json();
+    if(meta.error)throw new Error(meta.error);
+    const total=meta.size,chunkSize=meta.chunkSize||(15*1024*1024);
+    const totalChunks=Math.ceil(total/chunkSize);
+    const buffer=new Uint8Array(total);
+    let start=0,chunkIdx=0;
+    while(start<total){
+      chunkIdx++;
+      setStatus(`Downloading ${meta.name} — part ${chunkIdx} of ${totalChunks} (${(total/1048576).toFixed(1)} MB total)…`);
+      const r=await fetch(DRIVE_BRIDGE_URL+'?action=chunk&start='+start);
+      const j=await r.json();
+      if(j.error)throw new Error(j.error);
+      const bin=atob(j.base64);
+      const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      buffer.set(bytes,start);
+      start=j.end+1;
+    }
+    parseWorkbookBuffer(buffer,meta.name);
+    return true;
+  }catch(err){
+    console.warn('Drive auto-load failed:',err.message);
+    if(manual){setStatus('⚠ Drive refresh failed: '+err.message);}
+    else if(IS_ADMIN){$('#parseStatus').style.display='none';}
+    else{$('#parseStatus').style.display='none';$('#uploadWaitMsg').style.display='block';}
+    if(btn)btn.disabled=false;
+    return false;
+  }
+}
+$('#driveRefreshBtn').onclick=()=>loadFromDriveBridge(true);
+if(!driveBridgeConfigured())$('#driveRefreshBtn').style.display='none';
+
+function parseFile(file){
+  setStatus('Reading '+file.name+' ('+(file.size/1048576).toFixed(1)+' MB)…');
+  const reader=new FileReader();
+  reader.onload=e=>parseWorkbookBuffer(new Uint8Array(e.target.result),file.name);
+  reader.onerror=()=>setStatus('⚠ File read failed.');
+  reader.readAsArrayBuffer(file);
+}
+
+function normHeader(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();}
+
+function parseWorkbookBuffer(bytes,fileName){
+  setStatus('Parsing workbook — large files can take up to a minute…');
+  setTimeout(()=>{
+    try{
+      const wb=XLSX.read(bytes,{type:'array',dense:true,cellDates:true});
+      const mainSheetName=wb.SheetNames.includes('Base')?'Base':(wb.SheetNames.includes('Dashboard')?'Dashboard':wb.SheetNames[0]);
+      const ws=wb.Sheets[mainSheetName];
+      const cnSheetName=wb.SheetNames.find(n=>{const h=normHeader(n);return h==='cnworking'||h==='cnworkingsheet'||(h.includes('cn')&&h.includes('working'));});
+      const cnWs=cnSheetName?wb.Sheets[cnSheetName]:null;
+      const hovSheetName=wb.SheetNames.find(n=>normHeader(n)==='hov'||normHeader(n)==='hovsheet');
+      const hovWs=hovSheetName?wb.Sheets[hovSheetName]:null;
+      setStatus('Converting rows…');
+      setTimeout(()=>{
+        try{
+          const json=XLSX.utils.sheet_to_json(ws,{raw:true,defval:''});
+          setLHRecoveryData(cnWs?XLSX.utils.sheet_to_json(cnWs,{raw:true,defval:''}):[]);
+          setHOVData(hovWs?XLSX.utils.sheet_to_json(hovWs,{header:1,raw:true,defval:''}):[]);
+          if(!json.length)throw new Error('Sheet is empty');
+          if(!('Awb_number'in json[0])||!('Product_value'in json[0]))
+            throw new Error('Expected columns not found (need at least Awb_number & Product_value). Check the file format.');
+          boot(json.map(normalize));
+        }catch(err){setStatus('⚠ '+err.message);}
+      },30);
+    }catch(err){setStatus('⚠ Could not read file: '+err.message);}
+  },30);
+}
+
+/* ---------- sample data ---------- */
+$('#sampleBtn').onclick=()=>{
+  setStatus('Generating sample snapshot…');
+  setTimeout(()=>{
+    const zones=['South','West','North','East'],zw=[.39,.23,.21,.17];
+    const moves=['National','Tertiary (LM - LM)','Zonal','Intracity','Intracity - FM/RTS','Express LH - Railway'];
+    const mw=[.45,.27,.15,.06,.05,.02];
+    const dcs={South:['Bangalore DC','Hyderabad DC','Chennai DC','Hoskote FM'],West:['Surat DC','Mumbai DC','Ahmedabad DC','Pune DC'],
+      North:['NCR Bilaspur DC','OneNCR DC','Jaipur DC','Chandigarh DC'],East:['Kolkata DC','Patna DC','Guwahati DC','Bhubneshwar DC']};
+    const vendors=['Dummy Transporter','Jaiswal Associates - FTL','TCI - FTL','GMRC road carriers','Delhi Vapi Road Lines - FTL','GoBolt - FTL','Zast - FTL','Jeevan Mini Transport','KTC Translogistics - FTL','BG Logistics'];
+    const pods=['POD_BLR','POD_CHN','POD_HYD','POD_GJ','POD_BOM/PNQ','POD_NCR/UP_West','POD_MP/RJ','POD_BH/JH','POD_CCU/ROWB','POD_NE'];
+    const ABKT_SAMPLE=['A. 0 to 6 days','B. 7 to 13 days','C. 14 to 20 days','D. 21 to 27 days','E. 28 to 34 days','F. 35+ Days'];
+    const pick=(arr,w)=>{if(!w)return arr[Math.floor(Math.random()*arr.length)];
+      let r=Math.random(),i=0;while(r>w[i]){r-=w[i];i++;}return arr[Math.min(i,arr.length-1)];};
+    const rows=[];
+    for(let i=0;i<6000;i++){
+      const z=pick(zones,zw),o=pick(dcs[z]),dz2=pick(zones),d=pick(dcs[dz2]);
+      const age=Math.random()<.6?2+Math.floor(Math.random()*3):Math.random()<.7?5+Math.floor(Math.random()*12):20+Math.floor(Math.random()*80);
+      const abIdx=age<=6?0:age<=13?1:age<=20?2:age<=27?3:age<=34?4:5;
+      const hov=Math.random()<.05,hovType=hov?(Math.random()<.28?'HHOV':'HOV'):'Non-HOV';
+      const mc='DHFXSF'+(900000000+Math.floor(Math.random()*99999999));
+      rows.push({Zone:z,movement_type:pick(moves,mw),Awb_number:'SF'+(3000000000+Math.floor(Math.random()*999999999))+'FPL',
+        MM_origin:o,MM_origin_type:'MM',MM_destination:d,MM_destination_type:Math.random()<.6?'MM':'JIT/AD',
+        Product_value:hov?2000+Math.floor(Math.random()*30000):60+Math.floor(Math.random()*900),
+        flag:Math.random()<.6?'fwd_pendency':'rev_pendency','Lane Type':'National',
+        'Lane Code':o.split(' ')[0].slice(0,3).toUpperCase()+'-'+d.split(' ')[0].slice(0,3).toUpperCase()+'-'+(1+Math.floor(Math.random()*3)),
+        HOV_flag:hovType,intransit_ageing:age,intransit_ageing_bucket:String(Math.min(age,10)),
+        'Ageing bucket':ABKT_SAMPLE[abIdx],
+        vehicle_number:'HR'+(10+Math.floor(Math.random()*89))+'AZ'+(1000+Math.floor(Math.random()*8999)),
+        vendor_name:pick(vendors),Manifest_code:mc,MM_code:'MMN-'+Math.random().toString(36).slice(2,10).toUpperCase(),
+        trip_code:Math.random()<.65?'TRP'+Math.random().toString(36).slice(2,10).toUpperCase():'',
+        'POD Name':pick(pods),Volumetric_flag:Math.random()<.07?'Volumetric':'Normal',
+        seal_number:Math.random()<.55?'SL'+Math.floor(Math.random()*999999):'',
+        Client:pick(['FTPL','MarketPlace','B2B']),'IT Date':new Date(),'IT Time':new Date(),
+        Days:age,ShipmentInManifest:Math.floor(Math.random()*50)+1,CurrentShipmentInManifest:Math.floor(Math.random()*50)+1,
+        remarks:'Bag level',Manifest_origin:o,Manifest_Destination:d,Manifest_status:'IN_TRANSIT',
+        manifest_in_transit_time:new Date().toISOString()});
+    }
+    setHOVData([]);
+    boot(rows.map(normalize));
+  },50);
+};
+
+/* ---------- boot dashboard ---------- */
+let booted=false;
+function boot(rows){
+  RAW=rows;filters={};
+  $('#uploadScreen').style.display='none';
+  $('#app').style.display='block';
+  $('#rowTotalLbl').textContent=fmtN(RAW.length);
+  $('#footRows').textContent=fmtN(RAW.length)+' AWBs';
+  $('#todayLbl').textContent=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  $('#parseStatus').style.display='none';$('#fileInput').value='';
+  if(!booted){
+    mountCharts();
+    $('#wiDim').onchange=refreshWhatIfEntities;
+    $('#wiEnt').onchange=runWhatIf;
+    $('#wiPct').oninput=runWhatIf;
+    $('#tblSearch').oninput=()=>renderTable(true);
+    $('#pgPrev').onclick=()=>{tblPage--;renderTable();};
+    $('#pgNext').onclick=()=>{tblPage++;renderTable();};
+    $('#tblCsv').onclick=()=>exportTable('csv');
+    /* ---- Lane View wiring ---- */
+    $('#lvPrev').onclick=()=>{if(lvPage>1){lvPage--;lvRenderDetail();}};
+    $('#lvNext').onclick=()=>{lvPage++;lvRenderDetail();};
+    $('#lvLaneCsv').onclick=()=>lvExport(lvLaneExport,'csv','top20_lanes','lanes');
+    $('#lvTypeCsv').onclick=()=>lvExport(lvTypeExport,'csv','awb_by_lanetype','lanetype');
+    $('#lvDetCsv').onclick=()=>lvExport(lvDetailExport(),'csv','lane_detail','detail');
+    /* ---- Manifest vs Shipments wiring ---- */
+    $('#mvPrev').onclick=()=>{if(mvPage>1){mvPage--;mvRenderDetail();}};
+    $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
+    $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','top20_manifest_lanes','lanes');
+    $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','manifest_by_lanetype','lanetype');
+    $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','detail');
+    /* ---- LH Recovery wiring ---- */
+    $('#lhrFReset').onclick=()=>{$$('#lhrTblFilters input').forEach(el=>el.value='');lhrColF={};lhrApplyFilter();};
+    $('#lhrSummaryCsv').onclick=()=>{const m=new Map();for(const r of lhrFiltered){const o=m.get(r.month)||{month:r.month,key:r.monthKey,value:0};o.value+=r.cn_received_value;m.set(r.month,o);}const rows=[...m.values()].sort((a,b)=>a.key-b.key).map(r=>[r.month,r.value].map(csvEscape).join(','));dl(new Blob([['Month,CN Received Value',...rows].join('\n')],{type:'text/csv'}),'lh_recovery_amount.csv');};
+    $('#lhrDetailCsv').onclick=()=>{const h=LHR_DETAIL_COLS.map(c=>csvEscape(c.label)).join(',');const rows=lhrFiltered.map(r=>LHR_DETAIL_COLS.map(c=>csvEscape(r[c.k])).join(','));dl(new Blob([[h,...rows].join('\n')],{type:'text/csv'}),'lh_recovery_detail.csv');};
+    /* ---- Lock Analysis wiring ---- */
+    $('#lockSealCsv').onclick=()=>dl(new Blob([['Status,Count'].concat(lockSealData.map(r=>`${r.status},${r.count}`)).join('\n')],{type:'text/csv'}),'lock_seal_status.csv');
+    $('#lockSealJpg').onclick=()=>exportChartAsJPG('lockSealChart','lock_seal_status');
+    $('#lockMoveCsv').onclick=()=>dl(new Blob([['Movement,Sealed,Unsealed'].concat(lockMoveData.map(r=>`${r.move},${r.locked},${r.unlocked}`)).join('\n')],{type:'text/csv'}),'lock_by_movement.csv');
+    $('#lockMoveJpg').onclick=()=>exportChartAsJPG('lockMoveChart','lock_by_movement');
+    $('#lockLaneCsv').onclick=()=>dl(new Blob([['Lane_Code,Total,Locked,Unlocked,Lock_Pct,Avg_Value_Locked,Risk_Score'].concat(lockLaneData.map(r=>`${r.Lane_Code},${r.Total},${r.Locked},${r.Unlocked},${r.Lock_pct},${r.Avg_Value_Locked},${r.Risk_Score}`)).join('\n')],{type:'text/csv'}),'lock_by_lane.csv');
+    booted=true;
+  }else{
+    CHARTS.forEach(def=>{def.locked=false;def.card.classList.remove('frozen');
+      def.tableMode=false;def.tableSort={key:null,dir:1};def.card.classList.remove('table-mode');
+      const lb=def.card.querySelector('[data-t=lock]');lb.textContent='🔓';lb.classList.remove('lock-on');
+      const tb=def.card.querySelector('[data-t=swap]');tb.classList.remove('table-on');tb.title='Show table view';});
+    FILTER_DEFS.forEach(d=>{if(d._w)d._w.remove();});
+  }
+  buildFilterBar();
+  updateAll();
+}
+
+/* ---------- navigation & mobile ---------- */
+const PAGE_META={overview:['Executive Overview','Snapshot of all in-transit pendency'],
+  pendency:['Pendency Analytics','Where freight is stuck and for how long'],
+  value:['Value-at-Risk Analytics','Product value exposure, Trends & ABC'],
+  rootcause:['Root Cause & What-If','Drivers of delay and recapture simulation'],
+  laneview:['Lane View','Lane-level pendency · top lanes, lane-type rollup & per-column AWB drill'],
+  manifest:['Manifest vs Shipments','Manifest-level pendency · top lanes by manifest count & shipment drill'],
+  investigate:['Investigation Center','AWB-level drill-through'],
+  hov:['HOV Analytics','HOV flag analysis, ageing & product value distribution'],
+  lhrecovery:['LH Recovery','Recovery tracking, loss mitigation & timeline analysis'],
+  lock:['Lock Analysis','Lock & seal status, manifest integrity & risk assessment']};
+$$('.nav button').forEach(b=>b.onclick=navClickHandler);
+$('#hamb').onclick=()=>{$('#sidebar').classList.toggle('open');$('#overlay').classList.toggle('show');};
+$('#overlay').onclick=()=>{$('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');};
+</script>
+</body>
+</html>
