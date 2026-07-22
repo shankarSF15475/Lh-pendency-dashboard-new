@@ -91,9 +91,9 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--pine);box-shadow:var(--shadow)}
 .pill b{color:var(--ink)}
 #reUpload{background:var(--pine);color:var(--lime);border:none;border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
-#driveRefreshBtn{background:#fff;color:var(--pine);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
-#driveRefreshBtn:hover{background:var(--bg)}
-#driveRefreshBtn:disabled{opacity:.55;cursor:default}
+#supaRefreshBtn{background:#fff;color:var(--pine);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
+#supaRefreshBtn:hover{background:var(--bg)}
+#supaRefreshBtn:disabled{opacity:.55;cursor:default}
 #uploadWaitMsg{display:none;margin-top:22px;padding:16px 18px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--lime-soft);font-size:13px;line-height:1.6}
 
 /* ---------- FILTER BAR ---------- */
@@ -165,13 +165,12 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .mv-mcsel-panel .mc-actions{display:flex;gap:8px;padding:6px 12px;border-top:1px solid var(--line);margin-top:4px}
 .mv-mcsel-panel .mc-actions button{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:3px 8px;background:#F7FAF6;cursor:pointer;color:var(--text)}
 .mv-mcsel-panel .mc-actions button:hover{background:var(--pine);color:var(--lime)}
-/* MM destination expand row — plain <tr> cells aligned to same columns as header */
-.mv-dest-row{background:#F8F9FE!important}
-.mv-dest-row td{border-bottom:1px solid var(--line)!important;white-space:nowrap}
-.mv-dest-row:hover td{background:#F1F3FB!important}
+/* MM destination expand row */
+.mv-dest-row{background:#EEF7F2!important}
+.mv-dest-row td{padding:0!important;border-bottom:1px solid #C5E3D5!important}
 .mv-dest-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
 .mv-dest-chip{background:#D1F0E0;color:#1A5C38;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700}
-/* pivot sub-table kept for any legacy use */
+/* pivot sub-table inside expanded lane row */
 .mv-pivot-wrap{width:100%;border-collapse:collapse}
 .mv-pivot-wrap td{padding:5px 10px;font-size:12px;border-bottom:1px solid #D9EEE5;white-space:nowrap}
 .mv-pivot-wrap td.num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace;font-weight:600}
@@ -493,13 +492,10 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .mv-pivot-wrap td.aged-red{background:transparent;color:var(--text);font-weight:600;}
 .mv-pivot-wrap td.aged-ora{background:transparent;color:var(--text);font-weight:600;}
 .mv-pivot-wrap td.total-col{background:#F1F3FB;color:var(--ink);font-weight:800;}
-.mv-lane-summary{background:#F0F2FA;}
-.mv-lane-summary td{border-top:1px solid #D5D9F0!important;border-bottom:1px solid #D5D9F0!important;}
-.mv-lane-summary.mv-expanded td{border-bottom:none!important;}
-.mv-lane-summary:hover td{background:#E8EAF6!important;}
-.mv-dest-row{background:#F8F9FE!important;}
+.mv-lane-summary{background:#F8F9FC;}
+.mv-lane-summary td{border-top:2px solid var(--line)!important;border-bottom:1px solid var(--line)!important;}
+.mv-dest-row{background:#FBFBFE!important;}
 .mv-dest-row td{border-bottom:1px solid var(--line)!important;}
-.mv-dest-row:hover td{background:#F1F3FB!important;}
 .mv-pivot-wrap td{border-bottom:1px solid var(--line);}
 .mv-pivot-wrap td.dest-name{color:var(--pine);}
 .mv-pivot-wrap tr:hover td{background:#F1F3FB!important;}
@@ -676,7 +672,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="top-right">
         <span class="pill">📅 <b id="todayLbl"></b></span>
         <span class="pill">Showing <b id="rowCountLbl">0</b> of <b id="rowTotalLbl">0</b> AWBs</span>
-        <button id="driveRefreshBtn" title="Pull the latest file from Google Drive">🔄 Refresh from Drive</button>
+        <button id="supaRefreshBtn" title="Pull the latest data from Supabase">🔄 Load from Supabase</button>
         <button id="reUpload">⬆ New file</button>
       </div>
     </div>
@@ -1145,20 +1141,13 @@ function normalize(r){
     HOV_flag:s(r.HOV_flag)||'Non-HOV',intransit_ageing:age,bucket:bucketOf(age),
     vehicle_number:s(r.vehicle_number),vendor_name:s(r.vendor_name)||'Unknown',
     'POD Name':s(r['POD Name'])||'Unknown',Volumetric_flag:s(r.Volumetric_flag)||'Normal',
-    Manifest_code:s(r.Manifest_code),trip_code:s(r.trip_code)||s(r.trip_code===0?'':r.trip_code),MM_code:s(r.MM_code),
+    Manifest_code:s(r.Manifest_code),trip_code:s(r.trip_code),MM_code:s(r.MM_code),
     'Lane Type':s(r['Lane Type'])||'Unknown',seal_number:s(r.seal_number),Client:s(r.Client)||'Unknown',
     'IT Date':excelDate(r['IT Date']),'IT Time':excelTime(r['IT Time']),
     Manifest_origin:s(r.Manifest_origin)||'Unknown',Manifest_Destination:s(r.Manifest_Destination)||'Unknown',
     Manifest_status:s(r.Manifest_status)||'Unknown',
-    /* carry real Ageing bucket column directly — "A. 0 to 6 days" etc */
     'Ageing bucket':s(r['Ageing bucket'])||'',
-    intransit_ageing_bucket:s(r['intransit_ageing_bucket'])||'',
-    /* extra columns present in the real Dashboard sheet */
-    Days:+r['Days']||0,
-    ShipmentInManifest:+r['ShipmentInManifest']||0,
-    CurrentShipmentInManifest:+r['CurrentShipmentInManifest']||0,
-    remarks:s(r['remarks']),
-    manifest_in_transit_time:s(r['manifest_in_transit_time'])};
+    intransit_ageing_bucket:s(r['intransit_ageing_bucket'])||s(r.intransit_ageing_bucket)||''};
 }
 
 const FILTER_DEFS=[
@@ -1920,89 +1909,57 @@ function lvDetailExport(){
 <script>
 /* =============================================================
    MANIFEST VS SHIPMENTS  — lane→manifest pivots + detail
-   Real Ageing bucket values: A. 0 to 6 days … F. 35+ Days
 ============================================================= */
 const MV_DETAIL_COLS=[
-  {k:'Manifest_code',            label:'Manifest Code',           type:'text', cls:'mono'},
-  {k:'Lane Code',                label:'Lane Code',               type:'text'},
-  {k:'Lane Type',                label:'Lane Type',               type:'cat'},
-  {k:'Manifest_origin',          label:'Origin',                  type:'text'},
-  {k:'Manifest_Destination',     label:'Destination',             type:'text'},
-  {k:'Manifest_status',          label:'Status',                  type:'cat'},
-  {k:'Ageing bucket',            label:'Ageing Bucket',           type:'cat'},
-  {k:'intransit_ageing',         label:'IT Ageing (d)',           type:'num'},
-  {k:'Days',                     label:'Days',                    type:'num'},
-  {k:'ShipmentInManifest',       label:'Shipments in Manifest',   type:'num'},
-  {k:'CurrentShipmentInManifest',label:'Current Shipments',       type:'num'},
-  {k:'Product_value',            label:'Product Value ₹',         type:'num'},
-  {k:'remarks',                  label:'Remarks',                 type:'text'},
-  {k:'Manifest_code',            label:'_dup',                    skip:true},   // placeholder — hidden
+  {k:'Manifest_code', label:'Manifest',   type:'text', cls:'mono'},
+  {k:'Lane Code',     label:'Lane Code',  type:'text'},
+  {k:'Lane Type',     label:'Lane Type',  type:'cat'},
+  {k:'Manifest_origin',      label:'Origin',      type:'text'},
+  {k:'Manifest_Destination', label:'Destination', type:'text'},
+  {k:'Manifest_status',      label:'Status',      type:'cat'},
+  {k:'intransit_ageing',     label:'Ageing (d)',  type:'num'},
+  {k:'Ageing bucket',        label:'Ageing Bkt',  type:'cat'},
+  {k:'Product_value',        label:'Value ₹',     type:'num'},
+  {k:'trip_code',            label:'Trip Code',   type:'text', cls:'mono'},
 ];
-/* Real Ageing bucket labels as they appear in the data column */
-const ABKT=[
-  'A. 0 to 6 days',
-  'B. 7 to 13 days',
-  'C. 14 to 20 days',
-  'D. 21 to 27 days',
-  'E. 28 to 34 days',
-  'F. 35+ Days',
-];
-/* Short header labels for the pivot table columns (matches screenshot) */
-const ABKT_LABELS=['0–6 DAYS','7–13 DAYS','14–20 DAYS','21–27 DAYS','28–34 DAYS','35+ DAYS'];
-/* CSS class for old/red buckets */
-const ABKT_CLS={
-  'A. 0 to 6 days':'','B. 7 to 13 days':'','C. 14 to 20 days':'',
-  'D. 21 to 27 days':'aged-ora','E. 28 to 34 days':'aged-ora','F. 35+ Days':'aged-red',
-};
+const ABKT=['0-1','2-3','4-7','8-15','16-30','30+'];
+function ageBktOf(d){d=+d||0;if(d<=1)return'0-1';if(d<=3)return'2-3';if(d<=7)return'4-7';if(d<=15)return'8-15';if(d<=30)return'16-30';return'30+';}
+const ABKT_CLS={'0-1':'','2-3':'','4-7':'','8-15':'aged-ora','16-30':'aged-ora','30+':'aged-red'};
 
 let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'value',dir:-1}, mvTypeSort={k:'value',dir:-1};
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvExpandedLane=null;
 
-/* one row per Manifest_code: sum value, max ageing, keep first-seen metadata */
+/* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
   const m=new Map();
   for(const r of data){
     const code=r.Manifest_code||''; if(!code)continue;
     let o=m.get(code);
-    if(!o){
-      o={Manifest_code:code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
-        Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
-        Manifest_status:r.Manifest_status,
-        'Ageing bucket':r['Ageing bucket']||'',   // use real column — don't derive
-        intransit_ageing:r.intransit_ageing,
-        Days:r.Days||0,
-        ShipmentInManifest:r.ShipmentInManifest||0,
-        CurrentShipmentInManifest:r.CurrentShipmentInManifest||0,
-        remarks:r.remarks||'',
-        Product_value:0,_awbs:0};
-      m.set(code,o);
-    }
-    o.Product_value+=r.Product_value;
-    o._awbs++;
-    if(r.intransit_ageing>o.intransit_ageing){
-      o.intransit_ageing=r.intransit_ageing;
-      // update ageing bucket to the worst one seen
-      if(r['Ageing bucket'])o['Ageing bucket']=r['Ageing bucket'];
-    }
+    if(!o){o={Manifest_code:code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
+      Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
+      Manifest_status:r.Manifest_status,intransit_ageing:r.intransit_ageing,
+      Product_value:0,trip_code:r.trip_code,_awbs:0};m.set(code,o);}
+    o.Product_value+=r.Product_value; o._awbs++;
+    if(r.intransit_ageing>o.intransit_ageing)o.intransit_ageing=r.intransit_ageing;
   }
-  return [...m.values()];
+  const rows=[...m.values()];
+  rows.forEach(o=>{o['Ageing bucket']=ageBktOf(o.intransit_ageing);});
+  return rows;
 }
 
 function mvCatOptions(c,rows){
-  const u=[...new Set(rows.map(r=>String(r[c.k]||'')))].filter(x=>x!=='');
-  if(c.k==='Ageing bucket'||c.k==='Lane Type'||c.k==='Manifest_status')
-    return ABKT.filter(o=>u.includes(o)).concat(u.filter(x=>!ABKT.includes(x)));
+  const u=[...new Set(rows.map(r=>r[c.k]))].filter(x=>x!=='');
+  if(c.k==='Ageing bucket')return ABKT.filter(o=>u.includes(o)).concat(u.filter(x=>!ABKT.includes(x)));
   return u.sort((a,b)=>String(a).localeCompare(String(b)));
 }
 
 function mvBuildHeaders(){
   const rows=mvBuildManifestRows(RAW);
-  const visibleCols=MV_DETAIL_COLS.filter(c=>!c.skip);
-  $('#mvDetHead').innerHTML=visibleCols.map(c=>
+  $('#mvDetHead').innerHTML=MV_DETAIL_COLS.map(c=>
     `<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="arr"></span></th>`).join('');
-  $('#mvDetFilters').innerHTML=visibleCols.map(c=>{
+  $('#mvDetFilters').innerHTML=MV_DETAIL_COLS.map(c=>{
     if(c.type==='text')return `<th><input data-k="${c.k}" data-ft="text" placeholder="contains…"></th>`;
     if(c.type==='num') return `<th><div class="lv-rng"><input data-k="${c.k}" data-ft="min" type="number" placeholder="min"><input data-k="${c.k}" data-ft="max" type="number" placeholder="max"></div></th>`;
     const opts=mvCatOptions(c,rows);
@@ -2011,8 +1968,8 @@ function mvBuildHeaders(){
   }).join('');
 
   $$('#mvDetHead th').forEach(th=>th.onclick=()=>{
-    const k=th.dataset.k, col=visibleCols.find(c=>c.k===k);
-    mvSort.dir = mvSort.k===k ? -mvSort.dir : (col&&col.type==='text'?1:-1);
+    const k=th.dataset.k, col=MV_DETAIL_COLS.find(c=>c.k===k);
+    mvSort.dir = mvSort.k===k ? -mvSort.dir : (col.type==='text'?1:-1);
     mvSort.k=k; mvRenderDetail(true);
   });
   $$('#mvDetFilters input[data-ft]').forEach(inp=>inp.oninput=()=>{
@@ -2039,7 +1996,7 @@ function mvBuildHeaders(){
   /* Ageing bucket + in-transit bucket top filters */
   const abopts=ABKT.slice();
   $('#mvAgeingPanel').insertAdjacentHTML('afterbegin',
-    abopts.map(o=>`<label><input type="checkbox" value="${o}"><span>${o}</span></label>`).join(''));
+    abopts.map(o=>`<label><input type="checkbox" value="${o}"><span>${o} days</span></label>`).join(''));
   $$('#mvAgeingPanel input[type=checkbox]').forEach(ch=>ch.onchange=()=>{
     mvAgeingSel=new Set([...$$('#mvAgeingPanel input:checked')].map(x=>x.value));
     $('#mvAgeingBtn').classList.toggle('active',mvAgeingSel.size>0);
@@ -2073,13 +2030,13 @@ function mvClearCols(){
   mvRenderDetail(true);
 }
 
-/* Base manifest rows for detail table + type rollup:
-   apply top filters then dedupe to one row per manifest code */
+/* base rows for manifest views = filtered by global filters + the two mv top-filters */
 function mvBaseRows(){
   let d=FILTERED;
   if(mvItBktSel.size)d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
-  if(mvAgeingSel.size)d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
-  return mvBuildManifestRows(d);
+  let rows=mvBuildManifestRows(d);
+  if(mvAgeingSel.size)rows=rows.filter(o=>mvAgeingSel.has(o['Ageing bucket']));
+  return rows;
 }
 
 function mvDrillByLane(lane){ mvExpandedLane = mvExpandedLane===lane ? null : lane; mvRenderLaneTbl(); }
@@ -2113,33 +2070,25 @@ let mvT=null; function mvSchedule(){clearTimeout(mvT);mvT=setTimeout(()=>mvRende
 function mvRenderDetail(reset){
   if(reset)mvPage=1;
   let rows=mvFilterRows();
-  const visibleCols=MV_DETAIL_COLS.filter(c=>!c.skip);
-  const col=visibleCols.find(x=>x.k===mvSort.k);
-  rows.sort((a,b)=>{ const av=a[mvSort.k]??'',bv=b[mvSort.k]??'';
-    if(col&&col.type==='num')return ((+av||0)-(+bv||0))*mvSort.dir;
-    if(col&&col.k==='Ageing bucket'){return (ABKT.indexOf(String(av))-ABKT.indexOf(String(bv)))*mvSort.dir;}
+  const col=MV_DETAIL_COLS.find(x=>x.k===mvSort.k);
+  rows.sort((a,b)=>{ const av=a[mvSort.k],bv=b[mvSort.k];
+    if(mvSort.k==='value')return (a.Product_value-b.Product_value)*mvSort.dir;
+    if(col&&col.type==='num')return (av-bv)*mvSort.dir;
     return String(av).localeCompare(String(bv))*mvSort.dir;
   });
   mvDetailRows=rows;
   const pages=Math.max(1,Math.ceil(rows.length/MV_PAGE));
   if(mvPage>pages)mvPage=pages;
   const slice=rows.slice((mvPage-1)*MV_PAGE,mvPage*MV_PAGE);
-  $('#mvDetBody').innerHTML=slice.map(r=>'<tr>'+visibleCols.map(c=>{
+  $('#mvDetBody').innerHTML=slice.map(r=>'<tr>'+MV_DETAIL_COLS.map(c=>{
     const v=r[c.k];
-    if(c.type==='num'){
-      if(c.k==='intransit_ageing'||c.k==='Days')
-        return `<td class="num">${+v>30?`<span class="badge b-crit">${v}d</span>`:(v!=null?v+'d':'—')}</td>`;
-      return `<td class="num">${v!=null&&v!==''?fmtN(+v||0):'—'}</td>`;
-    }
-    if(c.k==='Ageing bucket'){
-      const cls=ABKT_CLS[v]||'';
-      const bdgCls=cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd';
-      return `<td><span class="badge ${bdgCls}" style="font-size:10px">${v||'—'}</span></td>`;
-    }
-    return `<td class="${c.cls||''}" style="white-space:nowrap">${v!=null&&v!==''?v:'—'}</td>`;
+    if(c.k==='intransit_ageing')return `<td class="num">${r.intransit_ageing>30?'<span class="badge b-crit">'+v+'d</span>':v+'d'}</td>`;
+    if(c.k==='Product_value')return `<td class="num">${fmtN(v)}</td>`;
+    if(c.k==='Ageing bucket'){const cls=ABKT_CLS[v]||'';return `<td><span class="badge ${cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd'}">${v}</span></td>`;}
+    return `<td class="${c.cls||''}">${v||'—'}</td>`;
   }).join('')+'</tr>').join('')
-    || `<tr><td colspan="${visibleCols.length}" style="text-align:center;padding:24px;color:var(--mut)">No manifests match the filters.</td></tr>`;
-  $$('#mvDetHead th').forEach(th=>{const a=th.querySelector('.arr');if(a)a.textContent=th.dataset.k===mvSort.k?(mvSort.dir<0?'▼':'▲'):'';});
+    || `<tr><td colspan="${MV_DETAIL_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No manifests match the filters.</td></tr>`;
+  $$('#mvDetHead th').forEach(th=>{const a=th.querySelector('.arr');a.textContent=th.dataset.k===mvSort.k?(mvSort.dir<0?'▼':'▲'):'';});
   $('#mvDetailCount').textContent=fmtN(rows.length)+' rows';
   $('#mvShown').textContent=fmtN(rows.length);
   $('#mvPgLbl').textContent='Page '+mvPage+' / '+pages;
@@ -2148,127 +2097,63 @@ function mvRenderDetail(reset){
 
 /* ---- Top-20 lanes by manifest count (with ageing-bucket breakdown) ---- */
 function mvLaneAgg(){
-  /* Aggregate AWB-level rows by Lane Code, summing Product_value per real Ageing bucket.
-     Destination breakdown uses MM_destination (actual shipment dest, e.g. "NCR Tauru DC")
-     NOT Manifest_Destination (bag-level field). */
-  const base=mvItBktSel.size?FILTERED.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket)):FILTERED;
-  const filtered=mvAgeingSel.size?base.filter(r=>mvAgeingSel.has(r['Ageing bucket'])):base;
+  const rows=mvBaseRows();
   const m=new Map();
-  for(const r of filtered){
-    const k=r['Lane Code']||'Unknown'; let e=m.get(k);
-    if(!e){
-      const bkts={};ABKT.forEach(b=>bkts[b]=0);
-      e={lane:k,type:r['Lane Type']||'Unknown',value:0,manifests:new Set(),bkts,
-         dests:new Map()};
-      m.set(k,e);
-    }
-    const ab=r['Ageing bucket']||'';
-    if(ab in e.bkts)e.bkts[ab]+=r.Product_value;
-    e.value+=r.Product_value;
-    if(r.Manifest_code)e.manifests.add(r.Manifest_code);
-    /* MM_destination = actual shipment destination (matches image: "NCR Tauru DC" etc) */
-    const dk=r.MM_destination||'Unknown';
-    const destEntry=e.dests.get(dk)||{value:0,bkts:Object.fromEntries(ABKT.map(b=>[b,0]))};
-    destEntry.value+=r.Product_value;
-    if(ab in destEntry.bkts)destEntry.bkts[ab]+=r.Product_value;
-    e.dests.set(dk,destEntry);
+  for(const o of rows){
+    const k=o['Lane Code']; let e=m.get(k);
+    if(!e){e={lane:k,type:o['Lane Type'],manifests:0,value:0,buckets:{},dests:{}};ABKT.forEach(b=>e.buckets[b]=0);m.set(k,e);}
+    e.manifests++; e.value+=o.Product_value; e.buckets[o['Ageing bucket']]++;
+    const dk=o.Manifest_Destination||'Unknown'; e.dests[dk]=(e.dests[dk]||0)+1;
   }
-  return [...m.values()].map(e=>({...e,manifests:e.manifests.size,
-    dests:[...e.dests.entries()].map(([d,v])=>({dest:d,...v})).sort((a,b)=>b.value-a.value)}));
+  return [...m.values()];
 }
 function mvRenderLaneTbl(){
   let arr=mvLaneAgg();
   const tot=arr.reduce((a,o)=>a+o.value,0)||1;
-  /* Default: sort top-20 by total value descending */
-  arr.sort((a,b)=>b.value-a.value);
-  arr=arr.slice(0,20);
-  /* Apply user sort */
-  if(mvLaneSort.k&&mvLaneSort.k!=='value'){
-    arr.sort((a,b)=>{
-      const ak=mvLaneSort.k,ad=mvLaneSort.dir;
-      if(ABKT.includes(ak))return ((a.bkts[ak]||0)-(b.bkts[ak]||0))*ad;
-      return (typeof a[ak]==='number'?(a[ak]-b[ak]):String(a[ak]).localeCompare(String(b[ak])))*ad;
-    });
-  } else if(mvLaneSort.k==='value'){
-    arr.sort((a,b)=>(a.value-b.value)*mvLaneSort.dir);
-  }
-  const NCOLS=1+ABKT.length+1; // Lane + 6 buckets + Total
-  const AGE_CLS=['age-a','age-b','age-c','age-d','age-e','age-f'];
-  const sortMark=k=>mvLaneSort.k===k?(mvLaneSort.dir<0?'▼':'▲'):'';
-  const sortClick=k=>()=>{
-    mvLaneSort.dir=mvLaneSort.k===k?-mvLaneSort.dir:-1;
-    mvLaneSort.k=k; mvRenderLaneTbl();
-  };
-  /* colgroup ensures pixel-perfect column alignment between header, lane rows and dest rows */
-  const colgroup=`<colgroup>`+
-    `<col style="width:220px;min-width:180px">`+
-    ABKT.map(()=>`<col style="width:100px;min-width:80px">`).join('')+
-    `<col style="width:140px;min-width:110px">`+
-    `</colgroup>`;
-  /* inject colgroup into the table */
-  const tbl=document.getElementById('mvLaneTbl');
-  if(tbl&&!tbl.querySelector('colgroup')){tbl.insertAdjacentHTML('afterbegin',colgroup);}
-
-  $('#mvLaneHead').innerHTML=
-    `<th class="sortable" style="cursor:pointer;text-align:left" data-sk="lane">LANE CODE <span class="arr">${sortMark('lane')}</span></th>`+
-    ABKT.map((b,i)=>`<th class="sortable num ${AGE_CLS[i]}" style="cursor:pointer" data-sk="${b}">${ABKT_LABELS[i]} <span class="arr">${sortMark(b)}</span></th>`).join('')+
-    `<th class="sortable num" data-sk="value" style="background:#F1F3FB;color:#4F46E5;cursor:pointer">PRODUCT VALUE ₹ <span class="arr">${sortMark('value')}</span></th>`;
-  $$('#mvLaneHead th[data-sk]').forEach(th=>th.onclick=sortClick(th.dataset.sk));
-
+  arr.sort((a,b)=>b.manifests-a.manifests); arr=arr.slice(0,20);
+  arr.forEach(o=>o.share=o.value/tot*100);
+  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
+  arr.sort((a,b)=>{const av=a[mvLaneSort.k],bv=b[mvLaneSort.k];
+    return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*mvLaneSort.dir;});
+  const cols=[{k:'lane',label:'Lane Code'},{k:'type',label:'Lane Type'},{k:'manifests',label:'Manifests',num:true}]
+    .concat(ABKT.map((b,i)=>({k:'b'+i,label:b,num:true,age:'age-'+'abcdef'[i]})))
+    .concat([{k:'value',label:'Product Value',num:true,total:true}]);
+  $('#mvLaneHead').innerHTML=cols.map(c=>{
+    const cls=(c.num?'num ':'')+(c.age||'')+(c.total?' total-col':'')+' sortable';
+    const style=c.total?'style="min-width:110px;background:#F1F3FB;color:#4F46E5"':'';
+    const sk=c.k.startsWith('b')?null:c.k;
+    return `<th data-k="${sk||''}" class="${cls}" ${style}>${c.label}${sk?`<span class="arr">${sk===mvLaneSort.k?(mvLaneSort.dir<0?'▼':'▲'):''}</span>`:''}</th>`;
+  }).join('');
   const body=[];
   arr.forEach(o=>{
     const expanded=mvExpandedLane===o.lane;
-    /* ---- parent lane row ---- */
-    body.push(
-      `<tr class="mv-lane-summary${expanded?' mv-expanded':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" style="cursor:pointer" title="Click to expand/collapse destinations">`+
-      `<td style="padding-left:10px"><span style="font-size:10px;color:var(--pine);margin-right:6px;display:inline-block;width:10px">${expanded?'▼':'▶'}</span><b>${o.lane}</b></td>`+
-      ABKT.map(b=>{const v=o.bkts[b]||0;const cls=ABKT_CLS[b];return `<td class="num ${cls}">${v>0?fmtINR(v):'—'}</td>`;}).join('')+
-      `<td class="num total-col"><b>${fmtINR(o.value)}</b></td></tr>`
-    );
-    /* ---- destination child rows — real <tr><td> cells aligned to the same columns ---- */
+    body.push(`<tr style="cursor:pointer" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click to expand destinations">
+      <td>${expanded?'▾ ':'▸ '}${o.lane}</td><td>${o.type}</td>
+      <td class="num">${fmtN(o.manifests)}</td>
+      ${ABKT.map((b,i)=>{const val=o.buckets[b]||0;const cls=ABKT_CLS[b];return `<td class="num ${val&&cls?cls:''}">${val||'—'}</td>`;}).join('')}
+      <td class="num total-col">${fmtINR(o.value)}</td></tr>`);
     if(expanded){
-      if(o.dests.length===0){
-        body.push(`<tr class="mv-dest-row"><td colspan="${NCOLS}" style="padding:6px 10px 6px 36px;font-style:italic;color:var(--mut);font-size:11.5px">No destination data for this lane.</td></tr>`);
-      } else {
-        o.dests.forEach(d=>{
-          body.push(
-            `<tr class="mv-dest-row">`+
-            `<td style="padding:5px 8px 5px 30px;white-space:nowrap;font-size:12px"><span style="color:var(--pine);margin-right:4px">↳</span><span style="color:var(--pine);font-weight:600">${d.dest}</span></td>`+
-            ABKT.map(b=>{const v=d.bkts[b]||0;const cls=ABKT_CLS[b];return `<td class="num ${v&&cls?cls:''}" style="padding:5px 8px;font-size:12px">${v>0?fmtINR(v):'—'}</td>`;}).join('')+
-            `<td class="num" style="padding:5px 8px;font-size:12px;font-weight:700;color:var(--ink)">${fmtINR(d.value)}</td>`+
-            `</tr>`
-          );
-        });
-      }
+      const dests=Object.entries(o.dests).sort((a,b)=>b[1]-a[1]).slice(0,12);
+      body.push(`<tr class="mv-dest-row"><td colspan="${cols.length}"><div style="padding:8px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:5px">DESTINATIONS (${Object.keys(o.dests).length}) — manifest counts</div>
+        <div class="mv-dest-chips">${dests.map(([d,c])=>`<span class="mv-dest-chip">${d}: ${c}</span>`).join('')}</div>
+      </div></td></tr>`);
     }
   });
-  $('#mvLaneBody').innerHTML=body.join('')
-    ||`<tr><td colspan="${NCOLS}" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
+  $('#mvLaneBody').innerHTML=body.join('')||`<tr><td colspan="${cols.length}" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
+  $$('#mvLaneHead th[data-k]').forEach(th=>{ if(!th.dataset.k)return;
+    th.onclick=()=>{const k=th.dataset.k;mvLaneSort.dir=mvLaneSort.k===k?-mvLaneSort.dir:(k==='lane'||k==='type'?1:-1);mvLaneSort.k=k;mvRenderLaneTbl();};});
   $$('#mvLaneBody tr[data-lane]').forEach(tr=>tr.onclick=()=>mvDrillByLane(tr.dataset.lane));
-  mvLaneExport=arr.map(o=>{
-    const row={Lane_Code:o.lane,Lane_Type:o.type,Manifests:o.manifests};
-    ABKT.forEach((b,i)=>row['Age_'+ABKT_LABELS[i].replace(/[^A-Z0-9]/gi,'_')]=Math.round(o.bkts[b]||0));
-    row.Product_value=Math.round(o.value);
-    return row;
-  });
+  mvLaneExport=arr.map(o=>{const row={Lane_Code:o.lane,Lane_Type:o.type,Manifests:o.manifests};ABKT.forEach(b=>row['Age_'+b]=o.buckets[b]||0);row.Product_value=Math.round(o.value);return row;});
 }
 
 /* ---- manifest count by lane type ---- */
 function mvRenderTypeTbl(){
-  /* aggregate from AWB-level filtered rows for accurate value sums */
-  let d=FILTERED;
-  if(mvItBktSel.size)d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
-  if(mvAgeingSel.size)d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
+  const rows=mvBaseRows();
   const cols=[{k:'type',label:'Lane Type'},{k:'manifests',label:'Manifests',num:true},{k:'value',label:'Value ₹',num:true},{k:'share',label:'% Val',num:true}];
   const m=new Map();
-  for(const r of d){
-    const k=r['Lane Type']||'Unknown';let e=m.get(k);
-    if(!e){e={type:k,manifests:new Set(),value:0};m.set(k,e);}
-    if(r.Manifest_code)e.manifests.add(r.Manifest_code);
-    e.value+=r.Product_value;
-  }
-  let arr=[...m.values()].map(o=>({...o,manifests:o.manifests.size}));
-  const tot=arr.reduce((a,o)=>a+o.value,0)||1;
+  for(const o of rows){const k=o['Lane Type'];let e=m.get(k);if(!e){e={type:k,manifests:0,value:0};m.set(k,e);}e.manifests++;e.value+=o.Product_value;}
+  let arr=[...m.values()];const tot=arr.reduce((a,o)=>a+o.value,0)||1;
   arr.forEach(o=>o.share=o.value/tot*100);
   const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
   arr.sort((a,b)=>{const av=a[mvTypeSort.k],bv=b[mvTypeSort.k];return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*mvTypeSort.dir;});
@@ -2285,16 +2170,14 @@ function mvRenderTypeTbl(){
 
 /* ---- summary cards ---- */
 function mvRenderCards(){
-  const d=FILTERED;
-  const manifests=new Set(d.map(r=>r.Manifest_code).filter(Boolean)).size;
-  const lanes=new Set(d.map(r=>r['Lane Code'])).size;
-  const tot=sumV(d);
-  const crit35=d.filter(r=>(r['Ageing bucket']||'').startsWith('F'));
+  const rows=mvBaseRows(), tot=rows.reduce((a,o)=>a+o.Product_value,0);
+  const lanes=new Set(rows.map(r=>r['Lane Code'])).size;
+  const crit=rows.filter(o=>o.intransit_ageing>30);
   const cards=[
-    {l:'MANIFESTS IN SCOPE',v:fmtN(manifests),s:'unique manifest codes'},
-    {l:'LANES IN SCOPE',v:fmtN(lanes),s:'distinct lane codes'},
-    {l:'PENDING VALUE',v:fmtINR(tot),s:fmtN(d.length)+' AWBs'},
-    {l:'35+ DAY VALUE',v:fmtINR(sumV(crit35)),s:fmtN(crit35.length)+' AWBs aged 35+ days'},
+    {l:'MANIFESTS IN SCOPE',v:fmtN(rows.length),s:'unique manifest codes'},
+    {l:'LANES',v:fmtN(lanes),s:'distinct lane codes'},
+    {l:'MANIFEST VALUE',v:fmtINR(tot),s:'summed product value'},
+    {l:'CRITICAL 30+ DAY',v:fmtN(crit.length),s:fmtINR(crit.reduce((a,o)=>a+o.Product_value,0))},
   ];
   $('#mvCards').innerHTML=cards.map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
 }
@@ -2307,13 +2190,9 @@ function renderManifestView(){
 function mvDetailExport(){
   const cap=80000;
   if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
-  return mvDetailRows.slice(0,cap).map(r=>({
-    Manifest_Code:r.Manifest_code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
-    Manifest_Origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
-    Manifest_Status:r.Manifest_status,'Ageing Bucket':r['Ageing bucket'],
-    IT_Ageing_Days:r.intransit_ageing,Days:r.Days,
-    Shipments_in_Manifest:r.ShipmentInManifest,Current_Shipments:r.CurrentShipmentInManifest,
-    Product_Value:r.Product_value,Remarks:r.remarks}));
+  return mvDetailRows.slice(0,cap).map(r=>({Manifest:r.Manifest_code,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],
+    Origin:r.Manifest_origin,Destination:r.Manifest_Destination,Status:r.Manifest_status,
+    Ageing_days:r.intransit_ageing,Ageing_bucket:r['Ageing bucket'],Product_value:r.Product_value,Trip_code:r.trip_code}));
 }
 </script>
 <script>
@@ -2419,186 +2298,227 @@ function hovExport(key){
 </script>
 <script>
 /* =============================================================
-   LH RECOVERY - CN Working sheet tables
+   LH RECOVERY — CN Working sheet: monthly summary + detail
 ============================================================= */
-const LHR_DETAIL_COLS=[
-  {k:'email_subject',label:'Email Subject',src:'Email Subject',type:'text'},
-  {k:'lane',label:'Lane',src:'Lane',type:'text'},
-  {k:'zone',label:'Zone',src:'Zone',type:'text'},
-  {k:'type',label:'Type',src:'Type',type:'text'},
-  {k:'email_escalation',label:'Email Escalation (DD-MM-YYYY)',src:'Email Escalation (DD-MM-YYYY)',type:'date'},
-  {k:'impacted_awb',label:'Impacted awb',src:'Impacted awb',type:'text'},
-  {k:'impacted_product_value',label:'Impacted Product value',src:'Impacted Product value',type:'num'},
-  {k:'cn_received_value',label:'CN Received Value',src:'CN Received Value',type:'num'},
-  {k:'cn_received_date',label:'CN Received Date( DD-MM-YYYY)',src:'CN Received Date( DD-MM-YYYY)',type:'date'},
-  {k:'pending_at',label:'Pending at ?',src:'Pending at ?',type:'text'},
-  {k:'remarks',label:'Remarks if any',src:'Remarks if any',type:'text'}
-];
-let LHR_DATA=[],lhrFiltered=[],lhrSortKey='cn_received_date',lhrSortDir=1,lhrColF={};
-function normHeader(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();}
-function pickField(row,label){if(Object.prototype.hasOwnProperty.call(row,label))return row[label];const want=normHeader(label);const key=Object.keys(row).find(k=>normHeader(k)===want);return key?row[key]:'';}
-function parseCNDate(v){if(v==null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);return d?new Date(d.y,d.m-1,d.d):null;}const s0=String(v).trim();let iso=s0.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);if(iso)return new Date(+iso[1],+iso[2]-1,+iso[3]);let m=s0.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}const d=new Date(s0);return isNaN(d)?null:d;}
-function lhrDateText(v){const d=parseCNDate(v);if(!d)return s(v);return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();}
-function lhrMonthLabel(v){const d=parseCNDate(v);if(!d)return 'Blank';return d.toLocaleString('en-US',{month:'short'})+"'"+String(d.getFullYear()).slice(-2);}
-function lhrMonthKey(v){const d=parseCNDate(v);return d?d.getFullYear()*100+d.getMonth()+1:999999;}
-function normalizeLHR(row){const out={};LHR_DETAIL_COLS.forEach(c=>{const val=pickField(row,c.src);out[c.k]=c.type==='num'?+String(val||0).replace(/,/g,'')||0:c.type==='date'?lhrDateText(val):s(val);});out.month=lhrMonthLabel(pickField(row,'CN Received Date( DD-MM-YYYY)'));out.monthKey=lhrMonthKey(pickField(row,'CN Received Date( DD-MM-YYYY)'));return out;}
-function setLHRecoveryData(rows){LHR_DATA=(rows||[]).map(normalizeLHR).filter(r=>LHR_DETAIL_COLS.some(c=>r[c.k]!==''&&r[c.k]!==0));lhrFiltered=[...LHR_DATA];lhrColF={};}
-function lhrBuildHeaders(){
-  $('#lhrTblHdr').innerHTML=LHR_DETAIL_COLS.map(c=>`<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="si"></span></th>`).join('');
-  $('#lhrTblFilters').innerHTML=LHR_DETAIL_COLS.map(c=>`<th><input data-k="${c.k}" data-type="${c.type}" placeholder="filter"></th>`).join('');
-  $$('#lhrTblHdr th[data-k]').forEach(th=>th.onclick=()=>lhrSort(th.dataset.k));
-  $$('#lhrTblFilters input').forEach(inp=>inp.oninput=()=>{lhrColF[inp.dataset.k]=inp.value.trim().toLowerCase();lhrApplyFilter();});
-}
-function lhrApplyFilter(){lhrFiltered=LHR_DATA.filter(r=>LHR_DETAIL_COLS.every(c=>{const q=lhrColF[c.k];if(!q)return true;return String(r[c.k]??'').toLowerCase().includes(q);}));lhrSort(lhrSortKey,true);}
-function lhrSort(k,keepDir=false){if(!keepDir){if(lhrSortKey===k)lhrSortDir*=-1;else{lhrSortKey=k;lhrSortDir=1;}}const col=LHR_DETAIL_COLS.find(c=>c.k===k);lhrFiltered.sort((a,b)=>{let va=a[k]??'',vb=b[k]??'';if(col&&col.type==='num')return ((+va||0)-(+vb||0))*lhrSortDir;if(col&&col.type==='date')return ((parseCNDate(va)?.getTime()||0)-(parseCNDate(vb)?.getTime()||0))*lhrSortDir;return String(va).localeCompare(String(vb),undefined,{numeric:true})*lhrSortDir;});$$('#lhrTblHdr th').forEach(th=>{th.classList.remove('asc','desc');if(th.dataset.k===k)th.classList.add(lhrSortDir===1?'asc':'desc');});lhrRenderAll();}
-function lhrRenderSummary(){if(!LHR_DATA.length){$('#lhrSummaryBody').innerHTML='<tr><td colspan="2" style="text-align:center;padding:22px;color:var(--mut)">Upload a workbook that includes the CN Working sheet.</td></tr>';return;}const m=new Map();for(const r of lhrFiltered){const o=m.get(r.month)||{month:r.month,key:r.monthKey,value:0};o.value+=r.cn_received_value;m.set(r.month,o);}const arr=[...m.values()].sort((a,b)=>a.key-b.key);$('#lhrSummaryBody').innerHTML=arr.map(r=>`<tr><td><b>${r.month}</b></td><td class="num">${fmtN(r.value)}</td></tr>`).join('')||'<tr><td colspan="2" style="text-align:center;padding:22px;color:var(--mut)">No rows match the filters.</td></tr>';lhrRenderSummaryChart(arr);}
+let LHR_RAW=[];        // array of row objects from CN Working sheet
+let LHR_COLS=[];       // detected column names
+let lhrSort={k:null,dir:1}, lhrColF={};
 let lhrSummaryChart=null;
-function lhrRenderSummaryChart(arr){
-  const cv=$('#lhrSummaryChart');if(!cv)return;
-  const labels=arr.map(r=>r.month),data=arr.map(r=>r.value);
-  const cfg={type:'line',data:{labels,datasets:[{label:'CN Received Value',data,borderColor:'#1F7A4D',backgroundColor:'rgba(31,122,77,.14)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#1F7A4D',pointHoverRadius:5,borderWidth:2.5}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtN(c.parsed.y)}}},
-      scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>fmtN(v)}}}}};
-  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.update();}else lhrSummaryChart=new Chart(cv,cfg);
-}
-function lhrRenderTable(){$('#lhrRowCount').textContent=lhrFiltered.length+' of '+LHR_DATA.length+' records';$('#lhrTblBody').innerHTML=lhrFiltered.map(r=>`<tr>${LHR_DETAIL_COLS.map(c=>`<td class="${c.type==='num'?'num':''}" title="${String(r[c.k]??'').replace(/"/g,'&quot;')}">${c.type==='num'?fmtN(r[c.k]):(r[c.k]||'')}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${LHR_DETAIL_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No CN Working rows match the filters.</td></tr>`;}
-function lhrRenderAll(){lhrRenderSummary();lhrRenderTable();}
-function renderLHRecovery(){if(!$('#lhrTblHdr').children.length)lhrBuildHeaders();lhrApplyFilter();}
+const LHR_MONEY_RE=/(value|amount|cn received|recovery|amt)/i;
+const LHR_DATE_RE=/(date|received|escalat)/i;
 
+function setLHRData(rows){
+  LHR_RAW=rows||[];
+  LHR_COLS = LHR_RAW.length ? Object.keys(LHR_RAW[0]) : [];
+  lhrBuildHeaders();
+  renderLHRecovery();
+}
+function lhrMonthKey(r){
+  // find a date-ish column, format YYYY-MM
+  for(const c of LHR_COLS){
+    if(/month/i.test(c) && r[c]) return String(r[c]).trim();
+  }
+  for(const c of LHR_COLS){
+    if(LHR_DATE_RE.test(c) && r[c]!=null && r[c]!==''){
+      const v=r[c];
+      if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);if(d)return d.y+'-'+String(d.m).padStart(2,'0');}
+      const dt=new Date(v); if(!isNaN(dt))return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+      return String(v).slice(0,7);
+    }
+  }
+  return 'Unknown';
+}
+function lhrValueOf(r){
+  for(const c of LHR_COLS){ if(/cn received value/i.test(c))return +r[c]||0; }
+  for(const c of LHR_COLS){ if(LHR_MONEY_RE.test(c))return +r[c]||0; }
+  return 0;
+}
+
+function lhrBuildHeaders(){
+  if(!LHR_COLS.length){$('#lhrTblHdr').innerHTML='';$('#lhrTblFilters').innerHTML='';return;}
+  $('#lhrTblHdr').innerHTML=LHR_COLS.map(c=>{
+    const money=LHR_MONEY_RE.test(c);
+    return `<th data-k="${c.replace(/"/g,'&quot;')}" class="${money?'num':''}">${c}<span class="si"></span></th>`;
+  }).join('');
+  $('#lhrTblFilters').innerHTML=LHR_COLS.map(c=>`<th><input data-k="${c.replace(/"/g,'&quot;')}" placeholder="filter…"></th>`).join('');
+  $$('#lhrTblHdr th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k; lhrSort.dir=lhrSort.k===k?-lhrSort.dir:1; lhrSort.k=k;
+    $$('#lhrTblHdr th').forEach(t=>t.classList.remove('asc','desc'));
+    th.classList.add(lhrSort.dir<0?'desc':'asc'); lhrRenderTable();
+  });
+  $$('#lhrTblFilters input').forEach(inp=>inp.oninput=()=>{
+    const k=inp.dataset.k,v=inp.value.trim().toLowerCase();
+    if(v)lhrColF[k]=v; else delete lhrColF[k]; lhrRenderTable();
+  });
+  $('#lhrFReset').onclick=()=>{lhrColF={};$$('#lhrTblFilters input').forEach(i=>i.value='');lhrRenderTable();};
+}
+function lhrFilterRows(){
+  return LHR_RAW.filter(r=>Object.entries(lhrColF).every(([k,v])=>String(r[k]??'').toLowerCase().includes(v)));
+}
+function lhrRenderTable(){
+  let rows=lhrFilterRows();
+  if(lhrSort.k){
+    rows=[...rows].sort((a,b)=>{
+      const av=a[lhrSort.k],bv=b[lhrSort.k];
+      const an=parseFloat(String(av).replace(/[^0-9.\-]/g,'')),bn=parseFloat(String(bv).replace(/[^0-9.\-]/g,''));
+      if(!isNaN(an)&&!isNaN(bn))return (an-bn)*lhrSort.dir;
+      return String(av??'').localeCompare(String(bv??''))*lhrSort.dir;
+    });
+  }
+  const cap=2000;
+  $('#lhrTblBody').innerHTML=rows.slice(0,cap).map(r=>'<tr>'+LHR_COLS.map(c=>{
+    const money=LHR_MONEY_RE.test(c),v=r[c];
+    if(money)return `<td class="num">${v!=null&&v!==''?fmtINR(+v||0):'—'}</td>`;
+    if(LHR_DATE_RE.test(c)&&v!=null&&v!==''){const disp=typeof v==='number'?excelDate(v):String(v);return `<td><span class="cn-date">${disp}</span></td>`;}
+    return `<td>${v!=null&&v!==''?v:'<span class="no-date">—</span>'}</td>`;
+  }).join('')+'</tr>').join('')
+    || `<tr><td colspan="${LHR_COLS.length||1}" style="text-align:center;padding:24px;color:var(--mut)">No CN Working rows — upload a workbook with a CN Working / LH Recovery sheet.</td></tr>`;
+  $('#lhrRowCount').textContent=fmtN(rows.length)+' rows'+(rows.length>cap?' (showing '+fmtN(cap)+')':'');
+}
+function lhrRenderSummary(){
+  const m=new Map();
+  for(const r of LHR_RAW){const k=lhrMonthKey(r);m.set(k,(m.get(k)||0)+lhrValueOf(r));}
+  const entries=[...m.entries()].filter(([k])=>k&&k!=='Unknown').sort((a,b)=>a[0].localeCompare(b[0]));
+  $('#lhrSummaryBody').innerHTML=entries.map(([mo,v])=>`<tr><td>${mo}</td><td class="num">${fmtINR(v)}</td></tr>`).join('')
+    || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">No monthly recovery data detected.</td></tr>`;
+  lhrRenderChart(entries);
+}
+function lhrRenderChart(entries){
+  const ctx=$('#lhrSummaryChart'); if(!ctx)return;
+  const cfg={type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'CN Received Value',data:entries.map(e=>e[1]),
+      backgroundColor:'#1F7A4D',borderRadius:6,maxBarThickness:46}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
+  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.update();}else lhrSummaryChart=new Chart(ctx,cfg);
+}
+function renderLHRecovery(){
+  if(!LHR_RAW.length){
+    $('#lhrSummaryBody').innerHTML=`<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">Upload a workbook containing a <b>CN Working</b> / <b>LH Recovery</b> sheet to populate this view.</td></tr>`;
+    $('#lhrTblBody').innerHTML=`<tr><td style="text-align:center;padding:24px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
+    return;
+  }
+  lhrRenderSummary(); lhrRenderTable();
+}
+function lhrSummaryExport(){
+  const m=new Map();
+  for(const r of LHR_RAW){const k=lhrMonthKey(r);m.set(k,(m.get(k)||0)+lhrValueOf(r));}
+  const entries=[...m.entries()].filter(([k])=>k&&k!=='Unknown').sort((a,b)=>a[0].localeCompare(b[0]));
+  return entries.map(([Month,CN_Received_Value])=>({Month,CN_Received_Value:Math.round(CN_Received_Value)}));
+}
+function lhrDetailExport(){ return lhrFilterRows(); }
+</script>
+<script>
 /* =============================================================
-   LOCK ANALYSIS
+   LOCK ANALYSIS — seal status, movement lock mix, per-lane risk
 ============================================================= */
-let lockCharts={}, lockSealData=[], lockMoveData=[], lockLaneData=[];
+let lockSealChart=null, lockMoveChart=null;
+let lockSealExport=[], lockMoveExport=[], lockLaneExport=[];
+
+function isLocked(r){ return !!(r.seal_number && String(r.seal_number).trim() && String(r.seal_number).trim()!=='0'); }
+
 function renderLock(){
   if(!RAW.length)return;
-  const sealed=new Map(),unsealed=new Map();
-  for(const r of FILTERED){
-    const hasSeal=r.seal_number && r.seal_number.trim()!=='',m=r.movement_type;
-    if(hasSeal){sealed.set(m,(sealed.get(m)||0)+1);}else{unsealed.set(m,(unsealed.get(m)||0)+1);}
-  }
-  const moves=[...new Set(FILTERED.map(r=>r.movement_type))].sort();
-  lockMoveData=moves.map(m=>({move:m,locked:sealed.get(m)||0,unlocked:unsealed.get(m)||0}));
-  lockSealData=[{status:'Sealed',count:FILTERED.filter(r=>r.seal_number&&r.seal_number.trim()).length},
-    {status:'Unsealed',count:FILTERED.filter(r=>!r.seal_number||!r.seal_number.trim()).length}];
-  const lm=new Map();
-  for(const r of FILTERED){
-    const lc=r['Lane Code'],hasSeal=r.seal_number&&r.seal_number.trim();
-    if(!lm.has(lc))lm.set(lc,{total:0,locked:0,value:0});
-    const o=lm.get(lc);o.total++;
-    if(hasSeal){o.locked++;o.value+=r.Product_value;}
-  }
-  lockLaneData=Array.from(lm.entries()).map(([lc,o])=>({Lane_Code:lc,Total:o.total,Locked:o.locked,Unlocked:o.total-o.locked,
-    Lock_pct:o.total?(o.locked/o.total*100).toFixed(1):'0',Avg_Value_Locked:o.locked?(o.value/o.locked).toFixed(0):'0',
-    Risk_Score:(o.total-o.locked).toFixed(0)})).sort((a,b)=>b.Locked-a.Locked);
-  const sx=lockSealData.map(d=>d.status),sy=lockSealData.map(d=>d.count);
-  if(lockCharts.seal){lockCharts.seal.destroy();}
-  lockCharts.seal=new Chart($('#lockSealChart'),{type:'doughnut',data:{labels:sx,datasets:[
-    {data:sy,backgroundColor:['#22A06B','#E31A1C']}]},options:{responsive:true,plugins:{legend:{position:'top'}}}});
-  const mx=lockMoveData.map(d=>d.move),my1=lockMoveData.map(d=>d.locked),my2=lockMoveData.map(d=>d.unlocked);
-  if(lockCharts.move){lockCharts.move.destroy();}
-  lockCharts.move=new Chart($('#lockMoveChart'),{type:'bar',data:{labels:mx,datasets:[
-    {label:'Sealed',data:my1,backgroundColor:'#22A06B'},{label:'Unsealed',data:my2,backgroundColor:'#E31A1C'}]},
-    options:{responsive:true,indexAxis:'y',plugins:{legend:{position:'top'}},scales:{x:{beginAtZero:true}}}});
-  const riskVals=lockLaneData.map(r=>+r.Risk_Score);
-  const rMin=Math.min(...riskVals,0),rMax=Math.max(...riskVals,1);
-  $('#lockLaneBody').innerHTML=lockLaneData.map(r=>`<tr><td>${r.Lane_Code}</td><td class="num">${fmtN(r.Total)}</td><td class="num">${fmtN(r.Locked)}</td><td class="num">${r.Lock_pct}%</td><td class="num">${fmtINR(r.Avg_Value_Locked)}</td><td class="num" style="${heatCellStyle(+r.Risk_Score,rMin,rMax)}">${r.Risk_Score}</td></tr>`).join('');
-  const totalSealed=lockSealData.find(d=>d.status==='Sealed').count;
+  const d=FILTERED;
+  const locked=d.filter(isLocked), unlocked=d.length-locked.length;
+  const lockPct=d.length?(locked.length/d.length*100):0;
+  const lockedVal=sumV(locked);
+
   $('#lockStats').innerHTML=[
-    {l:'Sealed Manifests',v:fmtN(totalSealed),s:'with locks'},
-    {l:'Seal %',v:((totalSealed/FILTERED.length)*100).toFixed(1)+'%',s:'of all AWBs'},
-    {l:'Unsealed Risk',v:fmtN(FILTERED.length-totalSealed),s:'AWBs at risk'}
+    {l:'TOTAL AWBS',v:fmtN(d.length),s:'in current scope'},
+    {l:'LOCKED / SEALED',v:fmtN(locked.length),s:lockPct.toFixed(1)+'% of AWBs'},
+    {l:'UNSEALED',v:fmtN(unlocked),s:(100-lockPct).toFixed(1)+'% of AWBs'},
+    {l:'SEALED VALUE',v:fmtINR(lockedVal),s:pct(lockedVal,sumV(d))+' of value'},
   ].map(c=>`<div class="lk-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+
+  /* seal doughnut */
+  lockSealExport=[{Status:'Sealed',AWBs:locked.length,Value:Math.round(lockedVal)},
+                  {Status:'Unsealed',AWBs:unlocked,Value:Math.round(sumV(d)-lockedVal)}];
+  const sealCfg={type:'doughnut',data:{labels:['Sealed','Unsealed'],datasets:[{data:[locked.length,unlocked],
+      backgroundColor:['#22A06B','#E31A1C'],borderColor:'#fff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},
+      tooltip:{callbacks:{label:c=>' '+c.label+': '+fmtN(c.parsed)+' ('+pct(c.parsed,d.length)+')'}}}}};
+  if(lockSealChart){lockSealChart.data=sealCfg.data;lockSealChart.update();}else lockSealChart=new Chart($('#lockSealChart'),sealCfg);
+
+  /* lock by movement type (stacked sealed vs unsealed) */
+  const moves=[...new Set(d.map(r=>r.movement_type))];
+  const sealedByMove=moves.map(mt=>d.filter(r=>r.movement_type===mt&&isLocked(r)).length);
+  const unsealByMove=moves.map(mt=>d.filter(r=>r.movement_type===mt&&!isLocked(r)).length);
+  lockMoveExport=moves.map((mt,i)=>({Movement_type:mt,Sealed:sealedByMove[i],Unsealed:unsealByMove[i]}));
+  const moveCfg={type:'bar',data:{labels:moves,datasets:[
+      {label:'Sealed',data:sealedByMove,backgroundColor:'#22A06B',borderRadius:5},
+      {label:'Unsealed',data:unsealByMove,backgroundColor:'#E31A1C',borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},
+      tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtN(c.parsed.y)}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6B667D'}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
+  if(lockMoveChart){lockMoveChart.data=moveCfg.data;lockMoveChart.update();}else lockMoveChart=new Chart($('#lockMoveChart'),moveCfg);
+
+  /* per-lane lock table with risk score */
+  const m=new Map();
+  for(const r of d){const k=r['Lane Code'];let o=m.get(k);if(!o){o={lane:k,total:0,locked:0,lockedVal:0};m.set(k,o);}
+    o.total++; if(isLocked(r)){o.locked++;o.lockedVal+=r.Product_value;}}
+  let arr=[...m.values()].map(o=>{o.lockPct=o.total?o.locked/o.total*100:0;o.avgVal=o.locked?o.lockedVal/o.locked:0;
+    o.risk=(o.lockedVal)*(o.lockPct/100);return o;}).sort((a,b)=>b.risk-a.risk).slice(0,25);
+  const rMin=Math.min(...arr.map(o=>o.risk),0),rMax=Math.max(...arr.map(o=>o.risk),1);
+  $('#lockLaneBody').innerHTML=arr.map(o=>`<tr>
+    <td>${o.lane}</td><td class="num">${fmtN(o.total)}</td><td class="num">${fmtN(o.locked)}</td>
+    <td class="num">${o.lockPct.toFixed(1)}%</td><td class="num">${fmtINR(o.avgVal)}</td>
+    <td class="num" style="${heatCellStyle(o.risk,rMin,rMax)}">${fmtINR(o.risk)}</td></tr>`).join('')
+    || `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--mut)">No lane data in scope.</td></tr>`;
+  lockLaneExport=arr.map(o=>({Lane_Code:o.lane,Total_AWBs:o.total,Locked_AWBs:o.locked,Lock_pct:+o.lockPct.toFixed(1),
+    Avg_locked_value:Math.round(o.avgVal),Risk_score:Math.round(o.risk)}));
 }
-function exportChartAsJPG(canvasId,filename){
-  const canvas=document.querySelector('#'+canvasId);
-  if(!canvas)return;
-  const url=canvas.toDataURL('image/jpeg',0.95);
-  const a=document.createElement('a');a.href=url;a.download=filename+'.jpg';a.click();
+function exportChartAsJPG(chart,name){
+  if(!chart)return; const url=chart.toBase64Image('image/jpeg',0.95);
+  const a=document.createElement('a');a.href=url;a.download=name+'.jpg';a.click();
 }
 </script>
 <script>
 /* =============================================================
    LOGIN · UPLOAD · NAV · BOOT
-   (original working architecture, + password-reset additions)
 ============================================================= */
 
-/* ---- credential gate ---- */
+/* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
- 'gowri.shankar@shadowfax.in':{pass:'garask123',lhRecovery:true,isAdmin:true},
- 'anup.pandey1@shadowfax.in':{pass:'Anupsk123',lhRecovery:true},
- 'sachin.r1@shadowfax.in':{pass:'Sachinsk123',lhRecovery:true},
- 'indrajeet.chouhan@shadowfax.in':{pass:'Indrask123',lhRecovery:false},
- 'anna.roy@shadowfax.in':{pass:'Annask123',lhRecovery:false},
- 'saikat.ghosh@shadowfax.in':{pass:'Saikatsk123',lhRecovery:false},
- 'anupam.sharma@shadowfax.in':{pass:'Anupamsk123',lhRecovery:false},
- 'isham.dawood@shadowfax.in':{pass:'Ishamsk123',lhRecovery:false},
- 'idharmraj.kumar@shadowfax.in':{pass:'Dharmrajsk123',lhRecovery:false},
- 'raj.singh1@shadowfax.in':{pass:'Rajsk123',lhRecovery:false},
- 'gaurav.khati@shadowfax.in':{pass:'Gauravsk123',lhRecovery:false},
- 'paswan.hiteshkumar@shadowfax.in':{pass:'Paswansk123',lhRecovery:false},
- 'karan.solanki@shadowfax.in':{pass:'karanSK123',lhRecovery:false},
- 'shyamkumar.raj@shadowfax.in':{pass:'Shyamkumarsk123',lhRecovery:false}
+  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true},
+  'anup.pandey1':{pass:'anup@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true},
+  'sachin.r1':   {pass:'sachin@123',name:'Sachin R',    isAdmin:false, lhRecovery:true},
+  'anna.roy1':   {pass:'anna@123',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
+  'indrajeet.c1':{pass:'indra@123', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
+  'ops.admin':   {pass:'admin123',  name:'Ops Admin',    isAdmin:true,  lhRecovery:true},
 };
+let CURRENT_USER=null;
 
-function applyLHRecoveryAccess(allowed){
-  const existing=document.querySelector('.nav button[data-page="lhrecovery"]');
-  if(existing)existing.remove();
-  if(!allowed)return;
-  const nav=document.querySelector('.nav'),lockBtn=document.querySelector('.nav button[data-page="lock"]');
-  const b=document.createElement('button');
-  b.dataset.page='lhrecovery';b.innerHTML='<span class="ic">💰</span>LH Recovery';
-  b.onclick=navClickHandler;
-  if(lockBtn)nav.insertBefore(b,lockBtn);else nav.appendChild(b);
+function applyLHRecoveryAccess(u){
+  const btn=document.querySelector('.nav button[data-page="lhrecovery"]');
+  if(btn)btn.style.display=(u&&u.lhRecovery)?'':'none';
 }
-let IS_ADMIN=false;
-function applyAdminAccess(isAdmin){
-  IS_ADMIN=!!isAdmin;
-  const reUploadBtn=$('#reUpload');
-  if(reUploadBtn)reUploadBtn.style.display=IS_ADMIN?'':'none';
-  if(IS_ADMIN){
-    $('#uploadHeadline').innerHTML='Good morning! <span>Upload today\'s pendency file.</span>';
-    $('#uploadSub').innerHTML='Drop the daily <b>Dashboard.xlsx</b> export (intransit pendency snapshot). Expected columns: Zone, movement_type, Awb_number, MM_origin/destination (+types), Product_value, flag, Lane Code, HOV_flag, intransit_ageing, vendor_name, POD Name, Volumetric_flag, manifest/trip codes.';
-    $('#uploadControls').style.display='';
-    $('#uploadWaitMsg').style.display='none';
-  }else{
-    $('#uploadHeadline').innerHTML='Good morning! <span>Loading today\'s data…</span>';
-    $('#uploadSub').textContent='Pulling the latest pendency snapshot from Google Drive.';
-    $('#uploadControls').style.display='none';
-    $('#uploadWaitMsg').style.display='none';
-  }
+function applyAdminAccess(u){
+  // admins see everything; non-admins currently see all analytics except gated LH Recovery
+  applyLHRecoveryAccess(u);
 }
-function navClickHandler(){
-  const b=this;
-  $$('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  const p=b.dataset.page;
-  document.body.classList.toggle('hov-page',p==='hov');
-  document.body.classList.toggle('lhrecovery-page',p==='lhrecovery');
-  document.body.classList.toggle('manifest-page',p==='manifest');
-  $$('.page').forEach(pg=>pg.classList.remove('active'));
-  $('#page-'+p).classList.add('active');
-  $('#pageTitle').textContent=PAGE_META[p][0];$('#pageCrumb').textContent=PAGE_META[p][1];
-  $('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');
-  requestAnimationFrame(()=>{CHARTS.filter(c=>c.page===p).forEach(c=>c.chart&&c.chart.resize());
-    if(heroChart&&p==='overview')heroChart.resize();
-    if(lhrSummaryChart&&p==='lhrecovery')lhrSummaryChart.resize();});
-}
+
 function doLogin(){
-  const u=$('#loginUser').value.trim(),p=$('#loginPass').value;
-  const rec=AUTH_USERS[u.toLowerCase()];
-  if(!u||!p||!rec||rec.pass!==p){
-    $('#loginErr').textContent='Invalid username or password.';
+  const user=($('#loginUser').value||'').trim().toLowerCase();
+  const pass=$('#loginPass').value||'';
+  const rec=AUTH_USERS[user];
+  if(!rec||rec.pass!==pass){
     $('#loginErr').style.display='block';
+    $('#loginErr').textContent=(!user||!pass)?'Enter your username and password.':'Incorrect username or password.';
     return;
   }
+  CURRENT_USER={id:user,...rec};
+  try{sessionStorage.setItem('sfx_user',user);}catch(e){}
   $('#loginErr').style.display='none';
-  sessionStorage.setItem('sfx_user',u.toLowerCase());
-  sessionStorage.setItem('sfx_lhr',rec.lhRecovery?'1':'0');
-  sessionStorage.setItem('sfx_admin',rec.isAdmin?'1':'0');
-  applyLHRecoveryAccess(rec.lhRecovery);
-  applyAdminAccess(rec.isAdmin);
+  applyAdminAccess(CURRENT_USER);
   $('#loginScreen').style.display='none';
-  $('#uploadScreen').style.display='block';
-  loadFromDriveBridge(false);
+  if(RAW.length){ $('#uploadScreen').style.display='none'; $('#app').style.display='block'; }
+  else {
+    $('#uploadScreen').style.display='block';
+    /* auto-fetch from Supabase for everyone — admin sees upload zone too if fetch fails */
+    loadFromSupabase();
+  }
 }
 $('#loginBtn').onclick=doLogin;
 $('#loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
@@ -2614,226 +2534,265 @@ $('#resetBtn').onclick=()=>{
   msg.style.display='block';
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){msg.style.color='#DC2626';msg.textContent='Enter a valid work email address.';return;}
   msg.style.color='#15803D';
-  msg.textContent='If an account exists for '+email+', password reset instructions have been sent. Contact your admin if you don\'t receive them.';
+  msg.textContent='If an account exists for '+email+', password reset instructions have been sent. Contact your admin if you don’t receive them.';
 };
 $('#resetEmail').addEventListener('keydown',e=>{if(e.key==='Enter')$('#resetBtn').click();});
 
-$('#logoutBtn').onclick=()=>{sessionStorage.removeItem('sfx_user');sessionStorage.removeItem('sfx_lhr');sessionStorage.removeItem('sfx_admin');location.reload();};
-if(sessionStorage.getItem('sfx_user')&&AUTH_USERS[sessionStorage.getItem('sfx_user')]){
-  $('#loginScreen').style.display='none';$('#uploadScreen').style.display='block';
-  applyLHRecoveryAccess(sessionStorage.getItem('sfx_lhr')==='1');
-  applyAdminAccess(sessionStorage.getItem('sfx_admin')==='1');
-  loadFromDriveBridge(false);
-}else{
-  sessionStorage.removeItem('sfx_user');sessionStorage.removeItem('sfx_lhr');sessionStorage.removeItem('sfx_admin');
-}
+/* restore session */
+(function restoreSession(){
+  let u=null; try{u=sessionStorage.getItem('sfx_user');}catch(e){}
+  if(u&&AUTH_USERS[u]){CURRENT_USER={id:u,...AUTH_USERS[u]};applyAdminAccess(CURRENT_USER);$('#loginScreen').style.display='none';$('#uploadScreen').style.display='block';loadFromSupabase();}
+})();
 
-/* ---------- upload & parse ---------- */
-const dz=$('#dropZone');
-$('#browseBtn').onclick=()=>$('#fileInput').click();
-$('#fileInput').onchange=e=>{if(e.target.files[0])parseFile(e.target.files[0]);};
-['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+$('#logoutBtn').onclick=()=>{
+  CURRENT_USER=null; try{sessionStorage.removeItem('sfx_user');}catch(e){}
+  $('#app').style.display='none';$('#uploadScreen').style.display='none';
+  $('#loginScreen').style.display='flex';showSignin();
+  $('#loginUser').value='';$('#loginPass').value='';
+};
+
+/* ---- date label ---- */
+$('#todayLbl').textContent=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+/* ---- upload wiring ---- */
+const dz=$('#dropZone'),fileInput=$('#fileInput');
+$('#browseBtn').onclick=()=>fileInput.click();
+fileInput.onchange=e=>{const f=e.target.files[0];if(f)parseFile(f);};
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
 dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)parseFile(f);});
-$('#reUpload').onclick=()=>{if(!IS_ADMIN)return;$('#app').style.display='none';$('#uploadScreen').style.display='block';};
+$('#reUpload').onclick=()=>{$('#app').style.display='none';$('#uploadScreen').style.display='block';};
 
-function setStatus(msg){$('#parseStatus').style.display='flex';$('#parseMsg').textContent=msg;}
-
-/* ---------- Google Drive auto-load bridge ---------- */
-const DRIVE_BRIDGE_URL='https://script.google.com/macros/s/AKfycbwUMaFV8zcRp6QNk9St7LC3pF5mZQklDpmlwZu9sbA48pXexT1oDiIkbX-q4-TdaVfdLA/exec';
-
-function driveBridgeConfigured(){
-  return DRIVE_BRIDGE_URL && !DRIVE_BRIDGE_URL.includes('PASTE_YOUR');
-}
-
-async function loadFromDriveBridge(manual){
-  if(!driveBridgeConfigured())return false;
-  const btn=$('#driveRefreshBtn');
-  if(btn)btn.disabled=true;
-  try{
-    if(manual){$('#app').style.display='none';$('#uploadScreen').style.display='block';}
-    $('#uploadWaitMsg').style.display='none';
-    setStatus('Checking Google Drive for the latest file…');
-    const metaRes=await fetch(DRIVE_BRIDGE_URL+'?action=meta');
-    const meta=await metaRes.json();
-    if(meta.error)throw new Error(meta.error);
-    const total=meta.size,chunkSize=meta.chunkSize||(15*1024*1024);
-    const totalChunks=Math.ceil(total/chunkSize);
-    const buffer=new Uint8Array(total);
-    let start=0,chunkIdx=0;
-    while(start<total){
-      chunkIdx++;
-      setStatus(`Downloading ${meta.name} — part ${chunkIdx} of ${totalChunks} (${(total/1048576).toFixed(1)} MB total)…`);
-      const r=await fetch(DRIVE_BRIDGE_URL+'?action=chunk&start='+start);
-      const j=await r.json();
-      if(j.error)throw new Error(j.error);
-      const bin=atob(j.base64);
-      const bytes=new Uint8Array(bin.length);
-      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-      buffer.set(bytes,start);
-      start=j.end+1;
-    }
-    parseWorkbookBuffer(buffer,meta.name);
-    return true;
-  }catch(err){
-    console.warn('Drive auto-load failed:',err.message);
-    if(manual){setStatus('⚠ Drive refresh failed: '+err.message);}
-    else if(IS_ADMIN){$('#parseStatus').style.display='none';}
-    else{$('#parseStatus').style.display='none';$('#uploadWaitMsg').style.display='block';}
-    if(btn)btn.disabled=false;
-    return false;
-  }
-}
-$('#driveRefreshBtn').onclick=()=>loadFromDriveBridge(true);
-if(!driveBridgeConfigured())$('#driveRefreshBtn').style.display='none';
+function showParse(msg){$('#parseStatus').style.display='flex';$('#parseMsg').textContent=msg;}
+function hideParse(){$('#parseStatus').style.display='none';}
 
 function parseFile(file){
-  setStatus('Reading '+file.name+' ('+(file.size/1048576).toFixed(1)+' MB)…');
+  showParse('Reading '+file.name+' …');
   const reader=new FileReader();
-  reader.onload=e=>parseWorkbookBuffer(new Uint8Array(e.target.result),file.name);
-  reader.onerror=()=>setStatus('⚠ File read failed.');
+  reader.onload=e=>{
+    try{
+      const buf=e.target.result;
+      parseWorkbookBuffer(buf);
+      /* Admin: also push to Supabase so all employees get fresh data */
+      if(CURRENT_USER&&CURRENT_USER.isAdmin){
+        pushToSupabase(buf, file.name);
+      }
+    }catch(err){ hideParse(); alert('Could not parse file: '+err.message); }
+  };
+  reader.onerror=()=>{hideParse();alert('File read failed.');};
   reader.readAsArrayBuffer(file);
 }
-
-function normHeader(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();}
-
-function parseWorkbookBuffer(bytes,fileName){
-  setStatus('Parsing workbook — large files can take up to a minute…');
+function parseWorkbookBuffer(buf){
+  showParse('Parsing workbook …');
   setTimeout(()=>{
-    try{
-      const wb=XLSX.read(bytes,{type:'array',dense:true,cellDates:true});
-      const mainSheetName=wb.SheetNames.includes('Base')?'Base':(wb.SheetNames.includes('Dashboard')?'Dashboard':wb.SheetNames[0]);
-      const ws=wb.Sheets[mainSheetName];
-      const cnSheetName=wb.SheetNames.find(n=>{const h=normHeader(n);return h==='cnworking'||h==='cnworkingsheet'||(h.includes('cn')&&h.includes('working'));});
-      const cnWs=cnSheetName?wb.Sheets[cnSheetName]:null;
-      const hovSheetName=wb.SheetNames.find(n=>normHeader(n)==='hov'||normHeader(n)==='hovsheet');
-      const hovWs=hovSheetName?wb.Sheets[hovSheetName]:null;
-      setStatus('Converting rows…');
-      setTimeout(()=>{
-        try{
-          const json=XLSX.utils.sheet_to_json(ws,{raw:true,defval:''});
-          setLHRecoveryData(cnWs?XLSX.utils.sheet_to_json(cnWs,{raw:true,defval:''}):[]);
-          setHOVData(hovWs?XLSX.utils.sheet_to_json(hovWs,{header:1,raw:true,defval:''}):[]);
-          if(!json.length)throw new Error('Sheet is empty');
-          if(!('Awb_number'in json[0])||!('Product_value'in json[0]))
-            throw new Error('Expected columns not found (need at least Awb_number & Product_value). Check the file format.');
-          boot(json.map(normalize));
-        }catch(err){setStatus('⚠ '+err.message);}
-      },30);
-    }catch(err){setStatus('⚠ Could not read file: '+err.message);}
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true});
+    // main data sheet: first sheet, or one named like Dashboard/Data
+    let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
+    const mainWs=wb.Sheets[mainName];
+    const rows=XLSX.utils.sheet_to_json(mainWs,{defval:''});
+    RAW=rows.map(normalize);
+    FILTERED=RAW;
+    // HOV sheet
+    const hovName=wb.SheetNames.find(n=>/hov/i.test(n));
+    if(hovName){const aoa=XLSX.utils.sheet_to_json(wb.Sheets[hovName],{header:1,defval:''});setHOVData(aoa);}
+    else{HOV_DATA={};}
+    // CN Working / LH Recovery sheet
+    const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
+    if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{defval:''}));}
+    else{LHR_RAW=[];LHR_COLS=[];}
+    boot();
+    hideParse();
+    $('#uploadScreen').style.display='none';$('#app').style.display='block';
   },30);
 }
 
-/* ---------- sample data ---------- */
+/* ---- sample data generator (preview) ---- */
 $('#sampleBtn').onclick=()=>{
-  setStatus('Generating sample snapshot…');
+  showParse('Generating sample data …');
   setTimeout(()=>{
-    const zones=['South','West','North','East'],zw=[.39,.23,.21,.17];
-    const moves=['National','Tertiary (LM - LM)','Zonal','Intracity','Intracity - FM/RTS','Express LH - Railway'];
-    const mw=[.45,.27,.15,.06,.05,.02];
-    const dcs={South:['Bangalore DC','Hyderabad DC','Chennai DC','Hoskote FM'],West:['Surat DC','Mumbai DC','Ahmedabad DC','Pune DC'],
-      North:['NCR Bilaspur DC','OneNCR DC','Jaipur DC','Chandigarh DC'],East:['Kolkata DC','Patna DC','Guwahati DC','Bhubneshwar DC']};
-    const vendors=['Dummy Transporter','Jaiswal Associates - FTL','TCI - FTL','GMRC road carriers','Delhi Vapi Road Lines - FTL','GoBolt - FTL','Zast - FTL','Jeevan Mini Transport','KTC Translogistics - FTL','BG Logistics'];
-    const pods=['POD_BLR','POD_CHN','POD_HYD','POD_GJ','POD_BOM/PNQ','POD_NCR/UP_West','POD_MP/RJ','POD_BH/JH','POD_CCU/ROWB','POD_NE'];
-    const ABKT_SAMPLE=['A. 0 to 6 days','B. 7 to 13 days','C. 14 to 20 days','D. 21 to 27 days','E. 28 to 34 days','F. 35+ Days'];
-    const pick=(arr,w)=>{if(!w)return arr[Math.floor(Math.random()*arr.length)];
-      let r=Math.random(),i=0;while(r>w[i]){r-=w[i];i++;}return arr[Math.min(i,arr.length-1)];};
+    const zones=['South','West','East','North'],moves=['Zonal','National','Intracity','Tertiary'],
+      flags=['forward','reverse'],vendors=['BlueDart','VRL','Delhivery','TCI','SafeEx','Gati'],
+      origins=['BLR','DEL','BOM','CCU','HYD','MAA','PNQ','AMD'],dests=['BLR','DEL','BOM','CCU','HYD','MAA','PNQ','AMD','GHY','COK'],
+      ltypes=['Large','Client WH','Standard','Tertiary'],hov=['HOV','Non-HOV'];
     const rows=[];
-    for(let i=0;i<6000;i++){
-      const z=pick(zones,zw),o=pick(dcs[z]),dz2=pick(zones),d=pick(dcs[dz2]);
-      const age=Math.random()<.6?2+Math.floor(Math.random()*3):Math.random()<.7?5+Math.floor(Math.random()*12):20+Math.floor(Math.random()*80);
-      const abIdx=age<=6?0:age<=13?1:age<=20?2:age<=27?3:age<=34?4:5;
-      const hov=Math.random()<.05,hovType=hov?(Math.random()<.28?'HHOV':'HOV'):'Non-HOV';
-      const mc='DHFXSF'+(900000000+Math.floor(Math.random()*99999999));
-      rows.push({Zone:z,movement_type:pick(moves,mw),Awb_number:'SF'+(3000000000+Math.floor(Math.random()*999999999))+'FPL',
-        MM_origin:o,MM_origin_type:'MM',MM_destination:d,MM_destination_type:Math.random()<.6?'MM':'JIT/AD',
-        Product_value:hov?2000+Math.floor(Math.random()*30000):60+Math.floor(Math.random()*900),
-        flag:Math.random()<.6?'fwd_pendency':'rev_pendency','Lane Type':'National',
-        'Lane Code':o.split(' ')[0].slice(0,3).toUpperCase()+'-'+d.split(' ')[0].slice(0,3).toUpperCase()+'-'+(1+Math.floor(Math.random()*3)),
-        HOV_flag:hovType,intransit_ageing:age,intransit_ageing_bucket:String(Math.min(age,10)),
-        'Ageing bucket':ABKT_SAMPLE[abIdx],
-        vehicle_number:'HR'+(10+Math.floor(Math.random()*89))+'AZ'+(1000+Math.floor(Math.random()*8999)),
-        vendor_name:pick(vendors),Manifest_code:mc,MM_code:'MMN-'+Math.random().toString(36).slice(2,10).toUpperCase(),
-        trip_code:Math.random()<.65?'TRP'+Math.random().toString(36).slice(2,10).toUpperCase():'',
-        'POD Name':pick(pods),Volumetric_flag:Math.random()<.07?'Volumetric':'Normal',
-        seal_number:Math.random()<.55?'SL'+Math.floor(Math.random()*999999):'',
-        Client:pick(['FTPL','MarketPlace','B2B']),'IT Date':new Date(),'IT Time':new Date(),
-        Days:age,ShipmentInManifest:Math.floor(Math.random()*50)+1,CurrentShipmentInManifest:Math.floor(Math.random()*50)+1,
-        remarks:'Bag level',Manifest_origin:o,Manifest_Destination:d,Manifest_status:'IN_TRANSIT',
-        manifest_in_transit_time:new Date().toISOString()});
+    for(let i=0;i<4000;i++){
+      const o=origins[i%origins.length],dd=dests[(i*7)%dests.length];
+      const age=Math.floor(Math.random()*Math.random()*45);
+      rows.push({Zone:zones[i%zones.length],movement_type:moves[i%moves.length],
+        Awb_number:'AWB'+(100000+i),MM_origin:o,MM_origin_type:'DC',MM_destination:dd,MM_destination_type:'DC',
+        Product_value:Math.round(Math.random()*20000+200),flag:flags[i%2],'Lane Code':o+'-'+dd+'-'+(1+i%3),
+        HOV_flag:hov[Math.random()>.85?0:1],intransit_ageing:age,vehicle_number:'KA01'+(1000+i%9000),
+        vendor_name:vendors[i%vendors.length],'POD Name':dests[(i*3)%dests.length]+' Hub',Volumetric_flag:Math.random()>.8?'Volumetric':'Normal',
+        Manifest_code:'MF'+(50000+Math.floor(i/3)),trip_code:'TR'+(9000+Math.floor(i/5)),MM_code:'MM'+i,
+        'Lane Type':ltypes[i%ltypes.length],seal_number:Math.random()>.4?'SL'+(3000+i):'',Client:'Client'+(i%6),
+        Manifest_origin:o,Manifest_Destination:dd,Manifest_status:Math.random()>.5?'In Transit':'Pending',
+        intransit_ageing_bucket:bucketOf(age)});
     }
-    setHOVData([]);
-    boot(rows.map(normalize));
-  },50);
+    RAW=rows.map(normalize);FILTERED=RAW;HOV_DATA={};LHR_RAW=[];LHR_COLS=[];
+    boot();hideParse();
+    $('#uploadScreen').style.display='none';$('#app').style.display='block';
+  },30);
 };
 
-/* ---------- boot dashboard ---------- */
+/* ================================================================
+   SUPABASE CONFIG
+   Bucket: dashboard-data (public)
+   Files:  meta.json, chunk_0.b64, chunk_1.b64 …
+   ================================================================ */
+const SUPA_URL    = 'https://minulxutqejxkqaiilws.supabase.co';
+const SUPA_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pbnVseHV0cWVqeGtxYWlpbHdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MDk5MDIsImV4cCI6MjEwMDI4NTkwMn0.KESt1Df3wv8JE6YMMKADp8lmMm0va33kgN5O9xGTgPI';
+const SUPA_BUCKET = 'dashboard-data';
+const CHUNK_SIZE  = 15 * 1024 * 1024;
+
+async function supaUpload(path, blob){
+  const res = await fetch(
+    SUPA_URL+'/storage/v1/object/'+SUPA_BUCKET+'/'+path,
+    { method:'POST',
+      headers:{ 'Authorization':'Bearer '+SUPA_KEY,
+                'Content-Type': blob.type||'text/plain',
+                'x-upsert':'true' },
+      body: blob }
+  );
+  if(!res.ok){ const t=await res.text(); throw new Error('Upload failed ('+path+'): '+t); }
+}
+
+async function supaFetch(path){
+  const res = await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+path);
+  if(!res.ok) throw new Error('Fetch failed ('+path+'): '+res.status);
+  return res;
+}
+
+async function pushToSupabase(arrayBuffer, fileName){
+  const bytes=new Uint8Array(arrayBuffer), total=bytes.length;
+  const numChunks=Math.ceil(total/CHUNK_SIZE);
+  try{
+    for(let i=0;i<numChunks;i++){
+      showParse('Saving to Supabase — part '+(i+1)+' of '+numChunks+'…');
+      const slice=bytes.slice(i*CHUNK_SIZE,(i+1)*CHUNK_SIZE);
+      let b64=''; const STEP=8192;
+      for(let j=0;j<slice.length;j+=STEP)
+        b64+=String.fromCharCode(...slice.subarray(j,Math.min(j+STEP,slice.length)));
+      b64=btoa(b64);
+      await supaUpload('chunk_'+i+'.b64', new Blob([b64],{type:'text/plain'}));
+    }
+    const meta=JSON.stringify({chunks:numChunks,name:fileName,
+      uploaded:new Date().toISOString(),size:total});
+    await supaUpload('meta.json', new Blob([meta],{type:'application/json'}));
+    showParse('✅ Saved to Supabase! All users will see fresh data on next login.');
+    setTimeout(hideParse,4000);
+  }catch(err){ showParse('⚠ Supabase save failed: '+err.message); }
+}
+
+async function loadFromSupabase(){
+  const btn=$('#supaRefreshBtn');
+  if(btn)btn.disabled=true;
+  try{
+    showParse('Connecting to Supabase…');
+    const meta=await (await supaFetch('meta.json')).json();
+    const n=meta.chunks||1, total=meta.size||0;
+    const buffer=new Uint8Array(total); let offset=0;
+    for(let i=0;i<n;i++){
+      showParse('Loading data — part '+(i+1)+' of '+n+'…');
+      const b64=await (await supaFetch('chunk_'+i+'.b64')).text();
+      const bin=atob(b64);
+      for(let j=0;j<bin.length;j++)buffer[offset++]=bin.charCodeAt(j);
+    }
+    showParse('Parsing…');
+    parseWorkbookBuffer(buffer.buffer);
+    if(btn)btn.disabled=false;
+  }catch(err){
+    hideParse();
+    if(CURRENT_USER&&CURRENT_USER.isAdmin){
+      showParse('No data in Supabase yet — upload Dashboard.xlsx using the button above.');
+    }else{
+      $('#uploadWaitMsg').style.display='block';
+    }
+    if(btn)btn.disabled=false;
+  }
+}
+$('#supaRefreshBtn').onclick=()=>loadFromSupabase();
+
+/* ---- boot: build UI once data is loaded ---- */
+const PAGE_META={
+  overview:{t:'Executive Overview',c:'Snapshot of all in-transit pendency'},
+  pendency:{t:'Pendency Analytics',c:'Shipment counts, ageing mix, congestion points'},
+  value:{t:'Value-at-Risk',c:'Where the money is stuck — vendors, HOV, ABC, PODs'},
+  rootcause:{t:'Root Cause & What-If',c:'Diagnose slow lanes and simulate recovery'},
+  laneview:{t:'Lane View',c:'Top lanes, lane-type rollups and AWB-level detail'},
+  manifest:{t:'Bag wise View',c:'Lane→manifest pivots and shipment-level detail'},
+  investigate:{t:'Base Data',c:'Searchable AWB-level base table'},
+  hov:{t:'HOV Analytics',c:'High-order-value pivots from the HOV sheet'},
+  lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
+  lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
+};
 let booted=false;
-function boot(rows){
-  RAW=rows;filters={};
-  $('#uploadScreen').style.display='none';
-  $('#app').style.display='block';
+function boot(){
   $('#rowTotalLbl').textContent=fmtN(RAW.length);
-  $('#footRows').textContent=fmtN(RAW.length)+' AWBs';
-  $('#todayLbl').textContent=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  $('#parseStatus').style.display='none';$('#fileInput').value='';
+  $('#footRows').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   if(!booted){
+    buildFilterBar();
     mountCharts();
-    $('#wiDim').onchange=refreshWhatIfEntities;
-    $('#wiEnt').onchange=runWhatIf;
-    $('#wiPct').oninput=runWhatIf;
-    $('#tblSearch').oninput=()=>renderTable(true);
-    $('#pgPrev').onclick=()=>{tblPage--;renderTable();};
-    $('#pgNext').onclick=()=>{tblPage++;renderTable();};
-    $('#tblCsv').onclick=()=>exportTable('csv');
-    /* ---- Lane View wiring ---- */
-    $('#lvPrev').onclick=()=>{if(lvPage>1){lvPage--;lvRenderDetail();}};
-    $('#lvNext').onclick=()=>{lvPage++;lvRenderDetail();};
-    $('#lvLaneCsv').onclick=()=>lvExport(lvLaneExport,'csv','top20_lanes','lanes');
-    $('#lvTypeCsv').onclick=()=>lvExport(lvTypeExport,'csv','awb_by_lanetype','lanetype');
-    $('#lvDetCsv').onclick=()=>lvExport(lvDetailExport(),'csv','lane_detail','detail');
-    /* ---- Manifest vs Shipments wiring ---- */
-    $('#mvPrev').onclick=()=>{if(mvPage>1){mvPage--;mvRenderDetail();}};
-    $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
-    $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','top20_manifest_lanes','lanes');
-    $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','manifest_by_lanetype','lanetype');
-    $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','detail');
-    /* ---- LH Recovery wiring ---- */
-    $('#lhrFReset').onclick=()=>{$$('#lhrTblFilters input').forEach(el=>el.value='');lhrColF={};lhrApplyFilter();};
-    $('#lhrSummaryCsv').onclick=()=>{const m=new Map();for(const r of lhrFiltered){const o=m.get(r.month)||{month:r.month,key:r.monthKey,value:0};o.value+=r.cn_received_value;m.set(r.month,o);}const rows=[...m.values()].sort((a,b)=>a.key-b.key).map(r=>[r.month,r.value].map(csvEscape).join(','));dl(new Blob([['Month,CN Received Value',...rows].join('\n')],{type:'text/csv'}),'lh_recovery_amount.csv');};
-    $('#lhrDetailCsv').onclick=()=>{const h=LHR_DETAIL_COLS.map(c=>csvEscape(c.label)).join(',');const rows=lhrFiltered.map(r=>LHR_DETAIL_COLS.map(c=>csvEscape(r[c.k])).join(','));dl(new Blob([[h,...rows].join('\n')],{type:'text/csv'}),'lh_recovery_detail.csv');};
-    /* ---- Lock Analysis wiring ---- */
-    $('#lockSealCsv').onclick=()=>dl(new Blob([['Status,Count'].concat(lockSealData.map(r=>`${r.status},${r.count}`)).join('\n')],{type:'text/csv'}),'lock_seal_status.csv');
-    $('#lockSealJpg').onclick=()=>exportChartAsJPG('lockSealChart','lock_seal_status');
-    $('#lockMoveCsv').onclick=()=>dl(new Blob([['Movement,Sealed,Unsealed'].concat(lockMoveData.map(r=>`${r.move},${r.locked},${r.unlocked}`)).join('\n')],{type:'text/csv'}),'lock_by_movement.csv');
-    $('#lockMoveJpg').onclick=()=>exportChartAsJPG('lockMoveChart','lock_by_movement');
-    $('#lockLaneCsv').onclick=()=>dl(new Blob([['Lane_Code,Total,Locked,Unlocked,Lock_Pct,Avg_Value_Locked,Risk_Score'].concat(lockLaneData.map(r=>`${r.Lane_Code},${r.Total},${r.Locked},${r.Unlocked},${r.Lock_pct},${r.Avg_Value_Locked},${r.Risk_Score}`)).join('\n')],{type:'text/csv'}),'lock_by_lane.csv');
+    wireControls();
     booted=true;
   }else{
-    CHARTS.forEach(def=>{def.locked=false;def.card.classList.remove('frozen');
-      def.tableMode=false;def.tableSort={key:null,dir:1};def.card.classList.remove('table-mode');
-      const lb=def.card.querySelector('[data-t=lock]');lb.textContent='🔓';lb.classList.remove('lock-on');
-      const tb=def.card.querySelector('[data-t=swap]');tb.classList.remove('table-on');tb.title='Show table view';});
-    FILTER_DEFS.forEach(d=>{if(d._w)d._w.remove();});
+    buildFilterBar();
   }
-  buildFilterBar();
+  filters={};
   updateAll();
 }
 
-/* ---------- navigation & mobile ---------- */
-const PAGE_META={overview:['Executive Overview','Snapshot of all in-transit pendency'],
-  pendency:['Pendency Analytics','Where freight is stuck and for how long'],
-  value:['Value-at-Risk Analytics','Product value exposure, Trends & ABC'],
-  rootcause:['Root Cause & What-If','Drivers of delay and recapture simulation'],
-  laneview:['Lane View','Lane-level pendency · top lanes, lane-type rollup & per-column AWB drill'],
-  manifest:['Manifest vs Shipments','Manifest-level pendency · top lanes by manifest count & shipment drill'],
-  investigate:['Investigation Center','AWB-level drill-through'],
-  hov:['HOV Analytics','HOV flag analysis, ageing & product value distribution'],
-  lhrecovery:['LH Recovery','Recovery tracking, loss mitigation & timeline analysis'],
-  lock:['Lock Analysis','Lock & seal status, manifest integrity & risk assessment']};
-$$('.nav button').forEach(b=>b.onclick=navClickHandler);
-$('#hamb').onclick=()=>{$('#sidebar').classList.toggle('open');$('#overlay').classList.toggle('show');};
-$('#overlay').onclick=()=>{$('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');};
+function navTo(page){
+  $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  $$('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
+  const meta=PAGE_META[page]||{t:page,c:''};
+  $('#pageTitle').textContent=meta.t;$('#pageCrumb').textContent=meta.c;
+  document.body.className=page+'-page';
+  closeSidebar();
+}
+function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
+function closeSidebar(){$('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');}
+
+function wireControls(){
+  $$('.nav button').forEach(b=>b.onclick=()=>navTo(b.dataset.page));
+  $('#hamb').onclick=openSidebar;
+  $('#overlay').onclick=closeSidebar;
+
+  /* what-if */
+  $('#wiDim').onchange=refreshWhatIfEntities;
+  $('#wiEnt').onchange=runWhatIf;
+  $('#wiPct').oninput=runWhatIf;
+
+  /* investigation table */
+  $('#tblSearch').oninput=()=>renderTable(true);
+  $('#pgPrev').onclick=()=>{tblPage--;renderTable();};
+  $('#pgNext').onclick=()=>{tblPage++;renderTable();};
+  $('#tblCsv').onclick=()=>exportTable('csv');
+
+  /* lane view */
+  $('#lvLaneCsv').onclick=()=>lvExport(lvLaneExport,'csv','top20_lanes_value','lanes');
+  $('#lvTypeCsv').onclick=()=>lvExport(lvTypeExport,'csv','awb_by_lanetype','lanetype');
+  $('#lvDetCsv').onclick=()=>lvExport(lvDetailExport(),'csv','lane_detail_awb','detail');
+  $('#lvPrev').onclick=()=>{lvPage--;lvRenderDetail();};
+  $('#lvNext').onclick=()=>{lvPage++;lvRenderDetail();};
+
+  /* manifest view */
+  $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','top20_lanes_manifest','manifest_lanes');
+  $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','manifest_by_lanetype','manifest_type');
+  $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','manifest_detail');
+  $('#mvPrev').onclick=()=>{mvPage--;mvRenderDetail();};
+  $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
+
+  /* lh recovery */
+  $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_summary','summary');
+  $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
+
+  /* lock */
+  $('#lockSealCsv').onclick=()=>lvExport(lockSealExport,'csv','lock_seal_status','seal');
+  $('#lockSealJpg').onclick=()=>exportChartAsJPG(lockSealChart,'lock_seal_status');
+  $('#lockMoveCsv').onclick=()=>lvExport(lockMoveExport,'csv','lock_by_movement','movement');
+  $('#lockMoveJpg').onclick=()=>exportChartAsJPG(lockMoveChart,'lock_by_movement');
+  $('#lockLaneCsv').onclick=()=>lvExport(lockLaneExport,'csv','lock_by_lane','lane');
+}
 </script>
 </body>
 </html>
