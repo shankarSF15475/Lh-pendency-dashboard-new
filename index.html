@@ -2495,8 +2495,26 @@ function applyLHRecoveryAccess(u){
   if(btn)btn.style.display=(u&&u.lhRecovery)?'':'none';
 }
 function applyAdminAccess(u){
-  // admins see everything; non-admins currently see all analytics except gated LH Recovery
   applyLHRecoveryAccess(u);
+  const isAdmin=u&&u.isAdmin;
+  /* upload controls: only admin can upload files */
+  const uc=$('#uploadControls');
+  if(uc) uc.style.display=isAdmin?'':'none';
+  /* headline changes for non-admin */
+  const hl=$('#uploadHeadline'), sub=$('#uploadSub');
+  if(isAdmin){
+    if(hl) hl.innerHTML='Good morning! <span>Upload today\'s pendency file.</span>';
+    if(sub) sub.innerHTML='Drop the daily <b>Dashboard.xlsx</b> export (intransit pendency snapshot). Expected columns: Zone, movement_type, Awb_number, MM_origin/destination (+types), Product_value, flag, Lane Code, HOV_flag, intransit_ageing, vendor_name, POD Name, Volumetric_flag, manifest/trip codes.';
+  }else{
+    if(hl) hl.innerHTML='Good morning! <span>Loading today\'s data…</span>';
+    if(sub) sub.textContent='Fetching the latest pendency snapshot. Please wait a moment.';
+  }
+  /* New file button: admin only */
+  const reUp=$('#reUpload');
+  if(reUp) reUp.style.display=isAdmin?'':'none';
+  /* Supabase refresh button: visible to all */
+  const supa=$('#supaRefreshBtn');
+  if(supa) supa.style.display='';
 }
 
 function doLogin(){
@@ -2573,9 +2591,9 @@ function parseFile(file){
     try{
       const buf=e.target.result;
       parseWorkbookBuffer(buf);
-      /* Admin: also push to Supabase so all employees get fresh data */
+      /* Admin: also push to Supabase — use a copy to avoid buffer conflicts */
       if(CURRENT_USER&&CURRENT_USER.isAdmin){
-        pushToSupabase(buf, file.name);
+        pushToSupabase(buf.slice(0), file.name);
       }
     }catch(err){ hideParse(); alert('Could not parse file: '+err.message); }
   };
@@ -2586,12 +2604,15 @@ function parseWorkbookBuffer(buf){
   showParse('Parsing workbook …');
   setTimeout(()=>{
     const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true});
+    console.log('[Parse] SheetNames:', wb.SheetNames);
     // main data sheet: first sheet, or one named like Dashboard/Data
     let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
+    console.log('[Parse] Using main sheet:', mainName);
     const mainWs=wb.Sheets[mainName];
     const rows=XLSX.utils.sheet_to_json(mainWs,{defval:''});
+    console.log('[Parse] Raw rows:', rows.length, 'Sample keys:', rows.length?Object.keys(rows[0]).slice(0,8):'none');
     RAW=rows.map(normalize);
-    FILTERED=RAW;
+    FILTERED=RAW.slice(); // ensure FILTERED is a fresh copy of all RAW rows
     // HOV sheet
     const hovName=wb.SheetNames.find(n=>/hov/i.test(n));
     if(hovName){const aoa=XLSX.utils.sheet_to_json(wb.Sheets[hovName],{header:1,defval:''});setHOVData(aoa);}
@@ -2716,6 +2737,7 @@ async function loadFromSupabase(){
     const full=new Uint8Array(totalLen);
     let offset=0;
     for(const p of parts){full.set(p,offset);offset+=p.length;}
+    console.log('[Supabase] Assembled buffer:',totalLen,'bytes, chunks:',n);
     showParse('Parsing workbook…');
     parseWorkbookBuffer(full.buffer);
     if(btn)btn.disabled=false;
