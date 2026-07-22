@@ -2669,18 +2669,26 @@ async function pushToSupabase(arrayBuffer, fileName){
     for(let i=0;i<numChunks;i++){
       showParse('Saving to Supabase — part '+(i+1)+' of '+numChunks+'…');
       const slice=bytes.slice(i*CHUNK_SIZE,(i+1)*CHUNK_SIZE);
-      let b64=''; const STEP=8192;
-      for(let j=0;j<slice.length;j+=STEP)
-        b64+=String.fromCharCode(...slice.subarray(j,Math.min(j+STEP,slice.length)));
+      /* safe base64 encode — avoids stack overflow on large arrays */
+      let b64='';
+      const STEP=8192;
+      for(let j=0;j<slice.length;j+=STEP){
+        const chunk=slice.subarray(j,Math.min(j+STEP,slice.length));
+        b64+=String.fromCharCode.apply(null,chunk);
+      }
       b64=btoa(b64);
       await supaUpload('chunk_'+i+'.b64', new Blob([b64],{type:'text/plain'}));
     }
+    /* write meta last — employees check this first */
     const meta=JSON.stringify({chunks:numChunks,name:fileName,
       uploaded:new Date().toISOString(),size:total});
     await supaUpload('meta.json', new Blob([meta],{type:'application/json'}));
     showParse('✅ Saved to Supabase! All users will see fresh data on next login.');
     setTimeout(hideParse,4000);
-  }catch(err){ showParse('⚠ Supabase save failed: '+err.message); }
+  }catch(err){
+    showParse('⚠ Supabase save failed: '+err.message);
+    console.error('pushToSupabase error:',err);
+  }
 }
 
 async function loadFromSupabase(){
@@ -2689,21 +2697,33 @@ async function loadFromSupabase(){
   try{
     showParse('Connecting to Supabase…');
     const meta=await (await supaFetch('meta.json')).json();
-    const n=meta.chunks||1, total=meta.size||0;
-    const buffer=new Uint8Array(total); let offset=0;
+    const n=meta.chunks||1;
+    /* collect all decoded chunks first, then concatenate */
+    const parts=[];
+    let totalLen=0;
     for(let i=0;i<n;i++){
       showParse('Loading data — part '+(i+1)+' of '+n+'…');
       const b64=await (await supaFetch('chunk_'+i+'.b64')).text();
-      const bin=atob(b64);
-      for(let j=0;j<bin.length;j++)buffer[offset++]=bin.charCodeAt(j);
+      /* atob → Uint8Array */
+      const bin=atob(b64.trim());
+      const bytes=new Uint8Array(bin.length);
+      for(let j=0;j<bin.length;j++)bytes[j]=bin.charCodeAt(j);
+      parts.push(bytes);
+      totalLen+=bytes.length;
     }
-    showParse('Parsing…');
-    parseWorkbookBuffer(buffer.buffer);
+    /* concatenate all parts into one buffer */
+    showParse('Assembling file…');
+    const full=new Uint8Array(totalLen);
+    let offset=0;
+    for(const p of parts){full.set(p,offset);offset+=p.length;}
+    showParse('Parsing workbook…');
+    parseWorkbookBuffer(full.buffer);
     if(btn)btn.disabled=false;
   }catch(err){
+    console.error('loadFromSupabase error:',err);
     hideParse();
     if(CURRENT_USER&&CURRENT_USER.isAdmin){
-      showParse('No data in Supabase yet — upload Dashboard.xlsx using the button above.');
+      showParse('⚠ Could not load from Supabase: '+err.message+'. Upload Dashboard.xlsx manually above.');
     }else{
       $('#uploadWaitMsg').style.display='block';
     }
