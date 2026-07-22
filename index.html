@@ -2603,13 +2603,13 @@ function parseFile(file){
 function parseWorkbookBuffer(buf){
   showParse('Parsing workbook …');
   setTimeout(()=>{
-    const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true});
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array',dense:true,cellDates:true});
     console.log('[Parse] SheetNames:', wb.SheetNames);
     // main data sheet: first sheet, or one named like Dashboard/Data
     let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
     console.log('[Parse] Using main sheet:', mainName);
     const mainWs=wb.Sheets[mainName];
-    const rows=XLSX.utils.sheet_to_json(mainWs,{defval:''});
+    const rows=XLSX.utils.sheet_to_json(mainWs,{raw:true,defval:''});
     console.log('[Parse] Raw rows:', rows.length, 'Sample keys:', rows.length?Object.keys(rows[0]).slice(0,8):'none');
     RAW=rows.map(normalize);
     FILTERED=RAW.slice(); // ensure FILTERED is a fresh copy of all RAW rows
