@@ -166,6 +166,26 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .mv-mcsel-panel .mc-actions button{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:3px 8px;background:#F7FAF6;cursor:pointer;color:var(--text)}
 .mv-mcsel-panel .mc-actions button:hover{background:var(--pine);color:var(--lime)}
 /* MM destination expand row */
+/* ---- Bag wise View filter bar ---- */
+.mv-filterbar{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:12px;flex-wrap:wrap}
+.mv-fb-ttl{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--pine)}
+.mv-fb-clear{font-size:11.5px;border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:#fff;cursor:pointer;color:var(--mut)}
+.mv-fb-clear:hover{background:#F1F3FB;color:var(--pine)}
+/* ---- pivot table ---- */
+.mv-pivot{border-collapse:collapse;width:100%}
+.mv-pivot thead th{position:sticky;top:0;z-index:5;white-space:nowrap;padding:9px 10px;font-weight:800}
+.mv-pivot td{padding:6px 10px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.mv-pivot td.num,.mv-pivot th.num{text-align:right;font-variant-numeric:tabular-nums}
+.mv-pivot tr.mv-lane-row{cursor:pointer}
+.mv-pivot tr.mv-lane-row td{font-weight:700;background:#F7F8FD}
+.mv-pivot tr.mv-lane-row:hover td{background:#EDEFFA}
+.mv-pivot tr.mv-lane-row.open td{background:#E7E9F8}
+.mv-pivot tr.mv-dest td{font-weight:500;background:#fff;color:var(--mut)}
+.mv-pivot tr.mv-dest td.dest-name{padding-left:30px;color:var(--pine);font-weight:600}
+.mv-pivot tr.mv-dest:hover td{background:#FAFBFF}
+.mv-pivot td.tot-col{font-weight:800;background:#F1F3FB;color:var(--pine)}
+.mv-pivot tfoot td{position:sticky;bottom:0;background:var(--pine);color:#fff;font-weight:800;padding:9px 10px;border-top:2px solid var(--pine2);z-index:4}
+.mv-pivot .exp-ic{display:inline-block;width:11px;font-size:9px;color:var(--pine);margin-right:5px}
 .mv-dest-row{background:#EEF7F2!important}
 .mv-dest-row td{padding:0!important;border-bottom:1px solid #C5E3D5!important}
 .mv-dest-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
@@ -387,6 +407,8 @@ body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .fil
 .lhr-tbl tbody tr:hover{background:#EEF7F2}
 .lhr-tbl tbody td{padding:8px 10px;vertical-align:middle;white-space:nowrap}
 .lhr-tbl .num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace}
+.lhr-tbl tfoot td{background:#F1F3FB;color:#4F46E5;font-weight:800;padding:9px 10px;border-top:2px solid #C7CBEC;white-space:nowrap}
+.lhr-tbl tfoot td.num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace}
 .lhr-tbl .mono{font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px}
 .badge-pct{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
 .badge-pct.high{background:#FED7D7;color:#C53030}
@@ -472,6 +494,15 @@ body{background:#F4F6FB;background-attachment:initial;}
 thead th{background:#F1F3FB;color:var(--pine);}
 .lv-mini thead th{background:#F1F3FB;color:var(--pine);}
 .lv-mini thead th.sortable:hover{background:#E7E9F5;}
+/* pivot ageing-bucket header tints (light theme) */
+.mv-pivot thead th.age-a{background:#ECFDF5;color:#047857;}
+.mv-pivot thead th.age-b{background:#F0FDFA;color:#0F766E;}
+.mv-pivot thead th.age-c{background:#FEFCE8;color:#A16207;}
+.mv-pivot thead th.age-d{background:#FFF7ED;color:#C2410C;}
+.mv-pivot thead th.age-e{background:#FEF2F2;color:#DC2626;}
+.mv-pivot thead th.age-f{background:#FEE2E2;color:#991B1B;}
+.mv-pivot thead th.tot-col{background:#EEF0FF;color:var(--pine);}
+.mv-filterbar{background:#fff;border:1px solid var(--line);}
 .lv-tbl thead th{background:#F1F3FB;color:var(--pine);border-bottom:1px solid var(--line);}
 .lv-tbl thead tr.lv-fltr th{background:#F8F9FC;}
 .lv-tbl thead tr.lv-fltr input{background:#fff;color:var(--text);border-color:var(--line);}
@@ -651,7 +682,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="rootcause"><span class="ic">🧭</span>Root Cause & What-If</button>
       <button data-page="laneview"><span class="ic">🛣️</span>Lane View</button>
       <button data-page="manifest"><span class="ic">📋</span>Bag wise View</button>
-      <button data-page="investigate"><span class="ic">🔍</span>Base Data</button>
+      <button data-page="investigate"><span class="ic">🔍</span>Raw Data</Data></button>
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
@@ -698,7 +729,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <div class="spark"><canvas id="heroSpark"></canvas></div>
         </div>
         <div class="insights">
-          <h3><span class="ai">AI</span> Smart Insights — auto-generated from the current filter state</h3>
+          <h3><span class="ai">Day</span>Highlights  </h3>
           <ul id="insightList"></ul>
         </div>
       </div>
@@ -816,61 +847,75 @@ thead th{background:#F1F3FB;color:var(--pine);}
 
     <!-- ============ PAGE: MANIFEST VS SHIPMENTS ============ -->
     <section class="page" id="page-manifest">
-      <div class="lv-cards" id="mvCards"></div>
+
+      <!-- ===== FILTER BAR : Lane Type · Bag Creation Ageing · Bag Intransit Ageing ===== -->
+      <div class="card mv-filterbar">
+        <span class="mv-fb-ttl">FILTERS</span>
+        <div class="mv-filters">
+          <div class="mv-mcsel" id="mvLaneTypeMcsel">
+            <button class="mv-mcsel-btn" id="mvLaneTypeBtn">Lane Type ▾</button>
+            <div class="mv-mcsel-panel" id="mvLaneTypePanel">
+              <div class="mc-actions">
+                <button id="mvLaneTypeAll">All</button>
+                <button id="mvLaneTypeNone">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="mv-mcsel" id="mvAgeingMcsel">
+            <button class="mv-mcsel-btn" id="mvAgeingBtn">Bag Creation Ageing ▾</button>
+            <div class="mv-mcsel-panel" id="mvAgeingPanel">
+              <div class="mc-actions">
+                <button id="mvAgeingAll">All</button>
+                <button id="mvAgeingNone">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="mv-mcsel" id="mvItBktMcsel">
+            <button class="mv-mcsel-btn" id="mvItBktBtn">Bag Intransit Ageing ▾</button>
+            <div class="mv-mcsel-panel" id="mvItBktPanel">
+              <div class="mc-actions">
+                <button id="mvItBktAll">All</button>
+                <button id="mvItBktNone">Clear</button>
+              </div>
+            </div>
+          </div>
+          <button class="mv-fb-clear" id="mvClearAllFilters">✕ Clear all</button>
+        </div>
+      </div>
 
       <div class="lv-grid">
         <!-- Top 20 Lanes by Pending Manifest Code -->
         <div class="card lv-sec">
           <div class="card-head">
             <div><h3>Top 20 Lanes by Pending Manifest Code</h3>
-              <span class="sub">by Lane Code · click header to sort · click row to see destinations · respects global filters</span></div>
-            <div class="mv-filters">
-              <!-- Ageing Bucket multi-select -->
-              <div class="mv-mcsel" id="mvAgeingMcsel">
-                <button class="mv-mcsel-btn" id="mvAgeingBtn">Ageing Bucket ▾</button>
-                <div class="mv-mcsel-panel" id="mvAgeingPanel">
-                  <div class="mc-actions">
-                    <button id="mvAgeingAll">All</button>
-                    <button id="mvAgeingNone">Clear</button>
-                  </div>
-                </div>
-              </div>
-              <!-- intransit_ageing_bucket multi-select -->
-              <div class="mv-mcsel" id="mvItBktMcsel">
-                <button class="mv-mcsel-btn" id="mvItBktBtn">In-Transit Bucket ▾</button>
-                <div class="mv-mcsel-panel" id="mvItBktPanel">
-                  <div class="mc-actions">
-                    <button id="mvItBktAll">All</button>
-                    <button id="mvItBktNone">Clear</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · click a lane to expand MM_destination · sorted large → small</span></div>
             <div class="card-tools">
               <button class="tool" id="mvLaneCsv">CSV</button>
             </div>
           </div>
           <div class="lv-mini-wrap" style="overflow-x:auto">
-            <table class="lv-mini" id="mvLaneTbl" style="min-width:780px">
+            <table class="lv-mini mv-pivot" id="mvLaneTbl">
               <thead><tr id="mvLaneHead"></tr></thead>
               <tbody id="mvLaneBody"></tbody>
+              <tfoot id="mvLaneFoot"></tfoot>
             </table>
           </div>
         </div>
 
-        <!-- Manifest Code Count by Lane Type -->
+        <!-- Movement type matrix -->
         <div class="card lv-sec">
           <div class="card-head">
-            <div><h3>Manifest Code Count by Lane Type</h3>
-              <span class="sub">unique manifests &amp; ₹ value per lane type · click a row to filter detail</span></div>
+            <div><h3>Movement Type Matrix</h3>
+              <span class="sub">Product value · AWB count · unique manifest codes per movement type · sorted large → small</span></div>
             <div class="card-tools">
               <button class="tool" id="mvTypeCsv">CSV</button>
             </div>
           </div>
           <div class="lv-mini-wrap">
-            <table class="lv-mini" id="mvTypeTbl">
+            <table class="lv-mini mv-pivot" id="mvTypeTbl">
               <thead><tr id="mvTypeHead"></tr></thead>
               <tbody id="mvTypeBody"></tbody>
+              <tfoot id="mvTypeFoot"></tfoot>
             </table>
           </div>
         </div>
@@ -943,11 +988,12 @@ thead th{background:#F1F3FB;color:var(--pine);}
 
     <!-- ============ PAGE: LH RECOVERY ============ -->
     <section class="page" id="page-lhrecovery">
+      <!-- ===== Table 1 + Table 2 : Recovery Amount by month + line chart ===== -->
       <div class="card" style="margin-top:12px;padding:18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
             <h3 style="margin:0">Recovery Amount</h3>
-            <span class="sub">monthly CN Received Value from the CN Working sheet</span>
+            <span class="sub">CN Received Value by month of <b>CN Received Date</b> — CN Working sheet</span>
           </div>
           <div class="card-tools"><button class="tool" id="lhrSummaryCsv" title="Download summary CSV">CSV</button></div>
         </div>
@@ -956,6 +1002,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <table class="lhr-tbl" style="min-width:420px">
               <thead><tr class="hdr"><th>Month</th><th class="num">CN Received Value</th></tr></thead>
               <tbody id="lhrSummaryBody"></tbody>
+              <tfoot id="lhrSummaryFoot"></tfoot>
             </table>
           </div>
           <div class="lhr-chart-pane">
@@ -965,6 +1012,32 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
       </div>
 
+      <!-- ===== Table 3 : Pending for Recovery (CN Received Date blank) ===== -->
+      <div class="card" style="margin-top:14px;padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0">Pending for Recovery</h3>
+            <span class="sub">escalations where <b>CN Received Date</b> is still blank — nothing recovered yet</span>
+          </div>
+          <div class="card-tools">
+            <span class="lhr-rowcount" id="lhrPendCount"></span>
+            <button class="tool" id="lhrPendCsv" title="Download pending CSV">CSV</button>
+          </div>
+        </div>
+        <div class="lhr-tbl-wrap" style="max-width:760px">
+          <table class="lhr-tbl" style="min-width:520px">
+            <thead><tr class="hdr">
+              <th data-pk="escKey">Escalation date<span class="si"></span></th>
+              <th class="num" data-pk="awb">Impacted awb<span class="si"></span></th>
+              <th class="num" data-pk="value">Impacted Product value<span class="si"></span></th>
+            </tr></thead>
+            <tbody id="lhrPendBody"></tbody>
+            <tfoot id="lhrPendFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Table 4 : full CN Working detail ===== -->
       <div class="card" style="margin-top:14px;padding:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
@@ -1922,14 +1995,24 @@ const MV_DETAIL_COLS=[
   {k:'Product_value',        label:'Value ₹',     type:'num'},
   {k:'trip_code',            label:'Trip Code',   type:'text', cls:'mono'},
 ];
-const ABKT=['0-1','2-3','4-7','8-15','16-30','30+'];
-function ageBktOf(d){d=+d||0;if(d<=1)return'0-1';if(d<=3)return'2-3';if(d<=7)return'4-7';if(d<=15)return'8-15';if(d<=30)return'16-30';return'30+';}
-const ABKT_CLS={'0-1':'','2-3':'','4-7':'','8-15':'aged-ora','16-30':'aged-ora','30+':'aged-red'};
+/* Real 'Ageing bucket' values straight from the Dashboard sheet (Bag Creation Ageing) */
+const ABKT=['A. 0 to 6 days','B. 7 to 13 days','C. 14 to 20 days','D. 21 to 27 days','E. 28 to 34 days','F. 35+ Days'];
+const ABKT_HCLS=['age-a','age-b','age-c','age-d','age-e','age-f'];
+function ageBktOf(d){d=+d||0;if(d<=6)return ABKT[0];if(d<=13)return ABKT[1];if(d<=20)return ABKT[2];if(d<=27)return ABKT[3];if(d<=34)return ABKT[4];return ABKT[5];}
+const ABKT_CLS={};ABKT.forEach((b,i)=>ABKT_CLS[b]=i>=4?'aged-red':i>=2?'aged-ora':'');
 
-let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'value',dir:-1}, mvTypeSort={k:'value',dir:-1};
+/* natural sort for intransit_ageing_bucket: 2,3,4,5,6,7,8-10,11-15,16-30,30+ */
+function itBktRank(v){
+  const s=String(v).trim();
+  const m=s.match(/^(\d+)/);
+  const n=m?+m[1]:9999;
+  return s.includes('+')?n+0.5:n;
+}
+
+let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'total',dir:-1}, mvTypeSort={k:'value',dir:-1};
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
-let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvExpandedLane=null;
+let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -1938,14 +2021,23 @@ function mvBuildManifestRows(data){
     const code=r.Manifest_code||''; if(!code)continue;
     let o=m.get(code);
     if(!o){o={Manifest_code:code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
+      movement_type:r.movement_type,
       Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
+      MM_destination:r.MM_destination,
       Manifest_status:r.Manifest_status,intransit_ageing:r.intransit_ageing,
+      'Ageing bucket':r['Ageing bucket']||'',
+      intransit_ageing_bucket:r.intransit_ageing_bucket||'',
       Product_value:0,trip_code:r.trip_code,_awbs:0};m.set(code,o);}
     o.Product_value+=r.Product_value; o._awbs++;
-    if(r.intransit_ageing>o.intransit_ageing)o.intransit_ageing=r.intransit_ageing;
+    /* keep the worst (oldest) ageing seen for this manifest */
+    if(r.intransit_ageing>o.intransit_ageing){
+      o.intransit_ageing=r.intransit_ageing;
+      if(r['Ageing bucket'])o['Ageing bucket']=r['Ageing bucket'];
+    }
   }
   const rows=[...m.values()];
-  rows.forEach(o=>{o['Ageing bucket']=ageBktOf(o.intransit_ageing);});
+  /* fall back to derived bucket only when the source column was blank */
+  rows.forEach(o=>{if(!o['Ageing bucket'])o['Ageing bucket']=ageBktOf(o.intransit_ageing);});
   return rows;
 }
 
@@ -1993,32 +2085,61 @@ function mvBuildHeaders(){
   });
   $('#mvReset').onclick=mvClearCols;
 
-  /* Ageing bucket + in-transit bucket top filters */
-  const abopts=ABKT.slice();
-  $('#mvAgeingPanel').insertAdjacentHTML('afterbegin',
-    abopts.map(o=>`<label><input type="checkbox" value="${o}"><span>${o} days</span></label>`).join(''));
-  $$('#mvAgeingPanel input[type=checkbox]').forEach(ch=>ch.onchange=()=>{
-    mvAgeingSel=new Set([...$$('#mvAgeingPanel input:checked')].map(x=>x.value));
-    $('#mvAgeingBtn').classList.toggle('active',mvAgeingSel.size>0);
-    $('#mvAgeingBtn').textContent=(mvAgeingSel.size?mvAgeingSel.size+' sel':'Ageing Bucket')+' ▾';
-    mvRenderLaneTbl();mvRenderDetail(true);
-  });
-  $('#mvAgeingBtn').onclick=e=>{e.stopPropagation();$('#mvAgeingMcsel').classList.toggle('open');$('#mvItBktMcsel').classList.remove('open');};
-  $('#mvAgeingAll').onclick=()=>{$$('#mvAgeingPanel input').forEach(c=>c.checked=true);$$('#mvAgeingPanel input')[0].onchange();};
-  $('#mvAgeingNone').onclick=()=>{$$('#mvAgeingPanel input').forEach(c=>c.checked=false);mvAgeingSel=new Set();$('#mvAgeingBtn').classList.remove('active');$('#mvAgeingBtn').textContent='Ageing Bucket ▾';mvRenderLaneTbl();mvRenderDetail(true);};
+  /* ===== three page-level multi-check filters ===== */
+  const mvRerender=()=>{mvRenderLaneTbl();mvRenderTypeTbl();mvRenderDetail(true);};
 
-  const itopts=[...new Set(RAW.map(r=>r.intransit_ageing_bucket))].filter(x=>x!=='').sort();
-  $('#mvItBktPanel').insertAdjacentHTML('afterbegin',
-    itopts.map(o=>`<label><input type="checkbox" value="${String(o).replace(/"/g,'&quot;')}"><span>${o}</span></label>`).join('')||'<div class="msel-more">No in-transit bucket column</div>');
-  $$('#mvItBktPanel input[type=checkbox]').forEach(ch=>ch.onchange=()=>{
-    mvItBktSel=new Set([...$$('#mvItBktPanel input:checked')].map(x=>x.value));
-    $('#mvItBktBtn').classList.toggle('active',mvItBktSel.size>0);
-    $('#mvItBktBtn').textContent=(mvItBktSel.size?mvItBktSel.size+' sel':'In-Transit Bucket')+' ▾';
-    mvRenderLaneTbl();mvRenderDetail(true);
-  });
-  $('#mvItBktBtn').onclick=e=>{e.stopPropagation();$('#mvItBktMcsel').classList.toggle('open');$('#mvAgeingMcsel').classList.remove('open');};
-  $('#mvItBktAll').onclick=()=>{$$('#mvItBktPanel input').forEach(c=>c.checked=true);const f=$$('#mvItBktPanel input')[0];if(f)f.onchange();};
-  $('#mvItBktNone').onclick=()=>{$$('#mvItBktPanel input').forEach(c=>c.checked=false);mvItBktSel=new Set();$('#mvItBktBtn').classList.remove('active');$('#mvItBktBtn').textContent='In-Transit Bucket ▾';mvRenderLaneTbl();mvRenderDetail(true);};
+  /* generic builder: panelId, btnId, mcselId, options[], selSet, baseLabel, setter */
+  function buildMcsel(cfg){
+    const panel=$('#'+cfg.panel), btn=$('#'+cfg.btn), mcsel=$('#'+cfg.mcsel);
+    panel.insertAdjacentHTML('afterbegin',
+      cfg.opts.length
+        ? cfg.opts.map(o=>`<label><input type="checkbox" value="${String(o).replace(/"/g,'&quot;')}"><span>${o}</span></label>`).join('')
+        : `<div class="msel-more">No values found</div>`);
+    const sync=()=>{
+      const sel=new Set([...panel.querySelectorAll('input:checked')].map(x=>x.value));
+      cfg.set(sel);
+      btn.classList.toggle('active',sel.size>0);
+      btn.textContent=(sel.size?sel.size+' selected':cfg.label)+' ▾';
+      mvRerender();
+    };
+    panel.querySelectorAll('input[type=checkbox]').forEach(ch=>ch.onchange=sync);
+    btn.onclick=e=>{e.stopPropagation();
+      const wasOpen=mcsel.classList.contains('open');
+      $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));
+      if(!wasOpen)mcsel.classList.add('open');};
+    panel.onclick=e=>e.stopPropagation();
+    $('#'+cfg.all).onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=true);sync();};
+    $('#'+cfg.none).onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
+    return {panel,btn,sync};
+  }
+
+  /* 1. Lane Type */
+  const ltOpts=[...new Set(RAW.map(r=>r['Lane Type']))].filter(x=>x&&x!=='Unknown').sort((a,b)=>String(a).localeCompare(String(b)));
+  const mcLT=buildMcsel({panel:'mvLaneTypePanel',btn:'mvLaneTypeBtn',mcsel:'mvLaneTypeMcsel',
+    all:'mvLaneTypeAll',none:'mvLaneTypeNone',label:'Lane Type',opts:ltOpts,
+    set:s=>{mvLaneTypeSel=s;}});
+
+  /* 2. Bag Creation Ageing  ← 'Ageing bucket' column */
+  const abOpts=ABKT.filter(b=>RAW.some(r=>r['Ageing bucket']===b));
+  const mcAB=buildMcsel({panel:'mvAgeingPanel',btn:'mvAgeingBtn',mcsel:'mvAgeingMcsel',
+    all:'mvAgeingAll',none:'mvAgeingNone',label:'Bag Creation Ageing',opts:abOpts.length?abOpts:ABKT,
+    set:s=>{mvAgeingSel=s;}});
+
+  /* 3. Bag Intransit Ageing ← 'intransit_ageing_bucket' column */
+  const itOpts=[...new Set(RAW.map(r=>r.intransit_ageing_bucket))].filter(x=>x!=='')
+    .sort((a,b)=>itBktRank(a)-itBktRank(b));
+  const mcIT=buildMcsel({panel:'mvItBktPanel',btn:'mvItBktBtn',mcsel:'mvItBktMcsel',
+    all:'mvItBktAll',none:'mvItBktNone',label:'Bag Intransit Ageing',opts:itOpts,
+    set:s=>{mvItBktSel=s;}});
+
+  $('#mvClearAllFilters').onclick=()=>{
+    [mcLT,mcAB,mcIT].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
+    mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
+    mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
+    mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
+    mvRerender();
+  };
 
   document.addEventListener('click',()=>{$$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));$$('.lv-csel.open').forEach(o=>o.classList.remove('open'));});
   mvBuilt=true;
@@ -2030,13 +2151,19 @@ function mvClearCols(){
   mvRenderDetail(true);
 }
 
-/* base rows for manifest views = filtered by global filters + the two mv top-filters */
-function mvBaseRows(){
+/* AWB-level rows after global filters + the three page filters.
+   This is the source for both pivots (values = Sum of Product_value). */
+function mvScopeRows(){
   let d=FILTERED;
-  if(mvItBktSel.size)d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
-  let rows=mvBuildManifestRows(d);
-  if(mvAgeingSel.size)rows=rows.filter(o=>mvAgeingSel.has(o['Ageing bucket']));
-  return rows;
+  if(mvLaneTypeSel.size) d=d.filter(r=>mvLaneTypeSel.has(r['Lane Type']));
+  if(mvAgeingSel.size)   d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
+  if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
+  return d;
+}
+
+/* manifest-deduped rows for the shipment detail table below */
+function mvBaseRows(){
+  return mvBuildManifestRows(mvScopeRows());
 }
 
 function mvDrillByLane(lane){ mvExpandedLane = mvExpandedLane===lane ? null : lane; mvRenderLaneTbl(); }
@@ -2095,97 +2222,180 @@ function mvRenderDetail(reset){
   $('#mvPrev').disabled=mvPage<=1; $('#mvNext').disabled=mvPage>=pages;
 }
 
-/* ---- Top-20 lanes by manifest count (with ageing-bucket breakdown) ---- */
+/* ---- PIVOT: rows = Lane Code → MM_destination · cols = Ageing bucket · values = Sum of Product_value ---- */
 function mvLaneAgg(){
-  const rows=mvBaseRows();
+  const rows=mvScopeRows();
   const m=new Map();
-  for(const o of rows){
-    const k=o['Lane Code']; let e=m.get(k);
-    if(!e){e={lane:k,type:o['Lane Type'],manifests:0,value:0,buckets:{},dests:{}};ABKT.forEach(b=>e.buckets[b]=0);m.set(k,e);}
-    e.manifests++; e.value+=o.Product_value; e.buckets[o['Ageing bucket']]++;
-    const dk=o.Manifest_Destination||'Unknown'; e.dests[dk]=(e.dests[dk]||0)+1;
+  for(const r of rows){
+    const k=r['Lane Code']||'Unknown';
+    let e=m.get(k);
+    if(!e){
+      e={lane:k,bkts:{},total:0,dests:new Map()};
+      ABKT.forEach(b=>e.bkts[b]=0);
+      m.set(k,e);
+    }
+    const ab=r['Ageing bucket'], v=r.Product_value||0;
+    if(ab in e.bkts) e.bkts[ab]+=v;
+    e.total+=v;
+    /* destination sub-pivot — MM_destination as per the requirement */
+    const dk=r.MM_destination||'Unknown';
+    let d=e.dests.get(dk);
+    if(!d){d={dest:dk,bkts:{},total:0};ABKT.forEach(b=>d.bkts[b]=0);e.dests.set(dk,d);}
+    if(ab in d.bkts) d.bkts[ab]+=v;
+    d.total+=v;
   }
-  return [...m.values()];
+  return [...m.values()].map(e=>({...e,
+    dests:[...e.dests.values()].sort((a,b)=>b.total-a.total)}));
 }
+
 function mvRenderLaneTbl(){
   let arr=mvLaneAgg();
-  const tot=arr.reduce((a,o)=>a+o.value,0)||1;
-  arr.sort((a,b)=>b.manifests-a.manifests); arr=arr.slice(0,20);
-  arr.forEach(o=>o.share=o.value/tot*100);
-  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
-  arr.sort((a,b)=>{const av=a[mvLaneSort.k],bv=b[mvLaneSort.k];
-    return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*mvLaneSort.dir;});
-  const cols=[{k:'lane',label:'Lane Code'},{k:'type',label:'Lane Type'},{k:'manifests',label:'Manifests',num:true}]
-    .concat(ABKT.map((b,i)=>({k:'b'+i,label:b,num:true,age:'age-'+'abcdef'[i]})))
-    .concat([{k:'value',label:'Product Value',num:true,total:true}]);
-  $('#mvLaneHead').innerHTML=cols.map(c=>{
-    const cls=(c.num?'num ':'')+(c.age||'')+(c.total?' total-col':'')+' sortable';
-    const style=c.total?'style="min-width:110px;background:#F1F3FB;color:#4F46E5"':'';
-    const sk=c.k.startsWith('b')?null:c.k;
-    return `<th data-k="${sk||''}" class="${cls}" ${style}>${c.label}${sk?`<span class="arr">${sk===mvLaneSort.k?(mvLaneSort.dir<0?'▼':'▲'):''}</span>`:''}</th>`;
-  }).join('');
+  /* MUST: sort large → small on total, then take top 20 */
+  arr.sort((a,b)=>b.total-a.total);
+  arr=arr.slice(0,20);
+  /* optional user re-sort on a clicked column (still within the top 20) */
+  if(mvLaneSort.k!=='total'||mvLaneSort.dir!==-1){
+    arr.sort((a,b)=>{
+      const k=mvLaneSort.k, d=mvLaneSort.dir;
+      if(k==='lane') return String(a.lane).localeCompare(String(b.lane))*d;
+      if(k==='total') return (a.total-b.total)*d;
+      return ((a.bkts[k]||0)-(b.bkts[k]||0))*d;
+    });
+  }
+
+  const NCOL=1+ABKT.length+1;
+  const mark=k=>mvLaneSort.k===k?(mvLaneSort.dir<0?' ▼':' ▲'):'';
+
+  /* fixed column widths keep parent rows and destination rows perfectly aligned */
+  const tbl=$('#mvLaneTbl');
+  if(tbl){
+    const cg=tbl.querySelector('colgroup');
+    if(cg)cg.remove();
+    tbl.insertAdjacentHTML('afterbegin',
+      '<colgroup><col style="width:230px">'+
+      ABKT.map(()=>'<col style="width:118px">').join('')+
+      '<col style="width:130px"></colgroup>');
+  }
+
+  $('#mvLaneHead').innerHTML=
+    `<th class="sortable" data-k="lane" style="text-align:left">Lane code${mark('lane')}</th>`+
+    ABKT.map((b,i)=>`<th class="sortable num ${ABKT_HCLS[i]}" data-k="${b}">${b}${mark(b)}</th>`).join('')+
+    `<th class="sortable num tot-col" data-k="total">Total${mark('total')}</th>`;
+  $$('#mvLaneHead th[data-k]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    mvLaneSort.dir = mvLaneSort.k===k ? -mvLaneSort.dir : -1;
+    mvLaneSort.k=k; mvRenderLaneTbl();
+  });
+
+  const cell=v=>v>0?fmtINR(v):'';
   const body=[];
   arr.forEach(o=>{
-    const expanded=mvExpandedLane===o.lane;
-    body.push(`<tr style="cursor:pointer" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click to expand destinations">
-      <td>${expanded?'▾ ':'▸ '}${o.lane}</td><td>${o.type}</td>
-      <td class="num">${fmtN(o.manifests)}</td>
-      ${ABKT.map((b,i)=>{const val=o.buckets[b]||0;const cls=ABKT_CLS[b];return `<td class="num ${val&&cls?cls:''}">${val||'—'}</td>`;}).join('')}
-      <td class="num total-col">${fmtINR(o.value)}</td></tr>`);
-    if(expanded){
-      const dests=Object.entries(o.dests).sort((a,b)=>b[1]-a[1]).slice(0,12);
-      body.push(`<tr class="mv-dest-row"><td colspan="${cols.length}"><div style="padding:8px 14px">
-        <div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:5px">DESTINATIONS (${Object.keys(o.dests).length}) — manifest counts</div>
-        <div class="mv-dest-chips">${dests.map(([d,c])=>`<span class="mv-dest-chip">${d}: ${c}</span>`).join('')}</div>
-      </div></td></tr>`);
+    const open=mvExpandedLane===o.lane;
+    /* --- parent lane row --- */
+    body.push(
+      `<tr class="mv-lane-row${open?' open':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click to expand MM_destination">`+
+      `<td><span class="exp-ic">${open?'▼':'▶'}</span>${o.lane}</td>`+
+      ABKT.map(b=>`<td class="num">${cell(o.bkts[b])}</td>`).join('')+
+      `<td class="num tot-col">${fmtINR(o.total)}</td></tr>`
+    );
+    /* --- destination child rows (real cells, aligned to the same columns) --- */
+    if(open){
+      if(!o.dests.length){
+        body.push(`<tr class="mv-dest"><td colspan="${NCOL}" style="padding-left:30px;font-style:italic">No destination data.</td></tr>`);
+      }else{
+        o.dests.forEach(d=>{
+          body.push(
+            `<tr class="mv-dest">`+
+            `<td class="dest-name">${d.dest}</td>`+
+            ABKT.map(b=>`<td class="num">${cell(d.bkts[b])}</td>`).join('')+
+            `<td class="num">${fmtINR(d.total)}</td></tr>`
+          );
+        });
+      }
     }
   });
-  $('#mvLaneBody').innerHTML=body.join('')||`<tr><td colspan="${cols.length}" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
-  $$('#mvLaneHead th[data-k]').forEach(th=>{ if(!th.dataset.k)return;
-    th.onclick=()=>{const k=th.dataset.k;mvLaneSort.dir=mvLaneSort.k===k?-mvLaneSort.dir:(k==='lane'||k==='type'?1:-1);mvLaneSort.k=k;mvRenderLaneTbl();};});
+  $('#mvLaneBody').innerHTML=body.join('')
+    ||`<tr><td colspan="${NCOL}" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
   $$('#mvLaneBody tr[data-lane]').forEach(tr=>tr.onclick=()=>mvDrillByLane(tr.dataset.lane));
-  mvLaneExport=arr.map(o=>{const row={Lane_Code:o.lane,Lane_Type:o.type,Manifests:o.manifests};ABKT.forEach(b=>row['Age_'+b]=o.buckets[b]||0);row.Product_value=Math.round(o.value);return row;});
+
+  /* --- grand total row for the shown top 20 --- */
+  const gt={},gtot=arr.reduce((a,o)=>a+o.total,0);
+  ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
+  $('#mvLaneFoot').innerHTML=arr.length
+    ? `<tr><td>Total</td>${ABKT.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtINR(gtot)}</td></tr>`
+    : '';
+
+  mvLaneExport=arr.map(o=>{
+    const row={Lane_Code:o.lane};
+    ABKT.forEach(b=>row[b]=Math.round(o.bkts[b]||0));
+    row.Total=Math.round(o.total);
+    return row;
+  });
 }
 
-/* ---- manifest count by lane type ---- */
+/* ---- Movement type matrix: Σ Product_value · count of Awb_number · unique Manifest_code ---- */
 function mvRenderTypeTbl(){
-  const rows=mvBaseRows();
-  const cols=[{k:'type',label:'Lane Type'},{k:'manifests',label:'Manifests',num:true},{k:'value',label:'Value ₹',num:true},{k:'share',label:'% Val',num:true}];
+  const rows=mvScopeRows();
   const m=new Map();
-  for(const o of rows){const k=o['Lane Type'];let e=m.get(k);if(!e){e={type:k,manifests:0,value:0};m.set(k,e);}e.manifests++;e.value+=o.Product_value;}
-  let arr=[...m.values()];const tot=arr.reduce((a,o)=>a+o.value,0)||1;
-  arr.forEach(o=>o.share=o.value/tot*100);
-  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
-  arr.sort((a,b)=>{const av=a[mvTypeSort.k],bv=b[mvTypeSort.k];return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*mvTypeSort.dir;});
-  $('#mvTypeHead').innerHTML=cols.map(c=>`<th data-k="${c.k}" class="sortable ${c.num?'num':''}">${c.label}<span class="arr">${c.k===mvTypeSort.k?(mvTypeSort.dir<0?'▼':'▲'):''}</span></th>`).join('');
-  $('#mvTypeBody').innerHTML=arr.map(o=>`<tr style="cursor:pointer" data-type="${o.type.replace(/"/g,'&quot;')}" title="Click to filter detail by lane type">
-    <td>${o.type}</td><td class="num">${fmtN(o.manifests)}</td>
-    <td class="num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>
-    <td class="num">${o.share.toFixed(1)}%</td></tr>`).join('')
-    || `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
-  $$('#mvTypeHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;mvTypeSort.dir=mvTypeSort.k===k?-mvTypeSort.dir:(k==='type'?1:-1);mvTypeSort.k=k;mvRenderTypeTbl();});
-  $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
-  mvTypeExport=arr.map(o=>({Lane_Type:o.type,Manifests:o.manifests,Product_value:Math.round(o.value),Pct_of_value:+o.share.toFixed(2)}));
-}
-
-/* ---- summary cards ---- */
-function mvRenderCards(){
-  const rows=mvBaseRows(), tot=rows.reduce((a,o)=>a+o.Product_value,0);
-  const lanes=new Set(rows.map(r=>r['Lane Code'])).size;
-  const crit=rows.filter(o=>o.intransit_ageing>30);
-  const cards=[
-    {l:'MANIFESTS IN SCOPE',v:fmtN(rows.length),s:'unique manifest codes'},
-    {l:'LANES',v:fmtN(lanes),s:'distinct lane codes'},
-    {l:'MANIFEST VALUE',v:fmtINR(tot),s:'summed product value'},
-    {l:'CRITICAL 30+ DAY',v:fmtN(crit.length),s:fmtINR(crit.reduce((a,o)=>a+o.Product_value,0))},
+  const allManifests=new Set();
+  for(const r of rows){
+    const k=r.movement_type||'Unknown';
+    let e=m.get(k);
+    if(!e){e={type:k,value:0,awbs:0,manifests:new Set()};m.set(k,e);}
+    e.value+=r.Product_value||0;
+    e.awbs++;
+    if(r.Manifest_code){e.manifests.add(r.Manifest_code);allManifests.add(r.Manifest_code);}
+  }
+  let arr=[...m.values()].map(e=>({type:e.type,value:e.value,awbs:e.awbs,manifests:e.manifests.size}));
+  /* MUST: sorted large → small */
+  arr.sort((a,b)=>b.value-a.value);
+  if(mvTypeSort.k!=='value'||mvTypeSort.dir!==-1){
+    arr.sort((a,b)=>{
+      const k=mvTypeSort.k,d=mvTypeSort.dir;
+      if(k==='type')return String(a.type).localeCompare(String(b.type))*d;
+      return ((a[k]||0)-(b[k]||0))*d;
+    });
+  }
+  const mark=k=>mvTypeSort.k===k?(mvTypeSort.dir<0?' ▼':' ▲'):'';
+  const cols=[
+    {k:'type',     label:'movement_type'},
+    {k:'value',    label:'Sum of Product_value', num:true},
+    {k:'awbs',     label:'Count of Awb_number',  num:true},
+    {k:'manifests',label:'Unique Manifest_code', num:true}
   ];
-  $('#mvCards').innerHTML=cards.map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+  $('#mvTypeHead').innerHTML=cols.map(c=>
+    `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${c.k==='type'?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
+  $$('#mvTypeHead th[data-k]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    mvTypeSort.dir=mvTypeSort.k===k?-mvTypeSort.dir:-1;
+    mvTypeSort.k=k;mvRenderTypeTbl();
+  });
+
+  $('#mvTypeBody').innerHTML=arr.map(o=>
+    `<tr style="cursor:pointer" data-type="${String(o.type).replace(/"/g,'&quot;')}" title="Click to filter the detail table">`+
+    `<td>${o.type}</td>`+
+    `<td class="num">${fmtINR(o.value)}</td>`+
+    `<td class="num">${fmtN(o.awbs)}</td>`+
+    `<td class="num">${fmtN(o.manifests)}</td></tr>`).join('')
+    ||`<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
+  $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
+
+  /* Grand total — unique manifest count is the overall distinct count, not the sum of parts */
+  $('#mvTypeFoot').innerHTML=arr.length
+    ? `<tr><td>Grand Total</td>`+
+      `<td class="num">${fmtINR(arr.reduce((a,o)=>a+o.value,0))}</td>`+
+      `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.awbs,0))}</td>`+
+      `<td class="num">${fmtN(allManifests.size)}</td></tr>`
+    : '';
+
+  mvTypeExport=arr.map(o=>({movement_type:o.type,Sum_of_Product_value:Math.round(o.value),
+    Count_of_Awb_number:o.awbs,Unique_Manifest_code:o.manifests}));
 }
 
 function renderManifestView(){
   if(!RAW.length)return;
   if(!mvBuilt)mvBuildHeaders();
-  mvRenderCards(); mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderDetail(true);
+  mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderDetail(true);
 }
 function mvDetailExport(){
   const cap=80000;
@@ -2303,35 +2513,76 @@ function hovExport(key){
 let LHR_RAW=[];        // array of row objects from CN Working sheet
 let LHR_COLS=[];       // detected column names
 let lhrSort={k:null,dir:1}, lhrColF={};
+let lhrPendSort={k:'escKey',dir:-1};
 let lhrSummaryChart=null;
-const LHR_MONEY_RE=/(value|amount|cn received|recovery|amt)/i;
-const LHR_DATE_RE=/(date|received|escalat)/i;
+const LHR_MONEY_RE=/(value|amount|cn received value|recovery|amt)/i;
+const LHR_DATE_RE=/(date|escalat)/i;
+
+/* ---- the CN Working columns this page is built on ---- */
+function lhrCol(re){ return LHR_COLS.find(c=>re.test(c)) || null; }
+function lhrColEsc(){ return lhrCol(/email\s*escalation/i); }
+function lhrColCnDate(){ return lhrCol(/cn\s*received\s*date/i); }
+function lhrColCnValue(){ return lhrCol(/cn\s*received\s*value/i); }
+function lhrColAwb(){ return lhrCol(/impacted\s*awb/i); }
+function lhrColImpValue(){ return lhrCol(/impacted\s*product\s*value/i); }
+
+/* ---- date parsing --------------------------------------------------------
+   Cells arrive as the text Excel displays (sheet_to_json raw:false).
+   Two shapes occur in this sheet:
+     "26-02-2026"  dashes  → DD-MM-YYYY, matching the column header
+     "3/25/26"     slashes → M/D/YY, how SheetJS renders a real date cell
+   A final guard swaps the parts if the month lands above 12.
+   Blank and "-" both mean "no date".                                        */
+function parseCNDate(v){
+  if(v==null||v==='')return null;
+  if(v instanceof Date&&!isNaN(v))return v;
+  const s=String(v).trim();
+  if(!s||s==='-')return null;
+  let m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);            // ISO
+  if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})([-\/])(\d{1,2})\2(\d{2,4})$/);
+  if(m){
+    const a=+m[1],sep=m[2],b=+m[3];
+    let y=+m[4]; if(y<100)y+=2000;
+    let day,mon;
+    if(sep==='-'){day=a;mon=b;}   // dd-mm-yyyy
+    else{mon=a;day=b;}            // m/d/yy
+    if(mon>12&&day<=12){const t=mon;mon=day;day=t;}
+    if(mon<1||mon>12||day<1||day>31)return null;
+    return new Date(y,mon-1,day);
+  }
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+const LHR_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* 02-06-2026 → Jun'26 · 29-05-2026 → May'26 */
+function lhrMonLabel(v){
+  const d=parseCNDate(v);
+  return d?LHR_MON[d.getMonth()]+"'"+String(d.getFullYear()).slice(-2):'';
+}
+function lhrMonKey(v){
+  const d=parseCNDate(v);
+  return d?d.getFullYear()*100+d.getMonth()+1:999999;
+}
+/* handles 2,27,000 · 87,634.00 · "-" · blank */
+function lhrNum(v){
+  if(v==null||v===''||v==='-')return 0;
+  const n=+String(v).replace(/[,\s₹]/g,'');
+  return isNaN(n)?0:n;
+}
+function lhrHasCN(r){
+  const c=lhrColCnDate();
+  return c?parseCNDate(r[c])!==null:false;
+}
 
 function setLHRData(rows){
   LHR_RAW=rows||[];
-  LHR_COLS = LHR_RAW.length ? Object.keys(LHR_RAW[0]) : [];
+  /* drop spurious blank columns Excel sometimes emits (e.g. __EMPTY) */
+  LHR_COLS = LHR_RAW.length
+    ? Object.keys(LHR_RAW[0]).filter(c=>c&&!/^__EMPTY/.test(c)&&String(c).trim()!=='')
+    : [];
   lhrBuildHeaders();
   renderLHRecovery();
-}
-function lhrMonthKey(r){
-  // find a date-ish column, format YYYY-MM
-  for(const c of LHR_COLS){
-    if(/month/i.test(c) && r[c]) return String(r[c]).trim();
-  }
-  for(const c of LHR_COLS){
-    if(LHR_DATE_RE.test(c) && r[c]!=null && r[c]!==''){
-      const v=r[c];
-      if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);if(d)return d.y+'-'+String(d.m).padStart(2,'0');}
-      const dt=new Date(v); if(!isNaN(dt))return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
-      return String(v).slice(0,7);
-    }
-  }
-  return 'Unknown';
-}
-function lhrValueOf(r){
-  for(const c of LHR_COLS){ if(/cn received value/i.test(c))return +r[c]||0; }
-  for(const c of LHR_COLS){ if(LHR_MONEY_RE.test(c))return +r[c]||0; }
-  return 0;
 }
 
 function lhrBuildHeaders(){
@@ -2358,8 +2609,14 @@ function lhrFilterRows(){
 function lhrRenderTable(){
   let rows=lhrFilterRows();
   if(lhrSort.k){
+    const k=lhrSort.k, isDate=LHR_DATE_RE.test(k), isMoney=LHR_MONEY_RE.test(k);
     rows=[...rows].sort((a,b)=>{
-      const av=a[lhrSort.k],bv=b[lhrSort.k];
+      const av=a[k],bv=b[k];
+      if(isDate){
+        const ad=parseCNDate(av),bd=parseCNDate(bv);
+        return ((ad?ad.getTime():-Infinity)-(bd?bd.getTime():-Infinity))*lhrSort.dir;
+      }
+      if(isMoney)return (lhrNum(av)-lhrNum(bv))*lhrSort.dir;
       const an=parseFloat(String(av).replace(/[^0-9.\-]/g,'')),bn=parseFloat(String(bv).replace(/[^0-9.\-]/g,''));
       if(!isNaN(an)&&!isNaN(bn))return (an-bn)*lhrSort.dir;
       return String(av??'').localeCompare(String(bv??''))*lhrSort.dir;
@@ -2367,44 +2624,121 @@ function lhrRenderTable(){
   }
   const cap=2000;
   $('#lhrTblBody').innerHTML=rows.slice(0,cap).map(r=>'<tr>'+LHR_COLS.map(c=>{
-    const money=LHR_MONEY_RE.test(c),v=r[c];
-    if(money)return `<td class="num">${v!=null&&v!==''?fmtINR(+v||0):'—'}</td>`;
-    if(LHR_DATE_RE.test(c)&&v!=null&&v!==''){const disp=typeof v==='number'?excelDate(v):String(v);return `<td><span class="cn-date">${disp}</span></td>`;}
-    return `<td>${v!=null&&v!==''?v:'<span class="no-date">—</span>'}</td>`;
+    const v=r[c];
+    const blank=(v==null||v===''||v==='-');
+    if(LHR_MONEY_RE.test(c))
+      return `<td class="num">${blank?'—':fmtINR(lhrNum(v))}</td>`;
+    if(LHR_DATE_RE.test(c)){
+      if(blank)return `<td><span class="no-date">—</span></td>`;
+      const d=parseCNDate(v);
+      /* consistent DD-MM-YYYY plus the month tag used elsewhere on this page */
+      const disp=d
+        ? String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear()
+        : String(v);
+      return `<td><span class="cn-date">${disp}</span>${d?` <span class="sub" style="font-size:10px">${lhrMonLabel(v)}</span>`:''}</td>`;
+    }
+    return `<td>${blank?'<span class="no-date">—</span>':v}</td>`;
   }).join('')+'</tr>').join('')
     || `<tr><td colspan="${LHR_COLS.length||1}" style="text-align:center;padding:24px;color:var(--mut)">No CN Working rows — upload a workbook with a CN Working / LH Recovery sheet.</td></tr>`;
   $('#lhrRowCount').textContent=fmtN(rows.length)+' rows'+(rows.length>cap?' (showing '+fmtN(cap)+')':'');
 }
-function lhrRenderSummary(){
+/* ---- Table 1: Recovery Amount — month of CN Received Date vs CN Received Value ---- */
+function lhrSummaryRows(){
+  const cd=lhrColCnDate(), cv=lhrColCnValue();
+  if(!cd)return [];
   const m=new Map();
-  for(const r of LHR_RAW){const k=lhrMonthKey(r);m.set(k,(m.get(k)||0)+lhrValueOf(r));}
-  const entries=[...m.entries()].filter(([k])=>k&&k!=='Unknown').sort((a,b)=>a[0].localeCompare(b[0]));
-  $('#lhrSummaryBody').innerHTML=entries.map(([mo,v])=>`<tr><td>${mo}</td><td class="num">${fmtINR(v)}</td></tr>`).join('')
-    || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">No monthly recovery data detected.</td></tr>`;
-  lhrRenderChart(entries);
+  for(const r of LHR_RAW){
+    if(parseCNDate(r[cd])===null)continue;          // only rows where CN was received
+    const label=lhrMonLabel(r[cd]), key=lhrMonKey(r[cd]);
+    const o=m.get(label)||{month:label,key,value:0};
+    o.value+=cv?lhrNum(r[cv]):0;
+    m.set(label,o);
+  }
+  return [...m.values()].sort((a,b)=>a.key-b.key);
 }
-function lhrRenderChart(entries){
+function lhrRenderSummary(){
+  const rows=lhrSummaryRows();
+  $('#lhrSummaryBody').innerHTML=rows.map(o=>
+    `<tr><td><b>${o.month}</b></td><td class="num">${fmtINR(o.value)}</td></tr>`).join('')
+    || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">No CN Received Date values found.</td></tr>`;
+  $('#lhrSummaryFoot').innerHTML=rows.length
+    ? `<tr><td>Total</td><td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
+    : '';
+  lhrRenderChart(rows);
+}
+/* ---- Table 2: line chart of the same series ---- */
+function lhrRenderChart(rows){
   const ctx=$('#lhrSummaryChart'); if(!ctx)return;
-  const cfg={type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'CN Received Value',data:entries.map(e=>e[1]),
-      backgroundColor:'#1F7A4D',borderRadius:6,maxBarThickness:46}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)}}},
-      scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
-  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.update();}else lhrSummaryChart=new Chart(ctx,cfg);
+  const cfg={type:'line',
+    data:{labels:rows.map(o=>o.month),
+      datasets:[{label:'CN Received Value',data:rows.map(o=>o.value),
+        borderColor:'#4F46E5',backgroundColor:'rgba(79,70,229,.12)',
+        fill:true,tension:.34,borderWidth:2.5,
+        pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#4F46E5',
+        pointBorderColor:'#fff',pointBorderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},
+              y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
+  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.options=cfg.options;lhrSummaryChart.update();}
+  else lhrSummaryChart=new Chart(ctx,cfg);
+}
+
+/* ---- Table 3: Pending for Recovery — rows whose CN Received Date is blank ---- */
+function lhrPendingRows(){
+  const esc=lhrColEsc(), awb=lhrColAwb(), ipv=lhrColImpValue();
+  return LHR_RAW
+    .filter(r=>!lhrHasCN(r))                        // nothing recovered yet
+    .map(r=>({
+      esc:   esc?lhrMonLabel(r[esc]):'',
+      escKey:esc?lhrMonKey(r[esc]):999999,
+      awb:   awb?lhrNum(r[awb]):0,
+      value: ipv?lhrNum(r[ipv]):0
+    }));
+}
+function lhrRenderPending(){
+  const rows=lhrPendingRows();
+  const k=lhrPendSort.k,d=lhrPendSort.dir;
+  rows.sort((a,b)=>((a[k]||0)-(b[k]||0))*d);
+  $('#lhrPendBody').innerHTML=rows.map(o=>
+    `<tr><td><b>${o.esc||'—'}</b></td>`+
+    `<td class="num">${fmtN(o.awb)}</td>`+
+    `<td class="num">${fmtINR(o.value)}</td></tr>`).join('')
+    || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">Nothing pending — every escalation has a CN Received Date.</td></tr>`;
+  $('#lhrPendFoot').innerHTML=rows.length
+    ? `<tr><td>Total</td><td class="num">${fmtN(rows.reduce((a,o)=>a+o.awb,0))}</td>`+
+      `<td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
+    : '';
+  $('#lhrPendCount').textContent=fmtN(rows.length)+' pending';
+  /* sortable headers */
+  $$('.lhr-tbl th[data-pk]').forEach(th=>{
+    th.classList.remove('asc','desc');
+    if(th.dataset.pk===lhrPendSort.k)th.classList.add(lhrPendSort.dir<0?'desc':'asc');
+    th.onclick=()=>{
+      const pk=th.dataset.pk;
+      lhrPendSort.dir=lhrPendSort.k===pk?-lhrPendSort.dir:-1;
+      lhrPendSort.k=pk; lhrRenderPending();
+    };
+  });
 }
 function renderLHRecovery(){
   if(!LHR_RAW.length){
     $('#lhrSummaryBody').innerHTML=`<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">Upload a workbook containing a <b>CN Working</b> / <b>LH Recovery</b> sheet to populate this view.</td></tr>`;
+    $('#lhrSummaryFoot').innerHTML='';
+    $('#lhrPendBody').innerHTML=`<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
+    $('#lhrPendFoot').innerHTML=''; $('#lhrPendCount').textContent='';
     $('#lhrTblBody').innerHTML=`<tr><td style="text-align:center;padding:24px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
     return;
   }
-  lhrRenderSummary(); lhrRenderTable();
+  lhrRenderSummary(); lhrRenderPending(); lhrRenderTable();
 }
 function lhrSummaryExport(){
-  const m=new Map();
-  for(const r of LHR_RAW){const k=lhrMonthKey(r);m.set(k,(m.get(k)||0)+lhrValueOf(r));}
-  const entries=[...m.entries()].filter(([k])=>k&&k!=='Unknown').sort((a,b)=>a[0].localeCompare(b[0]));
-  return entries.map(([Month,CN_Received_Value])=>({Month,CN_Received_Value:Math.round(CN_Received_Value)}));
+  return lhrSummaryRows().map(o=>({Month:o.month,CN_Received_Value:Math.round(o.value)}));
+}
+function lhrPendingExport(){
+  const k=lhrPendSort.k,d=lhrPendSort.dir;
+  return lhrPendingRows().sort((a,b)=>((a[k]||0)-(b[k]||0))*d)
+    .map(o=>({Escalation_date:o.esc,Impacted_awb:o.awb,Impacted_Product_value:Math.round(o.value)}));
 }
 function lhrDetailExport(){ return lhrFilterRows(); }
 </script>
@@ -2619,7 +2953,9 @@ function parseWorkbookBuffer(buf){
     else{HOV_DATA={};}
     // CN Working / LH Recovery sheet
     const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
-    if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{defval:''}));}
+    // raw:false → cells arrive as the text Excel displays, so the date columns
+    // read exactly as they appear in the sheet (DD-MM-YYYY per the column header).
+    if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
     else{LHR_RAW=[];LHR_COLS=[];}
     boot();
     hideParse();
@@ -2819,13 +3155,14 @@ function wireControls(){
 
   /* manifest view */
   $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','top20_lanes_manifest','manifest_lanes');
-  $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','manifest_by_lanetype','manifest_type');
+  $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','movement_type_matrix','movement_type');
   $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','manifest_detail');
   $('#mvPrev').onclick=()=>{mvPage--;mvRenderDetail();};
   $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
 
   /* lh recovery */
-  $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_summary','summary');
+  $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
+  $('#lhrPendCsv').onclick=()=>lvExport(lhrPendingExport(),'csv','lh_pending_for_recovery','pending');
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
 
   /* lock */
