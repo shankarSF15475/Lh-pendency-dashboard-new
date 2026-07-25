@@ -179,10 +179,10 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .mv-pivot tr.mv-lane-row{cursor:pointer}
 .mv-pivot tr.mv-lane-row td{font-weight:700;background:#F7F8FD}
 .mv-pivot tr.mv-lane-row:hover td{background:#EDEFFA}
-.mv-pivot tr.mv-lane-row.open td{background:#E7E9F8}
-.mv-pivot tr.mv-dest td{font-weight:500;background:#fff;color:var(--mut)}
-.mv-pivot tr.mv-dest td.dest-name{padding-left:30px;color:var(--pine);font-weight:600}
-.mv-pivot tr.mv-dest:hover td{background:#FAFBFF}
+.mv-pivot tr.mv-lane-row.open td{background:#DDE0F5;border-bottom:1px solid #C3C8EC}
+.mv-pivot tr.mv-dest td{font-weight:600;background:#EEF0FB;color:#1E293B;border-bottom:1px solid #DADEF2}
+.mv-pivot tr.mv-dest td.dest-name{padding-left:30px;color:#4F46E5;font-weight:700}
+.mv-pivot tr.mv-dest:hover td{background:#E4E7F7}
 .mv-pivot td.tot-col{font-weight:800;background:#F1F3FB;color:var(--pine)}
 .mv-pivot tfoot td{position:sticky;bottom:0;background:var(--pine);color:#fff;font-weight:800;padding:9px 10px;border-top:2px solid var(--pine2);z-index:4}
 .mv-pivot .exp-ic{display:inline-block;width:11px;font-size:9px;color:var(--pine);margin-right:5px}
@@ -906,13 +906,13 @@ thead th{background:#F1F3FB;color:var(--pine);}
         <div class="card lv-sec">
           <div class="card-head">
             <div><h3>Movement Type Matrix</h3>
-              <span class="sub">Product value · AWB count · unique manifest codes per movement type · sorted large → small</span></div>
+              <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
             <div class="card-tools">
               <button class="tool" id="mvTypeCsv">CSV</button>
             </div>
           </div>
-          <div class="lv-mini-wrap">
-            <table class="lv-mini mv-pivot" id="mvTypeTbl">
+          <div class="lv-mini-wrap" style="overflow-x:auto">
+            <table class="lv-mini mv-pivot" id="mvTypeTbl" style="min-width:660px">
               <thead><tr id="mvTypeHead"></tr></thead>
               <tbody id="mvTypeBody"></tbody>
               <tfoot id="mvTypeFoot"></tfoot>
@@ -1203,11 +1203,31 @@ function excelTime(v){
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 
+/* ---- Movement column (Dashboard sheet column H) ----------------------------
+   Header spelling varies between exports ("Movement", "movement", stray spaces),
+   so resolve the real key once from the first row instead of assuming a name.  */
+let MOVE_KEY='Movement';
+function resolveMoveKey(sampleRow){
+  if(!sampleRow){MOVE_KEY='Movement';return;}
+  const keys=Object.keys(sampleRow);
+  /* exact-ish match first: trimmed, case-insensitive "movement" */
+  let k=keys.find(x=>String(x).trim().toLowerCase()==='movement');
+  /* then anything that is a movement column but NOT movement_type */
+  if(!k)k=keys.find(x=>{
+    const t=String(x).trim().toLowerCase();
+    return t.startsWith('movement')&&!t.includes('type');
+  });
+  MOVE_KEY=k||'Movement';
+  console.log('[Parse] Movement column resolved to:',JSON.stringify(MOVE_KEY),
+    k?'':'(not found — Movement Type Matrix will show all rows with a blank movement label)');
+}
+
 function normalize(r){
   const age=+r['intransit_ageing']||0;
   let fl=s(r.flag).toLowerCase();
   fl = fl.includes('rev')?'Reverse':'Forward';
   return {Zone:s(r.Zone)||'Unknown',movement_type:s(r.movement_type)||'Unknown',
+    Movement:s(r[MOVE_KEY])||'',
     Awb_number:s(r.Awb_number),MM_origin:s(r.MM_origin)||'Unknown',MM_origin_type:s(r.MM_origin_type)||'Unknown',
     MM_destination:s(r.MM_destination)||'Unknown',MM_destination_type:s(r.MM_destination_type)||'Unknown',
     Product_value:+r.Product_value||0,flag:fl,'Lane Code':s(r['Lane Code'])||'Unknown',
@@ -2333,38 +2353,51 @@ function mvRenderLaneTbl(){
   });
 }
 
-/* ---- Movement type matrix: Σ Product_value · count of Awb_number · unique Manifest_code ---- */
+/* ---- Movement type matrix: movement · Σ Product_value · count Awb_number · count Manifest_code ----
+   Adds the Movement column (sheet column H) beside movement_type.
+   Only rows where Movement is populated are counted (matching the source pivot),
+   and the last two columns are plain row counts, not distinct counts. */
 function mvRenderTypeTbl(){
   const rows=mvScopeRows();
+  /* Only treat a blank Movement as an exclusion when the column actually carries data.
+     If the export has no Movement column at all, still show every row rather than
+     rendering an empty table. */
+  const hasMoveCol=rows.some(r=>r.Movement);
   const m=new Map();
   const allManifests=new Set();
   for(const r of rows){
+    const mv=r.Movement;
+    if(hasMoveCol&&!mv)continue;                  // Movement blank → excluded from this matrix
     const k=r.movement_type||'Unknown';
     let e=m.get(k);
-    if(!e){e={type:k,value:0,awbs:0,manifests:new Set()};m.set(k,e);}
+    if(!e){e={type:k,move:mv||'—',value:0,awbs:0,manifests:new Set()};m.set(k,e);}
+    if(mv&&e.move==='—')e.move=mv;
     e.value+=r.Product_value||0;
-    e.awbs++;
+    e.awbs++;                                     // Count of Awb_number = row count
     if(r.Manifest_code){e.manifests.add(r.Manifest_code);allManifests.add(r.Manifest_code);}
   }
-  let arr=[...m.values()].map(e=>({type:e.type,value:e.value,awbs:e.awbs,manifests:e.manifests.size}));
-  /* MUST: sorted large → small */
+  let arr=[...m.values()].map(e=>({type:e.type,move:e.move,value:e.value,
+    awbs:e.awbs,manifests:e.manifests.size}));
+  /* MUST: sorted large → small on value */
   arr.sort((a,b)=>b.value-a.value);
   if(mvTypeSort.k!=='value'||mvTypeSort.dir!==-1){
     arr.sort((a,b)=>{
       const k=mvTypeSort.k,d=mvTypeSort.dir;
       if(k==='type')return String(a.type).localeCompare(String(b.type))*d;
+      if(k==='move')return String(a.move).localeCompare(String(b.move))*d;
       return ((a[k]||0)-(b[k]||0))*d;
     });
   }
   const mark=k=>mvTypeSort.k===k?(mvTypeSort.dir<0?' ▼':' ▲'):'';
   const cols=[
     {k:'type',     label:'movement_type'},
+    {k:'move',     label:'movement'},
     {k:'value',    label:'Sum of Product_value', num:true},
     {k:'awbs',     label:'Count of Awb_number',  num:true},
-    {k:'manifests',label:'Unique Manifest_code', num:true}
+    {k:'manifests',label:'Count of Manifest_code', num:true}
   ];
   $('#mvTypeHead').innerHTML=cols.map(c=>
-    `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${c.k==='type'?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
+    `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${(c.k==='type'||c.k==='move')?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
   $$('#mvTypeHead th[data-k]').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;
     mvTypeSort.dir=mvTypeSort.k===k?-mvTypeSort.dir:-1;
@@ -2374,22 +2407,24 @@ function mvRenderTypeTbl(){
   $('#mvTypeBody').innerHTML=arr.map(o=>
     `<tr style="cursor:pointer" data-type="${String(o.type).replace(/"/g,'&quot;')}" title="Click to filter the detail table">`+
     `<td>${o.type}</td>`+
+    `<td>${o.move}</td>`+
     `<td class="num">${fmtINR(o.value)}</td>`+
     `<td class="num">${fmtN(o.awbs)}</td>`+
     `<td class="num">${fmtN(o.manifests)}</td></tr>`).join('')
-    ||`<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
+    ||`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
   $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
 
-  /* Grand total — unique manifest count is the overall distinct count, not the sum of parts */
+  /* Grand total — Count of Manifest_code is the overall distinct count, not the sum of parts */
   $('#mvTypeFoot').innerHTML=arr.length
-    ? `<tr><td>Grand Total</td>`+
+    ? `<tr><td>Grand Total</td><td></td>`+
       `<td class="num">${fmtINR(arr.reduce((a,o)=>a+o.value,0))}</td>`+
       `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.awbs,0))}</td>`+
       `<td class="num">${fmtN(allManifests.size)}</td></tr>`
     : '';
 
-  mvTypeExport=arr.map(o=>({movement_type:o.type,Sum_of_Product_value:Math.round(o.value),
-    Count_of_Awb_number:o.awbs,Unique_Manifest_code:o.manifests}));
+  mvTypeExport=arr.map(o=>({movement_type:o.type,movement:o.move,
+    Sum_of_Product_value:Math.round(o.value),
+    Count_of_Awb_number:o.awbs,Count_of_Manifest_code:o.manifests}));
 }
 
 function renderManifestView(){
@@ -2816,7 +2851,7 @@ function exportChartAsJPG(chart,name){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true},
-  'anup.pandey1':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true},
+  'anup.pandey1':{pass:'anup@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true},
   'sachin.r1':   {pass:'sachin@123',name:'Sachin R',    isAdmin:false, lhRecovery:true},
   'anna.roy1':   {pass:'anna@123',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
   'indrajeet.c1':{pass:'indra@123', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
@@ -2944,8 +2979,11 @@ function parseWorkbookBuffer(buf){
     console.log('[Parse] Using main sheet:', mainName);
     const mainWs=wb.Sheets[mainName];
     const rows=XLSX.utils.sheet_to_json(mainWs,{raw:true,defval:''});
-    console.log('[Parse] Raw rows:', rows.length, 'Sample keys:', rows.length?Object.keys(rows[0]).slice(0,8):'none');
+    console.log('[Parse] Raw rows:', rows.length);
+    console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
+    resolveMoveKey(rows[0]);
     RAW=rows.map(normalize);
+    console.log('[Parse] Rows with a Movement value:', RAW.filter(r=>r.Movement).length, 'of', RAW.length);
     FILTERED=RAW.slice(); // ensure FILTERED is a fresh copy of all RAW rows
     // HOV sheet
     const hovName=wb.SheetNames.find(n=>/hov/i.test(n));
