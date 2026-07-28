@@ -166,7 +166,51 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .mv-mcsel-panel .mc-actions button{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:3px 8px;background:#F7FAF6;cursor:pointer;color:var(--text)}
 .mv-mcsel-panel .mc-actions button:hover{background:var(--pine);color:var(--lime)}
 /* MM destination expand row */
-/* ---- Bag wise View filter bar ---- */
+/* ---- Documentation page ---- */
+.doc-intro{padding:18px 20px;margin-bottom:14px}
+.doc-lead{margin:0 0 14px;font-size:13px;color:var(--mut);line-height:1.65;max-width:900px}
+.doc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#docSearch{flex:1;min-width:220px;max-width:420px;padding:8px 12px;border:1px solid var(--line);
+  border-radius:9px;font-size:13px;background:#fff;color:var(--ink);font-family:inherit}
+#docSearch:focus{outline:none;border-color:var(--pine)}
+.doc-count{font-size:11.5px;color:var(--mut);font-weight:700}
+.doc-sec{margin-bottom:16px}
+.doc-sec-head{display:flex;align-items:baseline;gap:10px;padding:11px 16px;background:var(--pine);
+  color:#fff;border-radius:11px 11px 0 0}
+.doc-sec-head h4{margin:0;font-size:14px;font-weight:800;letter-spacing:.01em}
+.doc-sec-head .n{font-size:11px;opacity:.82;font-weight:700}
+.doc-grid{background:#fff;border:1px solid var(--line);border-top:none;border-radius:0 0 11px 11px;overflow:hidden}
+.doc-item{padding:13px 16px;border-bottom:1px solid var(--line)}
+.doc-item:last-child{border-bottom:none}
+.doc-item:nth-child(even){background:#FBFBFE}
+.doc-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+.doc-name{font-size:13.5px;font-weight:800;color:var(--ink)}
+.doc-tag{font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:5px;text-transform:uppercase}
+.tag-kpi{background:#EEF0FF;color:#4F46E5}
+.tag-chart{background:#E7F5EE;color:#0F766E}
+.tag-table{background:#FEF3E2;color:#B45309}
+.tag-panel{background:#FDECEC;color:#B42318}
+.doc-what{font-size:12.5px;color:var(--mut);line-height:1.6;margin:0 0 8px}
+.doc-rows{display:grid;grid-template-columns:118px 1fr;gap:4px 12px;font-size:12px;line-height:1.6}
+.doc-k{color:var(--mut);font-weight:700;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding-top:2px}
+.doc-v{color:var(--ink)}
+.doc-v code{background:#F1F3FB;color:#4F46E5;padding:1px 6px;border-radius:4px;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px;white-space:nowrap}
+.doc-formula{background:#F8F9FC;border-left:3px solid var(--pine);padding:7px 11px;border-radius:0 6px 6px 0;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px;color:var(--ink);
+  line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.doc-note{font-size:11.5px;color:#B45309;background:#FEF9EF;border-radius:6px;padding:6px 10px;margin-top:7px;line-height:1.55}
+.doc-empty{padding:26px;text-align:center;color:var(--mut);font-size:13px}
+@media print{
+  .sidebar,.topbar,.doc-toolbar,#overlay{display:none!important}
+  .page:not(#page-docs){display:none!important}
+  #page-docs{display:block!important}
+  .doc-grid{break-inside:auto}
+  .doc-item{break-inside:avoid}
+  .doc-sec-head{background:#4F46E5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media(max-width:720px){.doc-rows{grid-template-columns:1fr;gap:2px}
+  .doc-k{padding-top:6px}}
 .mv-filterbar{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:12px;flex-wrap:wrap}
 .mv-fb-ttl{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--pine)}
 .mv-fb-clear{font-size:11.5px;border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:#fff;cursor:pointer;color:var(--mut)}
@@ -179,10 +223,11 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .mv-pivot tr.mv-lane-row{cursor:pointer}
 .mv-pivot tr.mv-lane-row td{font-weight:700;background:#F7F8FD}
 .mv-pivot tr.mv-lane-row:hover td{background:#EDEFFA}
-.mv-pivot tr.mv-lane-row.open td{background:#E7E9F8}
-.mv-pivot tr.mv-dest td{font-weight:500;background:#fff;color:var(--mut)}
-.mv-pivot tr.mv-dest td.dest-name{padding-left:30px;color:var(--pine);font-weight:600}
-.mv-pivot tr.mv-dest:hover td{background:#FAFBFF}
+.mv-pivot tr.mv-lane-row.open td{background:#E3E6F7;border-bottom:1px solid #C3C8EC}
+/* expanded MM_destination row — light red so it reads clearly against the lane row above */
+.mv-pivot tr.mv-dest td{font-weight:700;background:#FEF1F1;color:#B42318;border-bottom:1px solid #F6CFCB}
+.mv-pivot tr.mv-dest td.dest-name{padding-left:30px;color:#B42318;font-weight:800;box-shadow:inset 3px 0 0 #E5484D}
+.mv-pivot tr.mv-dest:hover td{background:#FDE3E1}
 .mv-pivot td.tot-col{font-weight:800;background:#F1F3FB;color:var(--pine)}
 .mv-pivot tfoot td{position:sticky;bottom:0;background:var(--pine);color:#fff;font-weight:800;padding:9px 10px;border-top:2px solid var(--pine2);z-index:4}
 .mv-pivot .exp-ic{display:inline-block;width:11px;font-size:9px;color:var(--pine);margin-right:5px}
@@ -407,6 +452,8 @@ body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .fil
 .lhr-tbl tbody tr:hover{background:#EEF7F2}
 .lhr-tbl tbody td{padding:8px 10px;vertical-align:middle;white-space:nowrap}
 .lhr-tbl .num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace}
+.lhr-tbl tfoot td{background:#F1F3FB;color:#4F46E5;font-weight:800;padding:9px 10px;border-top:2px solid #C7CBEC;white-space:nowrap}
+.lhr-tbl tfoot td.num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace}
 .lhr-tbl .mono{font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px}
 .badge-pct{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
 .badge-pct.high{background:#FED7D7;color:#C53030}
@@ -684,6 +731,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
+      <button data-page="docs"><span class="ic">📖</span>Documentation</button>
     </nav>
     <div class="side-foot">
       <div>Data refresh: <b id="footRows" style="color:#1E293B">—</b></div>
@@ -904,13 +952,13 @@ thead th{background:#F1F3FB;color:var(--pine);}
         <div class="card lv-sec">
           <div class="card-head">
             <div><h3>Movement Type Matrix</h3>
-              <span class="sub">Product value · AWB count · unique manifest codes per movement type · sorted large → small</span></div>
+              <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
             <div class="card-tools">
               <button class="tool" id="mvTypeCsv">CSV</button>
             </div>
           </div>
-          <div class="lv-mini-wrap">
-            <table class="lv-mini mv-pivot" id="mvTypeTbl">
+          <div class="lv-mini-wrap" style="overflow-x:auto">
+            <table class="lv-mini mv-pivot" id="mvTypeTbl" style="min-width:660px">
               <thead><tr id="mvTypeHead"></tr></thead>
               <tbody id="mvTypeBody"></tbody>
               <tfoot id="mvTypeFoot"></tfoot>
@@ -986,11 +1034,12 @@ thead th{background:#F1F3FB;color:var(--pine);}
 
     <!-- ============ PAGE: LH RECOVERY ============ -->
     <section class="page" id="page-lhrecovery">
+      <!-- ===== Table 1 + Table 2 : Recovery Amount by month + line chart ===== -->
       <div class="card" style="margin-top:12px;padding:18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
             <h3 style="margin:0">Recovery Amount</h3>
-            <span class="sub">monthly CN Received Value from the CN Working sheet</span>
+            <span class="sub">CN Received Value by month of <b>CN Received Date</b> — CN Working sheet</span>
           </div>
           <div class="card-tools"><button class="tool" id="lhrSummaryCsv" title="Download summary CSV">CSV</button></div>
         </div>
@@ -999,6 +1048,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <table class="lhr-tbl" style="min-width:420px">
               <thead><tr class="hdr"><th>Month</th><th class="num">CN Received Value</th></tr></thead>
               <tbody id="lhrSummaryBody"></tbody>
+              <tfoot id="lhrSummaryFoot"></tfoot>
             </table>
           </div>
           <div class="lhr-chart-pane">
@@ -1008,6 +1058,32 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
       </div>
 
+      <!-- ===== Table 3 : Pending for Recovery (CN Received Date blank) ===== -->
+      <div class="card" style="margin-top:14px;padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0">Pending for Recovery</h3>
+            <span class="sub">escalations where <b>CN Received Date</b> is still blank — nothing recovered yet</span>
+          </div>
+          <div class="card-tools">
+            <span class="lhr-rowcount" id="lhrPendCount"></span>
+            <button class="tool" id="lhrPendCsv" title="Download pending CSV">CSV</button>
+          </div>
+        </div>
+        <div class="lhr-tbl-wrap" style="max-width:760px">
+          <table class="lhr-tbl" style="min-width:520px">
+            <thead><tr class="hdr">
+              <th data-pk="escKey">Escalation date<span class="si"></span></th>
+              <th class="num" data-pk="awb">Impacted awb<span class="si"></span></th>
+              <th class="num" data-pk="value">Impacted Product value<span class="si"></span></th>
+            </tr></thead>
+            <tbody id="lhrPendBody"></tbody>
+            <tfoot id="lhrPendFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Table 4 : full CN Working detail ===== -->
       <div class="card" style="margin-top:14px;padding:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
@@ -1079,6 +1155,22 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <tbody id="lockLaneBody"></tbody>
         </table>
       </div>
+    </section>
+
+    <!-- ============ PAGE: DOCUMENTATION ============ -->
+    <section class="page" id="page-docs">
+      <div class="card doc-intro">
+        <h3 style="margin:0 0 6px">How this dashboard is calculated</h3>
+        <p class="doc-lead">Every KPI, chart and table below is listed with the sheet and columns it reads,
+          the exact aggregation applied, and any filters that affect it. Use this as the single reference
+          when a number needs to be explained or reconciled against the source workbook.</p>
+        <div class="doc-toolbar">
+          <input id="docSearch" type="search" placeholder="Search a KPI, chart, table or column name…">
+          <span class="doc-count" id="docCount"></span>
+          <button class="tool" id="docPrint" title="Print or save as PDF">Print / PDF</button>
+        </div>
+      </div>
+      <div id="docBody"></div>
     </section>
   </main>
 </div>
@@ -1173,11 +1265,31 @@ function excelTime(v){
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 
+/* ---- Movement column (Dashboard sheet column H) ----------------------------
+   Header spelling varies between exports ("Movement", "movement", stray spaces),
+   so resolve the real key once from the first row instead of assuming a name.  */
+let MOVE_KEY='Movement';
+function resolveMoveKey(sampleRow){
+  if(!sampleRow){MOVE_KEY='Movement';return;}
+  const keys=Object.keys(sampleRow);
+  /* exact-ish match first: trimmed, case-insensitive "movement" */
+  let k=keys.find(x=>String(x).trim().toLowerCase()==='movement');
+  /* then anything that is a movement column but NOT movement_type */
+  if(!k)k=keys.find(x=>{
+    const t=String(x).trim().toLowerCase();
+    return t.startsWith('movement')&&!t.includes('type');
+  });
+  MOVE_KEY=k||'Movement';
+  console.log('[Parse] Movement column resolved to:',JSON.stringify(MOVE_KEY),
+    k?'':'(not found — Movement Type Matrix will show all rows with a blank movement label)');
+}
+
 function normalize(r){
   const age=+r['intransit_ageing']||0;
   let fl=s(r.flag).toLowerCase();
   fl = fl.includes('rev')?'Reverse':'Forward';
   return {Zone:s(r.Zone)||'Unknown',movement_type:s(r.movement_type)||'Unknown',
+    Movement:s(r[MOVE_KEY])||'',
     Awb_number:s(r.Awb_number),MM_origin:s(r.MM_origin)||'Unknown',MM_origin_type:s(r.MM_origin_type)||'Unknown',
     MM_destination:s(r.MM_destination)||'Unknown',MM_destination_type:s(r.MM_destination_type)||'Unknown',
     Product_value:+r.Product_value||0,flag:fl,'Lane Code':s(r['Lane Code'])||'Unknown',
@@ -2303,38 +2415,51 @@ function mvRenderLaneTbl(){
   });
 }
 
-/* ---- Movement type matrix: Σ Product_value · count of Awb_number · unique Manifest_code ---- */
+/* ---- Movement type matrix: movement · Σ Product_value · count Awb_number · count Manifest_code ----
+   Adds the Movement column (sheet column H) beside movement_type.
+   Only rows where Movement is populated are counted (matching the source pivot),
+   and the last two columns are plain row counts, not distinct counts. */
 function mvRenderTypeTbl(){
   const rows=mvScopeRows();
+  /* Only treat a blank Movement as an exclusion when the column actually carries data.
+     If the export has no Movement column at all, still show every row rather than
+     rendering an empty table. */
+  const hasMoveCol=rows.some(r=>r.Movement);
   const m=new Map();
   const allManifests=new Set();
   for(const r of rows){
+    const mv=r.Movement;
+    if(hasMoveCol&&!mv)continue;                  // Movement blank → excluded from this matrix
     const k=r.movement_type||'Unknown';
     let e=m.get(k);
-    if(!e){e={type:k,value:0,awbs:0,manifests:new Set()};m.set(k,e);}
+    if(!e){e={type:k,move:mv||'—',value:0,awbs:0,manifests:new Set()};m.set(k,e);}
+    if(mv&&e.move==='—')e.move=mv;
     e.value+=r.Product_value||0;
-    e.awbs++;
+    e.awbs++;                                     // Count of Awb_number = row count
     if(r.Manifest_code){e.manifests.add(r.Manifest_code);allManifests.add(r.Manifest_code);}
   }
-  let arr=[...m.values()].map(e=>({type:e.type,value:e.value,awbs:e.awbs,manifests:e.manifests.size}));
-  /* MUST: sorted large → small */
+  let arr=[...m.values()].map(e=>({type:e.type,move:e.move,value:e.value,
+    awbs:e.awbs,manifests:e.manifests.size}));
+  /* MUST: sorted large → small on value */
   arr.sort((a,b)=>b.value-a.value);
   if(mvTypeSort.k!=='value'||mvTypeSort.dir!==-1){
     arr.sort((a,b)=>{
       const k=mvTypeSort.k,d=mvTypeSort.dir;
       if(k==='type')return String(a.type).localeCompare(String(b.type))*d;
+      if(k==='move')return String(a.move).localeCompare(String(b.move))*d;
       return ((a[k]||0)-(b[k]||0))*d;
     });
   }
   const mark=k=>mvTypeSort.k===k?(mvTypeSort.dir<0?' ▼':' ▲'):'';
   const cols=[
     {k:'type',     label:'movement_type'},
+    {k:'move',     label:'movement'},
     {k:'value',    label:'Sum of Product_value', num:true},
     {k:'awbs',     label:'Count of Awb_number',  num:true},
-    {k:'manifests',label:'Unique Manifest_code', num:true}
+    {k:'manifests',label:'Count of Manifest_code', num:true}
   ];
   $('#mvTypeHead').innerHTML=cols.map(c=>
-    `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${c.k==='type'?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
+    `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${(c.k==='type'||c.k==='move')?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
   $$('#mvTypeHead th[data-k]').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;
     mvTypeSort.dir=mvTypeSort.k===k?-mvTypeSort.dir:-1;
@@ -2344,22 +2469,24 @@ function mvRenderTypeTbl(){
   $('#mvTypeBody').innerHTML=arr.map(o=>
     `<tr style="cursor:pointer" data-type="${String(o.type).replace(/"/g,'&quot;')}" title="Click to filter the detail table">`+
     `<td>${o.type}</td>`+
+    `<td>${o.move}</td>`+
     `<td class="num">${fmtINR(o.value)}</td>`+
     `<td class="num">${fmtN(o.awbs)}</td>`+
     `<td class="num">${fmtN(o.manifests)}</td></tr>`).join('')
-    ||`<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
+    ||`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
   $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
 
-  /* Grand total — unique manifest count is the overall distinct count, not the sum of parts */
+  /* Grand total — Count of Manifest_code is the overall distinct count, not the sum of parts */
   $('#mvTypeFoot').innerHTML=arr.length
-    ? `<tr><td>Grand Total</td>`+
+    ? `<tr><td>Grand Total</td><td></td>`+
       `<td class="num">${fmtINR(arr.reduce((a,o)=>a+o.value,0))}</td>`+
       `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.awbs,0))}</td>`+
       `<td class="num">${fmtN(allManifests.size)}</td></tr>`
     : '';
 
-  mvTypeExport=arr.map(o=>({movement_type:o.type,Sum_of_Product_value:Math.round(o.value),
-    Count_of_Awb_number:o.awbs,Unique_Manifest_code:o.manifests}));
+  mvTypeExport=arr.map(o=>({movement_type:o.type,movement:o.move,
+    Sum_of_Product_value:Math.round(o.value),
+    Count_of_Awb_number:o.awbs,Count_of_Manifest_code:o.manifests}));
 }
 
 function renderManifestView(){
@@ -2483,35 +2610,76 @@ function hovExport(key){
 let LHR_RAW=[];        // array of row objects from CN Working sheet
 let LHR_COLS=[];       // detected column names
 let lhrSort={k:null,dir:1}, lhrColF={};
+let lhrPendSort={k:'escKey',dir:-1};
 let lhrSummaryChart=null;
-const LHR_MONEY_RE=/(value|amount|cn received|recovery|amt)/i;
-const LHR_DATE_RE=/(date|received|escalat)/i;
+const LHR_MONEY_RE=/(value|amount|cn received value|recovery|amt)/i;
+const LHR_DATE_RE=/(date|escalat)/i;
+
+/* ---- the CN Working columns this page is built on ---- */
+function lhrCol(re){ return LHR_COLS.find(c=>re.test(c)) || null; }
+function lhrColEsc(){ return lhrCol(/email\s*escalation/i); }
+function lhrColCnDate(){ return lhrCol(/cn\s*received\s*date/i); }
+function lhrColCnValue(){ return lhrCol(/cn\s*received\s*value/i); }
+function lhrColAwb(){ return lhrCol(/impacted\s*awb/i); }
+function lhrColImpValue(){ return lhrCol(/impacted\s*product\s*value/i); }
+
+/* ---- date parsing --------------------------------------------------------
+   Cells arrive as the text Excel displays (sheet_to_json raw:false).
+   Two shapes occur in this sheet:
+     "26-02-2026"  dashes  → DD-MM-YYYY, matching the column header
+     "3/25/26"     slashes → M/D/YY, how SheetJS renders a real date cell
+   A final guard swaps the parts if the month lands above 12.
+   Blank and "-" both mean "no date".                                        */
+function parseCNDate(v){
+  if(v==null||v==='')return null;
+  if(v instanceof Date&&!isNaN(v))return v;
+  const s=String(v).trim();
+  if(!s||s==='-')return null;
+  let m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);            // ISO
+  if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})([-\/])(\d{1,2})\2(\d{2,4})$/);
+  if(m){
+    const a=+m[1],sep=m[2],b=+m[3];
+    let y=+m[4]; if(y<100)y+=2000;
+    let day,mon;
+    if(sep==='-'){day=a;mon=b;}   // dd-mm-yyyy
+    else{mon=a;day=b;}            // m/d/yy
+    if(mon>12&&day<=12){const t=mon;mon=day;day=t;}
+    if(mon<1||mon>12||day<1||day>31)return null;
+    return new Date(y,mon-1,day);
+  }
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+const LHR_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* 02-06-2026 → Jun'26 · 29-05-2026 → May'26 */
+function lhrMonLabel(v){
+  const d=parseCNDate(v);
+  return d?LHR_MON[d.getMonth()]+"'"+String(d.getFullYear()).slice(-2):'';
+}
+function lhrMonKey(v){
+  const d=parseCNDate(v);
+  return d?d.getFullYear()*100+d.getMonth()+1:999999;
+}
+/* handles 2,27,000 · 87,634.00 · "-" · blank */
+function lhrNum(v){
+  if(v==null||v===''||v==='-')return 0;
+  const n=+String(v).replace(/[,\s₹]/g,'');
+  return isNaN(n)?0:n;
+}
+function lhrHasCN(r){
+  const c=lhrColCnDate();
+  return c?parseCNDate(r[c])!==null:false;
+}
 
 function setLHRData(rows){
   LHR_RAW=rows||[];
-  LHR_COLS = LHR_RAW.length ? Object.keys(LHR_RAW[0]) : [];
+  /* drop spurious blank columns Excel sometimes emits (e.g. __EMPTY) */
+  LHR_COLS = LHR_RAW.length
+    ? Object.keys(LHR_RAW[0]).filter(c=>c&&!/^__EMPTY/.test(c)&&String(c).trim()!=='')
+    : [];
   lhrBuildHeaders();
   renderLHRecovery();
-}
-function lhrMonthKey(r){
-  // find a date-ish column, format YYYY-MM
-  for(const c of LHR_COLS){
-    if(/month/i.test(c) && r[c]) return String(r[c]).trim();
-  }
-  for(const c of LHR_COLS){
-    if(LHR_DATE_RE.test(c) && r[c]!=null && r[c]!==''){
-      const v=r[c];
-      if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);if(d)return d.y+'-'+String(d.m).padStart(2,'0');}
-      const dt=new Date(v); if(!isNaN(dt))return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
-      return String(v).slice(0,7);
-    }
-  }
-  return 'Unknown';
-}
-function lhrValueOf(r){
-  for(const c of LHR_COLS){ if(/cn received value/i.test(c))return +r[c]||0; }
-  for(const c of LHR_COLS){ if(LHR_MONEY_RE.test(c))return +r[c]||0; }
-  return 0;
 }
 
 function lhrBuildHeaders(){
@@ -2538,8 +2706,14 @@ function lhrFilterRows(){
 function lhrRenderTable(){
   let rows=lhrFilterRows();
   if(lhrSort.k){
+    const k=lhrSort.k, isDate=LHR_DATE_RE.test(k), isMoney=LHR_MONEY_RE.test(k);
     rows=[...rows].sort((a,b)=>{
-      const av=a[lhrSort.k],bv=b[lhrSort.k];
+      const av=a[k],bv=b[k];
+      if(isDate){
+        const ad=parseCNDate(av),bd=parseCNDate(bv);
+        return ((ad?ad.getTime():-Infinity)-(bd?bd.getTime():-Infinity))*lhrSort.dir;
+      }
+      if(isMoney)return (lhrNum(av)-lhrNum(bv))*lhrSort.dir;
       const an=parseFloat(String(av).replace(/[^0-9.\-]/g,'')),bn=parseFloat(String(bv).replace(/[^0-9.\-]/g,''));
       if(!isNaN(an)&&!isNaN(bn))return (an-bn)*lhrSort.dir;
       return String(av??'').localeCompare(String(bv??''))*lhrSort.dir;
@@ -2547,44 +2721,121 @@ function lhrRenderTable(){
   }
   const cap=2000;
   $('#lhrTblBody').innerHTML=rows.slice(0,cap).map(r=>'<tr>'+LHR_COLS.map(c=>{
-    const money=LHR_MONEY_RE.test(c),v=r[c];
-    if(money)return `<td class="num">${v!=null&&v!==''?fmtINR(+v||0):'—'}</td>`;
-    if(LHR_DATE_RE.test(c)&&v!=null&&v!==''){const disp=typeof v==='number'?excelDate(v):String(v);return `<td><span class="cn-date">${disp}</span></td>`;}
-    return `<td>${v!=null&&v!==''?v:'<span class="no-date">—</span>'}</td>`;
+    const v=r[c];
+    const blank=(v==null||v===''||v==='-');
+    if(LHR_MONEY_RE.test(c))
+      return `<td class="num">${blank?'—':fmtINR(lhrNum(v))}</td>`;
+    if(LHR_DATE_RE.test(c)){
+      if(blank)return `<td><span class="no-date">—</span></td>`;
+      const d=parseCNDate(v);
+      /* consistent DD-MM-YYYY plus the month tag used elsewhere on this page */
+      const disp=d
+        ? String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear()
+        : String(v);
+      return `<td><span class="cn-date">${disp}</span>${d?` <span class="sub" style="font-size:10px">${lhrMonLabel(v)}</span>`:''}</td>`;
+    }
+    return `<td>${blank?'<span class="no-date">—</span>':v}</td>`;
   }).join('')+'</tr>').join('')
     || `<tr><td colspan="${LHR_COLS.length||1}" style="text-align:center;padding:24px;color:var(--mut)">No CN Working rows — upload a workbook with a CN Working / LH Recovery sheet.</td></tr>`;
   $('#lhrRowCount').textContent=fmtN(rows.length)+' rows'+(rows.length>cap?' (showing '+fmtN(cap)+')':'');
 }
-function lhrRenderSummary(){
+/* ---- Table 1: Recovery Amount — month of CN Received Date vs CN Received Value ---- */
+function lhrSummaryRows(){
+  const cd=lhrColCnDate(), cv=lhrColCnValue();
+  if(!cd)return [];
   const m=new Map();
-  for(const r of LHR_RAW){const k=lhrMonthKey(r);m.set(k,(m.get(k)||0)+lhrValueOf(r));}
-  const entries=[...m.entries()].filter(([k])=>k&&k!=='Unknown').sort((a,b)=>a[0].localeCompare(b[0]));
-  $('#lhrSummaryBody').innerHTML=entries.map(([mo,v])=>`<tr><td>${mo}</td><td class="num">${fmtINR(v)}</td></tr>`).join('')
-    || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">No monthly recovery data detected.</td></tr>`;
-  lhrRenderChart(entries);
+  for(const r of LHR_RAW){
+    if(parseCNDate(r[cd])===null)continue;          // only rows where CN was received
+    const label=lhrMonLabel(r[cd]), key=lhrMonKey(r[cd]);
+    const o=m.get(label)||{month:label,key,value:0};
+    o.value+=cv?lhrNum(r[cv]):0;
+    m.set(label,o);
+  }
+  return [...m.values()].sort((a,b)=>a.key-b.key);
 }
-function lhrRenderChart(entries){
+function lhrRenderSummary(){
+  const rows=lhrSummaryRows();
+  $('#lhrSummaryBody').innerHTML=rows.map(o=>
+    `<tr><td><b>${o.month}</b></td><td class="num">${fmtINR(o.value)}</td></tr>`).join('')
+    || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">No CN Received Date values found.</td></tr>`;
+  $('#lhrSummaryFoot').innerHTML=rows.length
+    ? `<tr><td>Total</td><td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
+    : '';
+  lhrRenderChart(rows);
+}
+/* ---- Table 2: line chart of the same series ---- */
+function lhrRenderChart(rows){
   const ctx=$('#lhrSummaryChart'); if(!ctx)return;
-  const cfg={type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'CN Received Value',data:entries.map(e=>e[1]),
-      backgroundColor:'#1F7A4D',borderRadius:6,maxBarThickness:46}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)}}},
-      scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
-  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.update();}else lhrSummaryChart=new Chart(ctx,cfg);
+  const cfg={type:'line',
+    data:{labels:rows.map(o=>o.month),
+      datasets:[{label:'CN Received Value',data:rows.map(o=>o.value),
+        borderColor:'#4F46E5',backgroundColor:'rgba(79,70,229,.12)',
+        fill:true,tension:.34,borderWidth:2.5,
+        pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#4F46E5',
+        pointBorderColor:'#fff',pointBorderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},
+              y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
+  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.options=cfg.options;lhrSummaryChart.update();}
+  else lhrSummaryChart=new Chart(ctx,cfg);
+}
+
+/* ---- Table 3: Pending for Recovery — rows whose CN Received Date is blank ---- */
+function lhrPendingRows(){
+  const esc=lhrColEsc(), awb=lhrColAwb(), ipv=lhrColImpValue();
+  return LHR_RAW
+    .filter(r=>!lhrHasCN(r))                        // nothing recovered yet
+    .map(r=>({
+      esc:   esc?lhrMonLabel(r[esc]):'',
+      escKey:esc?lhrMonKey(r[esc]):999999,
+      awb:   awb?lhrNum(r[awb]):0,
+      value: ipv?lhrNum(r[ipv]):0
+    }));
+}
+function lhrRenderPending(){
+  const rows=lhrPendingRows();
+  const k=lhrPendSort.k,d=lhrPendSort.dir;
+  rows.sort((a,b)=>((a[k]||0)-(b[k]||0))*d);
+  $('#lhrPendBody').innerHTML=rows.map(o=>
+    `<tr><td><b>${o.esc||'—'}</b></td>`+
+    `<td class="num">${fmtN(o.awb)}</td>`+
+    `<td class="num">${fmtINR(o.value)}</td></tr>`).join('')
+    || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">Nothing pending — every escalation has a CN Received Date.</td></tr>`;
+  $('#lhrPendFoot').innerHTML=rows.length
+    ? `<tr><td>Total</td><td class="num">${fmtN(rows.reduce((a,o)=>a+o.awb,0))}</td>`+
+      `<td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
+    : '';
+  $('#lhrPendCount').textContent=fmtN(rows.length)+' pending';
+  /* sortable headers */
+  $$('.lhr-tbl th[data-pk]').forEach(th=>{
+    th.classList.remove('asc','desc');
+    if(th.dataset.pk===lhrPendSort.k)th.classList.add(lhrPendSort.dir<0?'desc':'asc');
+    th.onclick=()=>{
+      const pk=th.dataset.pk;
+      lhrPendSort.dir=lhrPendSort.k===pk?-lhrPendSort.dir:-1;
+      lhrPendSort.k=pk; lhrRenderPending();
+    };
+  });
 }
 function renderLHRecovery(){
   if(!LHR_RAW.length){
     $('#lhrSummaryBody').innerHTML=`<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">Upload a workbook containing a <b>CN Working</b> / <b>LH Recovery</b> sheet to populate this view.</td></tr>`;
+    $('#lhrSummaryFoot').innerHTML='';
+    $('#lhrPendBody').innerHTML=`<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
+    $('#lhrPendFoot').innerHTML=''; $('#lhrPendCount').textContent='';
     $('#lhrTblBody').innerHTML=`<tr><td style="text-align:center;padding:24px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
     return;
   }
-  lhrRenderSummary(); lhrRenderTable();
+  lhrRenderSummary(); lhrRenderPending(); lhrRenderTable();
 }
 function lhrSummaryExport(){
-  const m=new Map();
-  for(const r of LHR_RAW){const k=lhrMonthKey(r);m.set(k,(m.get(k)||0)+lhrValueOf(r));}
-  const entries=[...m.entries()].filter(([k])=>k&&k!=='Unknown').sort((a,b)=>a[0].localeCompare(b[0]));
-  return entries.map(([Month,CN_Received_Value])=>({Month,CN_Received_Value:Math.round(CN_Received_Value)}));
+  return lhrSummaryRows().map(o=>({Month:o.month,CN_Received_Value:Math.round(o.value)}));
+}
+function lhrPendingExport(){
+  const k=lhrPendSort.k,d=lhrPendSort.dir;
+  return lhrPendingRows().sort((a,b)=>((a[k]||0)-(b[k]||0))*d)
+    .map(o=>({Escalation_date:o.esc,Impacted_awb:o.awb,Impacted_Product_value:Math.round(o.value)}));
 }
 function lhrDetailExport(){ return lhrFilterRows(); }
 </script>
@@ -2652,6 +2903,261 @@ function renderLock(){
 function exportChartAsJPG(chart,name){
   if(!chart)return; const url=chart.toBase64Image('image/jpeg',0.95);
   const a=document.createElement('a');a.href=url;a.download=name+'.jpg';a.click();
+}
+</script>
+<script>
+/* =============================================================
+   DOCUMENTATION — how every KPI, chart and table is calculated
+   Each entry mirrors the live code in this file. If a calculation
+   changes above, update its entry here so the two stay in step.
+============================================================= */
+const DOC_SECTIONS=[
+
+{sec:'Data foundation', note:'Applies to every page unless stated otherwise.', items:[
+ {t:'panel', n:'Source workbook', what:'Everything on this dashboard comes from one uploaded Excel file with three sheets.',
+  src:'Dashboard.xlsx',
+  logic:'Dashboard sheet      -> RAW (AWB-level rows, one row per shipment)\nCN Working sheet     -> LH Recovery page only\nHOV sheet            -> HOV Analytics page only',
+  fields:'Sheet is matched by name: /dashboard|data|pendency/i, /cn working|lh recovery/i, /hov/i'},
+
+ {t:'panel', n:'RAW vs FILTERED', what:'RAW is every row in the file. FILTERED is what survives the global filter bar. Almost every KPI and chart reads FILTERED, so numbers move as you filter.',
+  logic:'RAW      = all rows parsed from the Dashboard sheet\nFILTERED = RAW after all active global filters (AND across filters, OR within one filter)',
+  note:'KPI sub-lines that say "of file" or "of total value" compare FILTERED against RAW, not against itself.'},
+
+ {t:'panel', n:'In-transit ageing bucket', what:'The day-band used by the Overview, Pendency and Hero charts.',
+  fields:'<code>intransit_ageing_bucket</code>',
+  logic:'Order: 2, 3, 4, 5, 6, 7, 8-10, 11-15, 16-30, 30+\nRead straight from the sheet column, not recalculated.'},
+
+ {t:'panel', n:'Bag creation ageing bucket', what:'The six-band ageing used by Bag wise View. Distinct from the in-transit bucket above.',
+  fields:'<code>Ageing bucket</code>',
+  logic:'A. 0 to 6 days | B. 7 to 13 days | C. 14 to 20 days\nD. 21 to 27 days | E. 28 to 34 days | F. 35+ Days',
+  note:'Two different ageing systems exist in the file. Overview uses intransit_ageing_bucket; Bag wise View uses Ageing bucket. They will not tie to each other.'},
+
+ {t:'panel', n:'Value formatting', what:'How rupee figures are shortened on screen.',
+  logic:'>= 1,00,00,000  -> Cr  (e.g. 4.94 Cr)\n>= 1,00,000      -> L   (e.g. 67.34 L)\n>= 1,000         -> k\notherwise         -> plain number\nUnderlying maths always uses the full unrounded value.'}
+]},
+
+{sec:'Executive Overview — KPI cards', items:[
+ {t:'kpi', n:'PENDING SHIPMENTS', what:'How many shipment rows are currently in scope.',
+  fields:'row count', logic:'COUNT(FILTERED)\nsub-line = COUNT(FILTERED) / COUNT(RAW) as %'},
+ {t:'kpi', n:'PENDING VALUE', what:'Total rupee value sitting in transit right now.',
+  fields:'<code>Product_value</code>', logic:'SUM(Product_value) over FILTERED\nsub-line = that sum / SUM(Product_value) over RAW'},
+ {t:'kpi', n:'AVG AGEING (DAYS)', what:'Mean days in transit across shipments in scope.',
+  fields:'<code>intransit_ageing</code>', logic:'SUM(intransit_ageing) / COUNT(rows)',
+  note:'Traffic light: green <= 5 days, amber <= 10, red above 10.'},
+ {t:'kpi', n:'CRITICAL 30+ DAY VALUE', what:'Money tied up in shipments that have crossed 30 days.',
+  fields:'<code>intransit_ageing</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) WHERE intransit_ageing > 30\nsub-line = COUNT of those rows',
+  note:'Strictly greater than 30, so exactly 30 days is excluded. Light: green if under 5% of value, amber under 15%, else red.'},
+ {t:'kpi', n:'SLA BREACH % (>7 DAYS)', what:'Share of shipments past the 7-day service threshold.',
+  fields:'<code>intransit_ageing</code>',
+  logic:'COUNT(intransit_ageing > 7) / COUNT(rows) as %',
+  note:'Counts shipments, not value. Green under 15%, amber under 30%, else red.'},
+ {t:'kpi', n:'HOV VALUE EXPOSURE', what:'Value held in high-order-value consignments.',
+  fields:'<code>HOV_flag</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) WHERE HOV_flag = "HOV"',
+  note:'Matches "HOV" exactly, so rows flagged HHOV are not included here.'}
+]},
+
+{sec:'Executive Overview — panels & charts', items:[
+ {t:'panel', n:'Value currently stuck in transit (hero)', what:'The headline number with a spark line of value by ageing band.',
+  fields:'<code>Product_value</code>, <code>Lane Code</code>, <code>vendor_name</code>, <code>intransit_ageing_bucket</code>',
+  logic:'headline = SUM(Product_value)\ncaption  = COUNT(rows), DISTINCT Lane Code, DISTINCT vendor_name\nspark    = SUM(Product_value) grouped by ageing bucket, in bucket order'},
+ {t:'panel', n:'Smart Insights', what:'Six sentences regenerated from the current filter state.',
+  logic:'1 top zone by value + its % share\n2 slowest zone by avg ageing (zones with >= 500 AWBs only)\n3 top vendor by value + % share\n4 count and value of AWBs over 30 days\n5 HOV share of AWBs vs HOV share of value\n6 top lane by value + % share',
+  note:'The slowest-zone line ignores zones under 500 AWBs so a tiny zone cannot dominate.'},
+ {t:'chart', n:'Pending Value by Zone', what:'Which region holds the most stuck value.',
+  fields:'<code>Zone</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) grouped by Zone, sorted high to low',
+  note:'Clicking a bar drills the whole dashboard to that zone.'},
+ {t:'chart', n:'Forward vs Reverse Pendency', what:'Split of value between forward and reverse flows.',
+  fields:'<code>flag</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) grouped by flag\nflag containing "rev" -> Reverse, everything else -> Forward'},
+ {t:'chart', n:'Value by In-transit Ageing Bucket', what:'How much money sits in each day band.',
+  fields:'<code>intransit_ageing_bucket</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) grouped by bucket, kept in bucket order (not sorted by size)'},
+ {t:'chart', n:'Top 10 Lanes by Value at Risk', what:'The ten lanes holding the most value.',
+  fields:'<code>Lane Code</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) grouped by Lane Code, sorted high to low, top 10'}
+]},
+
+{sec:'Pendency Analytics', items:[
+ {t:'chart', n:'Pendency by Movement Type', what:'Shipment counts per movement class.',
+  fields:'<code>movement_type</code>',
+  logic:'COUNT(rows) grouped by movement_type, sorted high to low',
+  note:'Counts shipments, not value.'},
+ {t:'chart', n:'Ageing Mix — Shipments vs Value', what:'Whether old buckets are few but expensive.',
+  fields:'<code>intransit_ageing_bucket</code>, <code>Product_value</code>',
+  logic:'series 1 = COUNT(rows) by bucket   (left axis)\nseries 2 = SUM(Product_value) by bucket (right axis)\nboth in bucket order'},
+ {t:'chart', n:'Top Origins by Pending Shipments', what:'Where freight starts piling up.',
+  fields:'<code>MM_origin</code>', logic:'COUNT(rows) grouped by MM_origin, top 12'},
+ {t:'chart', n:'Top Destinations by Pending Shipments', what:'Inbound congestion points.',
+  fields:'<code>MM_destination</code>', logic:'COUNT(rows) grouped by MM_destination, top 12'},
+ {t:'chart', n:'Forward / Reverse Split by Zone', what:'Stacked value per zone split by flow direction.',
+  fields:'<code>Zone</code>, <code>flag</code>, <code>Product_value</code>',
+  logic:'zones ordered by total value, then\nforward = SUM(Product_value) WHERE flag = Forward\nreverse = SUM(Product_value) WHERE flag = Reverse'}
+]},
+
+{sec:'Value-at-Risk Analytics', items:[
+ {t:'chart', n:'Vendor Trends — 80/20 of Value at Risk', what:'Which carriers hold the money, with a cumulative line.',
+  fields:'<code>vendor_name</code>, <code>Product_value</code>',
+  logic:'bars = SUM(Product_value) by vendor, sorted high to low, top 25\nline = running cumulative % of the FULL vendor total',
+  note:'The cumulative % is against all vendors, not just the 25 shown, so the line will not reach 100%.'},
+ {t:'chart', n:'HOV vs Non-HOV Value', what:'Concentration of value in high-order-value stock.',
+  fields:'<code>HOV_flag</code>, <code>Product_value</code>', logic:'SUM(Product_value) grouped by HOV_flag'},
+ {t:'chart', n:'ABC Classification of Pending AWBs', what:'Classic ABC split of shipments by value contribution.',
+  fields:'<code>Product_value</code>',
+  logic:'sort every row by Product_value descending\nwalk the list accumulating value:\n  cumulative <= 70% of total -> class A\n  cumulative <= 90% of total -> class B\n  remainder                  -> class C\nplot value and AWB count per class',
+  note:'Classified at shipment level, not lane or vendor level.'},
+ {t:'chart', n:'Value at Risk by POD', what:'Proof-of-delivery clusters holding value.',
+  fields:'<code>POD Name</code>, <code>Product_value</code>',
+  logic:'SUM(Product_value) grouped by POD Name, top 12'}
+]},
+
+{sec:'Root Cause & What-If', items:[
+ {t:'chart', n:'Lane Trends — Value Concentration', what:'The vital-few lanes to attack first.',
+  fields:'<code>Lane Code</code>, <code>Product_value</code>',
+  logic:'bars = SUM(Product_value) by Lane Code, top 25\nline = cumulative % against the full lane total'},
+ {t:'chart', n:'Slowest Origins (Avg Ageing)', what:'Systemic delay sources.',
+  fields:'<code>MM_origin</code>, <code>intransit_ageing</code>',
+  logic:'AVG(intransit_ageing) grouped by MM_origin\nkeep only origins with >= 300 AWBs, then top 12',
+  note:'The 300-AWB floor stops a low-volume origin with one very old shipment topping the chart.'},
+ {t:'chart', n:'Slowest Vendors (Avg Ageing)', what:'Carrier accountability view.',
+  fields:'<code>vendor_name</code>, <code>intransit_ageing</code>',
+  logic:'AVG(intransit_ageing) grouped by vendor_name\nkeep only vendors with >= 200 AWBs, then top 12'},
+ {t:'chart', n:'Volumetric vs Normal — Ageing Pressure', what:'Whether bulky freight waits longer.',
+  fields:'<code>Volumetric_flag</code>, <code>intransit_ageing</code>',
+  logic:'AVG(intransit_ageing) by Volumetric_flag (left axis)\nCOUNT(rows) by Volumetric_flag (right axis)\nno minimum-count floor here'},
+ {t:'panel', n:'What-If recovery simulator', what:'Estimates value recovered if a chosen entity clears a set share of its backlog.',
+  fields:'chosen dimension, <code>Product_value</code>, <code>intransit_ageing</code>',
+  logic:'rows      = FILTERED WHERE dimension = selected entity\nbase      = SUM(Product_value)\nrecovered = base x slider %\ncritical  = SUM(Product_value WHERE intransit_ageing > 30) x slider %',
+  note:'A straight linear projection. It assumes the cleared share is representative and models no operational constraint.'}
+]},
+
+{sec:'Lane View', items:[
+ {t:'kpi', n:'Lane View stat cards', what:'Four headline counts for the lanes in scope.',
+  fields:'<code>Lane Code</code>, <code>Lane Type</code>, <code>Product_value</code>',
+  logic:'LANES IN SCOPE  = DISTINCT Lane Code\nLANE TYPES      = DISTINCT Lane Type\nPENDING VALUE   = SUM(Product_value), sub-line COUNT(rows)\nTOP LANE SHARE  = highest lane value / total value'},
+ {t:'table', n:'Top 20 Lanes', what:'Lane-level rollup with ageing and 30+ day exposure.',
+  fields:'<code>Lane Code</code>, <code>Lane Type</code>, <code>Product_value</code>, <code>intransit_ageing</code>',
+  logic:'per Lane Code:\n  AWBs    = COUNT(rows)\n  Value   = SUM(Product_value)\n  % Val   = lane value / total value across all lanes\n  Avg Age = SUM(intransit_ageing) / AWBs\n  30+ Rs  = SUM(Product_value WHERE intransit_ageing > 30)\nsorted by value, top 20',
+  note:'Lane Type shows the most frequent type on that lane, so a mixed lane displays only its dominant class.'},
+ {t:'table', n:'AWBs by Lane Type', what:'Rollup one level up from lane to lane type.',
+  fields:'<code>Lane Type</code>, <code>Product_value</code>',
+  logic:'COUNT(rows) and SUM(Product_value) grouped by Lane Type'},
+ {t:'table', n:'Lane detail (AWB level)', what:'Every shipment behind the lane rollups, with per-column filters.',
+  logic:'FILTERED rows, narrowed by any lane row you click and by the per-column filters\ntext columns match on contains, numeric columns on min/max'}
+]},
+
+{sec:'Bag wise View', items:[
+ {t:'panel', n:'Page filters', what:'Three page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>',
+  logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nmulti-select, OR within a filter, AND across the three'},
+ {t:'table', n:'Top 20 Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
+  fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
+  logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nsorted by row total descending, top 20\nclicking a lane expands SUM(Product_value) by MM_destination',
+  note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row covers only the 20 lanes shown, not all lanes.'},
+ {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
+  fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
+  logic:'per movement_type:\n  movement              = the Movement column value (sheet column H)\n  Sum of Product_value  = SUM(Product_value)\n  Count of Awb_number   = COUNT(rows)\n  Count of Manifest_code= DISTINCT Manifest_code\nsorted by value descending',
+  note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it.'},
+ {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
+  fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
+  logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
+]},
+
+{sec:'Base Data', items:[
+ {t:'table', n:'AWB-level base table', what:'The raw shipment rows, searchable and paginated.',
+  fields:'<code>Awb_number</code>, <code>flag</code>, <code>Zone</code>, <code>MM_origin</code>, <code>MM_destination</code>, <code>Lane Code</code>, <code>movement_type</code>, <code>vendor_name</code>, <code>intransit_ageing</code>, <code>Product_value</code>, <code>HOV_flag</code>, <code>vehicle_number</code>, <code>Manifest_code</code>, <code>trip_code</code>, <code>POD Name</code>',
+  logic:'FILTERED rows, then the search box matches on AWB number, lane code, vendor, origin or destination\n20 rows per page',
+  note:'Ageing over 30 days is badged red. No aggregation happens here, these are source rows.'}
+]},
+
+{sec:'HOV Analytics', items:[
+ {t:'table', n:'Six HOV pivots', what:'Pre-built pivot blocks read straight from the HOV sheet.',
+  src:'HOV sheet',
+  logic:'Zone x Ageing bucket     | Zone x Product value\nLane x Ageing bucket     | Lane x Product value\nVendor x Ageing bucket   | Vendor x Product value',
+  note:'These are read as-is from the workbook, not recalculated here. The global filter bar does not affect them. If the HOV sheet is missing the page shows an empty-state message.'}
+]},
+
+{sec:'LH Recovery', note:'Every figure on this page comes from the CN Working sheet, not the Dashboard sheet.', items:[
+ {t:'panel', n:'How dates are read', what:'The two date columns are stored inconsistently in the source sheet, so they are read as the text Excel displays.',
+  src:'CN Working sheet',
+  logic:'dashes  26-02-2026 -> day first (matches the column header)\nslashes 3/25/26    -> month first (how a real date cell renders)\nif the month lands above 12 the two parts are swapped\nblank and "-" both mean no date',
+  note:'Some cells are true Excel dates carrying a US format while others are plain text. Reading the displayed text is what makes the two agree.'},
+ {t:'table', n:'Recovery Amount', what:'Money actually recovered, by month.',
+  fields:'<code>CN Received Date</code>, <code>CN Received Value</code>',
+  logic:'keep only rows where CN Received Date is present\nmonth  = month of CN Received Date, shown as Mon\u0027YY\nvalue  = SUM(CN Received Value)\nsorted oldest month first, with a Total row'},
+ {t:'chart', n:'Month vs CN Received Value', what:'The same series as a line chart.',
+  logic:'identical data to the Recovery Amount table, plotted in month order'},
+ {t:'table', n:'Pending for Recovery', what:'Escalations where nothing has been recovered yet.',
+  fields:'<code>Email Escalation</code>, <code>Impacted awb</code>, <code>Impacted Product value</code>, <code>CN Received Date</code>',
+  logic:'keep only rows where CN Received Date is BLANK\nescalation date shown as Mon\u0027YY\nAWB and value summed into a Total row',
+  note:'A row with a CN Received Value but no CN Received Date still counts as pending, because the date is what marks recovery as complete.'},
+ {t:'table', n:'CN Working Detail', what:'Every column of the CN Working sheet with per-column filter and sort.',
+  logic:'all sheet columns, blank columns removed\nmoney columns parse Indian comma format (2,27,000 -> 227000)\ndate columns sort chronologically, not alphabetically'}
+]},
+
+{sec:'Lock Analysis', items:[
+ {t:'panel', n:'What counts as locked', what:'The single rule behind every figure on this page.',
+  fields:'<code>seal_number</code>',
+  logic:'locked = seal_number is present, not empty and not "0"\neverything else is unsealed'},
+ {t:'kpi', n:'Lock stat cards', what:'Four headline seal figures.',
+  logic:'TOTAL AWBS      = COUNT(rows)\nLOCKED / SEALED = COUNT(locked), sub-line % of AWBs\nUNSEALED        = COUNT(rows) - COUNT(locked)\nSEALED VALUE    = SUM(Product_value) over locked rows'},
+ {t:'chart', n:'Seal status', what:'Sealed vs unsealed shipment split.',
+  logic:'COUNT(locked) vs COUNT(unsealed), shown as a doughnut with % of total'},
+ {t:'chart', n:'Lock by movement type', what:'Sealed and unsealed counts stacked per movement class.',
+  fields:'<code>movement_type</code>, <code>seal_number</code>',
+  logic:'per movement_type: COUNT(locked) and COUNT(unsealed), stacked'},
+ {t:'table', n:'Lock Distribution by Lane', what:'Per-lane seal compliance with a risk score.',
+  fields:'<code>Lane Code</code>, <code>seal_number</code>, <code>Product_value</code>',
+  logic:'per Lane Code:\n  Total AWBs   = COUNT(rows)\n  Locked AWBs  = COUNT(locked)\n  Lock %       = locked / total\n  Avg Value    = SUM(Product_value over locked) / locked count\n  Risk Score   = SUM(Product_value over locked) x (Lock % / 100)\nsorted by risk score, top 25',
+  note:'Risk Score rises with both sealed value and seal rate, so it highlights lanes carrying a lot of sealed value rather than lanes with poor compliance. A lane with low seal % scores low even if that is the operational problem.'}
+]}
+];
+
+const DOC_TAG={kpi:['KPI','tag-kpi'],chart:['Chart','tag-chart'],table:['Table','tag-table'],panel:['Panel','tag-panel']};
+
+function docItemHTML(it){
+  const [lbl,cls]=DOC_TAG[it.t]||DOC_TAG.panel;
+  const row=(k,v)=>v?`<div class="doc-k">${k}</div><div class="doc-v">${v}</div>`:'';
+  return `<div class="doc-item" data-doc="${String(it.n+' '+(it.what||'')+' '+(it.fields||'')+' '+(it.logic||'')).replace(/"/g,'&quot;').toLowerCase()}">
+    <div class="doc-head"><span class="doc-name">${it.n}</span><span class="doc-tag ${cls}">${lbl}</span></div>
+    ${it.what?`<p class="doc-what">${it.what}</p>`:''}
+    <div class="doc-rows">
+      ${row('Source',it.src||'Dashboard sheet')}
+      ${row('Columns',it.fields)}
+      ${it.logic?`<div class="doc-k">Logic</div><div class="doc-v"><div class="doc-formula">${it.logic}</div></div>`:''}
+    </div>
+    ${it.note?`<div class="doc-note"><b>Note:</b> ${it.note}</div>`:''}
+  </div>`;
+}
+function renderDocs(){
+  const host=$('#docBody'); if(!host)return;
+  host.innerHTML=DOC_SECTIONS.map(s=>`<div class="doc-sec" data-sec>
+    <div class="doc-sec-head"><h4>${s.sec}</h4><span class="n">${s.items.length} item${s.items.length>1?'s':''}</span></div>
+    <div class="doc-grid">${s.items.map(docItemHTML).join('')}</div>
+  </div>`).join('');
+  const total=DOC_SECTIONS.reduce((a,s)=>a+s.items.length,0);
+  $('#docCount').textContent=total+' documented items across '+DOC_SECTIONS.length+' sections';
+}
+function docFilter(){
+  const q=($('#docSearch').value||'').trim().toLowerCase();
+  let shown=0;
+  $$('#docBody .doc-sec').forEach(sec=>{
+    let any=false;
+    sec.querySelectorAll('.doc-item').forEach(it=>{
+      const hit=!q||it.dataset.doc.includes(q);
+      it.style.display=hit?'':'none';
+      if(hit){any=true;shown++;}
+    });
+    sec.style.display=any?'':'none';
+  });
+  const total=DOC_SECTIONS.reduce((a,s)=>a+s.items.length,0);
+  $('#docCount').textContent=q?(shown+' of '+total+' items match'):(total+' documented items across '+DOC_SECTIONS.length+' sections');
+  if(!shown&&q){
+    if(!$('#docNone')){const d=document.createElement('div');d.id='docNone';d.className='card doc-empty';
+      d.textContent='Nothing matches that search.';$('#docBody').appendChild(d);}
+  }else{const n=$('#docNone');if(n)n.remove();}
 }
 </script>
 <script>
@@ -2790,8 +3296,11 @@ function parseWorkbookBuffer(buf){
     console.log('[Parse] Using main sheet:', mainName);
     const mainWs=wb.Sheets[mainName];
     const rows=XLSX.utils.sheet_to_json(mainWs,{raw:true,defval:''});
-    console.log('[Parse] Raw rows:', rows.length, 'Sample keys:', rows.length?Object.keys(rows[0]).slice(0,8):'none');
+    console.log('[Parse] Raw rows:', rows.length);
+    console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
+    resolveMoveKey(rows[0]);
     RAW=rows.map(normalize);
+    console.log('[Parse] Rows with a Movement value:', RAW.filter(r=>r.Movement).length, 'of', RAW.length);
     FILTERED=RAW.slice(); // ensure FILTERED is a fresh copy of all RAW rows
     // HOV sheet
     const hovName=wb.SheetNames.find(n=>/hov/i.test(n));
@@ -2799,7 +3308,9 @@ function parseWorkbookBuffer(buf){
     else{HOV_DATA={};}
     // CN Working / LH Recovery sheet
     const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
-    if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{defval:''}));}
+    // raw:false → cells arrive as the text Excel displays, so the date columns
+    // read exactly as they appear in the sheet (DD-MM-YYYY per the column header).
+    if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
     else{LHR_RAW=[];LHR_COLS=[];}
     boot();
     hideParse();
@@ -2946,6 +3457,7 @@ const PAGE_META={
   hov:{t:'HOV Analytics',c:'High-order-value pivots from the HOV sheet'},
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
+  docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
 };
 let booted=false;
 function boot(){
@@ -2969,6 +3481,8 @@ function navTo(page){
   const meta=PAGE_META[page]||{t:page,c:''};
   $('#pageTitle').textContent=meta.t;$('#pageCrumb').textContent=meta.c;
   document.body.className=page+'-page';
+  /* documentation is static — build it once, on first visit */
+  if(page==='docs'&&!$('#docBody').innerHTML)renderDocs();
   closeSidebar();
 }
 function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
@@ -2978,6 +3492,10 @@ function wireControls(){
   $$('.nav button').forEach(b=>b.onclick=()=>navTo(b.dataset.page));
   $('#hamb').onclick=openSidebar;
   $('#overlay').onclick=closeSidebar;
+
+  /* documentation */
+  $('#docSearch').oninput=docFilter;
+  $('#docPrint').onclick=()=>{if(!$('#docBody').innerHTML)renderDocs();window.print();};
 
   /* what-if */
   $('#wiDim').onchange=refreshWhatIfEntities;
@@ -3005,7 +3523,8 @@ function wireControls(){
   $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
 
   /* lh recovery */
-  $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_summary','summary');
+  $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
+  $('#lhrPendCsv').onclick=()=>lvExport(lhrPendingExport(),'csv','lh_pending_for_recovery','pending');
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
 
   /* lock */
