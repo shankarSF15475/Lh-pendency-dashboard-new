@@ -63,7 +63,13 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .btn{padding:11px 18px;border-radius:11px;border:none;font-weight:700;font-size:13px}
 .btn-lime{background:var(--lime);color:var(--ink)}
 .btn-ghost{background:transparent;color:var(--lime);border:1px solid rgba(225,249,75,.5)}
-#parseStatus{margin-top:16px;font-size:12.5px;color:var(--lime-soft);display:none;align-items:center;gap:10px}
+#parseStatus{margin-top:16px;font-size:12.5px;color:var(--lime-soft);display:none;flex-direction:column;align-items:stretch;gap:8px;width:100%;max-width:520px}
+#parseStatus .ps-top{display:flex;align-items:center;gap:10px}
+#parsePct{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
+#parseBarWrap{height:7px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+#parseBar{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#F13724,#FD913E,#FECC68);
+  transition:width .25s ease}
+#parseSub{font-size:11px;opacity:.75;min-height:13px}
 .spinner{width:16px;height:16px;border:2.5px solid rgba(225,249,75,.3);border-top-color:var(--lime);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -562,7 +568,27 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .lhr-tbl thead tr.hdr th:hover{background:#E7E9F5;}
 .lhr-fb button:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
 
+/* ---- Activity Log ---- */
+.act-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+#actTbl td{padding:7px 10px;border-bottom:1px solid var(--line);font-size:12.5px}
+#actTbl thead th{background:#F1F3FB;color:var(--pine);padding:9px 10px;font-weight:800;position:sticky;top:0;z-index:3}
+
 /* ---- MANIFEST "Top 20 Lanes by Pending Manifest Code" → clean, colourless ---- */
+/* Total column + Total / Grand Total footer rows: plain white with black text
+   (they previously rendered solid blue and dominated both tables). */
+.mv-pivot td.tot-col,
+.mv-pivot th.tot-col,
+.lv-mini th.tot-col{background:#FFFFFF!important;color:#111111!important;font-weight:800!important;}
+.mv-pivot tfoot td{background:#FFFFFF!important;color:#111111!important;font-weight:800!important;
+  border-top:2px solid #D5D9E6!important;box-shadow:inset 0 1px 0 #D5D9E6;}
+.mv-pivot tbody tr.mv-lane-row td{background:#FFFFFF;color:#111111;}
+.mv-pivot tbody tr.mv-lane-row:hover td{background:#F4F6FB;}
+.mv-pivot tbody tr.mv-lane-row.open td{background:#EEF1F8;}
+/* drillable numeric cells */
+.mv-pivot td.num.drill,.lv-mini td.num.drill{cursor:pointer;}
+.mv-pivot td.num.drill:hover,.lv-mini td.num.drill:hover{
+  background:#FFF3B3!important;color:#7A4B00!important;border-radius:4px;}
+
 .lv-mini thead th.age-a,.lv-mini thead th.age-b,.lv-mini thead th.age-c,
 .lv-mini thead th.age-d,.lv-mini thead th.age-e,.lv-mini thead th.age-f{background:#F1F3FB;color:var(--pine);}
 .mv-pivot-wrap td.aged-red{background:transparent;color:var(--text);font-weight:600;}
@@ -707,7 +733,11 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
       </div>
       <div id="uploadWaitMsg">Today's data isn't loaded yet. Please check back in a moment, or contact your admin if this persists.</div>
-      <div id="parseStatus"><span class="spinner"></span><span id="parseMsg">Parsing…</span></div>
+      <div id="parseStatus">
+        <div class="ps-top"><span class="spinner"></span><span id="parseMsg">Parsing…</span><span id="parsePct">0%</span></div>
+        <div id="parseBarWrap"><div id="parseBar"></div></div>
+        <div id="parseSub"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -731,6 +761,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
+      <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
     </nav>
     <div class="side-foot">
@@ -1026,8 +1057,8 @@ thead th{background:#F1F3FB;color:var(--pine);}
     <!-- ============ PAGE: HOV ANALYTICS ============ -->
     <section class="page" id="page-hov">
       <div class="card hov-dashboard-head">
-        <div><h3>HOV and Error Scan Analytics</h3><span class="sub">lane ageing and product-value distribution from the workbook's HOV sheet</span></div>
-        <span class="hov-source-badge">SOURCE · HOV SHEET</span>
+        <div><h3>HOV and Error Scan Analytics</h3><span class="sub">HOV, HHOV and error-scan cuts computed from the Dashboard sheet — top 20 rows per table, ranked by Grand Total</span></div>
+        <span class="hov-source-badge">SOURCE · DASHBOARD SHEET</span>
       </div>
       <div class="hov-section-grid" id="hovSectionGrid"></div>
     </section>
@@ -1158,6 +1189,42 @@ thead th{background:#F1F3FB;color:var(--pine);}
     </section>
 
     <!-- ============ PAGE: DOCUMENTATION ============ -->
+    <!-- ============ PAGE: ACTIVITY LOG (admin only) ============ -->
+    <section class="page" id="page-activity">
+      <div class="card" style="margin-top:12px;padding:18px">
+        <div class="card-head">
+          <div><h3>Activity Log</h3>
+            <span class="sub">sign-ins and downloads across all users · newest first</span></div>
+          <div class="card-tools">
+            <button class="tool" id="actRefresh">Refresh</button>
+            <button class="tool" id="actCsv">CSV</button>
+          </div>
+        </div>
+        <div class="act-cards" id="actCards"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px">
+          <input id="actUser" placeholder="filter by user…" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px">
+          <select id="actAction" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px">
+            <option value="">All activity</option>
+            <option value="login">Sign-ins</option>
+            <option value="download">Downloads</option>
+            <option value="logout">Sign-outs</option>
+          </select>
+          <span class="pill" id="actCount">0 events</span>
+        </div>
+        <div class="lv-mini-wrap" style="max-height:520px">
+          <table class="lv-mini" id="actTbl">
+            <thead><tr>
+              <th style="text-align:left">When</th><th style="text-align:left">User</th>
+              <th style="text-align:left">Action</th><th style="text-align:left">Detail</th>
+            </tr></thead>
+            <tbody id="actBody"></tbody>
+          </table>
+        </div>
+        <div class="hint" style="margin-top:10px">Events are written to Supabase Storage under <code>logs/</code>.
+          Because the browser key is public, treat this as an operational audit trail, not a tamper-proof security log.</div>
+      </div>
+    </section>
+
     <section class="page" id="page-docs">
       <div class="card doc-intro">
         <h3 style="margin:0 0 6px">How this dashboard is calculated</h3>
@@ -1302,6 +1369,10 @@ function normalize(r){
     Manifest_origin:s(r.Manifest_origin)||'Unknown',Manifest_Destination:s(r.Manifest_Destination)||'Unknown',
     Manifest_status:s(r.Manifest_status)||'Unknown',
     'Ageing bucket':s(r['Ageing bucket'])||'',
+    /* --- fields the HOV cuts are built from (Dashboard sheet) --- */
+    HHOV:s(r.HHOV)||'',
+    misroute_location:s(r.misroute_location)||'',
+    error_scan_flag:s(r.error_scan_flag)||'',
     intransit_ageing_bucket:s(r['intransit_ageing_bucket'])||s(r.intransit_ageing_bucket)||''};
 }
 
@@ -1582,10 +1653,28 @@ function exportChart(def,fmt){
     XLSX.utils.book_append_sheet(wb,ws,'chart');XLSX.writeFile(wb,name+'.xlsx');
   }
 }
-function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+function dl(blob,name){
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  /* every CSV/XLSX export in the app funnels through here, so this is the
+     single place that records who downloaded what */
+  try{ if(typeof logEvent==='function') logEvent('download',name); }catch(e){}
+}
 
 /* ---------- chart render ---------- */
-function chartLabelColor(def,label,index){
+/* Warm sequential ramp — used ONLY by the two charts named in the brief:
+   c_flag (Forward vs Reverse Pendency) and c_zoneflag (Forward/Reverse by Zone). */
+const WARM_PALETTE=['#F13724','#FC6330','#FD913E','#FEAE4A','#FECC68','#FEE289','#FFF1AA','#FFFFCC'];
+const WARM_CHARTS=['c_flag','c_zoneflag'];
+/* sample evenly across the legible span of the ramp (the last swatches are
+   almost white, so fills stop at index 4) */
+function warmAt(i,n){
+  const span=5;
+  if(n<=1)return WARM_PALETTE[0];
+  return WARM_PALETTE[Math.round(i*((span-1)/(n-1)))%WARM_PALETTE.length];
+}
+function chartLabelColor(def,label,index,count){
+  if(WARM_CHARTS.includes(def.id))return warmAt(index,count||2);
   if(def.id==='c_flag'&&FLAG_CLR[label])return FLAG_CLR[label];
   return MPALET[index%MPALET.length];
 }
@@ -1604,10 +1693,17 @@ function renderChart(def,built,force){
 
     /* ── Doughnut: diverse colourful palette ── */
     if(isD)return{...base,
-      backgroundColor:built.labels.map((l,j)=>chartLabelColor(def,l,j)),
+      backgroundColor:built.labels.map((l,j)=>chartLabelColor(def,l,j,n)),
       borderWidth:2,borderColor:'#fff',
-      hoverBackgroundColor:built.labels.map((l,j)=>chartLabelColor(def,l,j)+'CC'),
+      hoverBackgroundColor:built.labels.map((l,j)=>chartLabelColor(def,l,j,n)+'CC'),
       hoverBorderWidth:3};
+
+    /* ── Warm-ramp charts: one flat colour per series (Forward / Reverse) ── */
+    if(WARM_CHARTS.includes(def.id)){
+      const wc=warmAt(i,Math.max(built.series.length,2));
+      return{...base,backgroundColor:wc,hoverBackgroundColor:wc+'CC',
+        borderColor:wc,borderWidth:0};
+    }
 
     /* ── Line: coloured lines ── */
     if(lineLike){
@@ -1912,6 +2008,16 @@ function lvClearCols(){
   lvRenderDetail(true);
 }
 /* programmatic drill from summary tables -> detail column filters */
+/* clicking the "30+ ₹" cell drills to that lane AND ageing over 30 days */
+function lvFilterByLaneAged(code,minAge){
+  const inp=document.querySelector('#lvDetFilters input[data-k="Lane Code"][data-ft="text"]');
+  const mn=document.querySelector('#lvDetFilters input[data-k="intransit_ageing"][data-ft="min"]');
+  if(inp){inp.value=code;lvColF['Lane Code']={q:code.toLowerCase()};}
+  if(mn){mn.value=minAge;lvColF['intransit_ageing']={min:minAge};}
+  lvRenderDetail(true);
+  const el=document.querySelector('.lv-detail');
+  if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function lvFilterByLaneCode(code){
   const inp=document.querySelector('#lvDetFilters input[data-k="Lane Code"][data-ft="text"]'); if(!inp)return;
   inp.value=code; lvColF['Lane Code']={q:code.toLowerCase()};
@@ -1992,14 +2098,24 @@ function lvRenderLaneTbl(){
   arr.sort((a,b)=>{const av=a[lvLaneSort.k],bv=b[lvLaneSort.k];
     return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*lvLaneSort.dir;});
   $('#lvLaneHead').innerHTML=cols.map(c=>`<th data-k="${c.k}" class="sortable ${c.num?'num':''}">${c.label}<span class="arr">${c.k===lvLaneSort.k?(lvLaneSort.dir<0?'▼':'▲'):''}</span></th>`).join('');
-  $('#lvLaneBody').innerHTML=arr.map(o=>`<tr style="cursor:pointer" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click to drill into the detail table">
-    <td>${o.lane}</td><td>${o.type}</td><td class="num">${fmtN(o.awbs)}</td>
-    <td class="num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>
-    <td class="num">${o.share.toFixed(1)}%</td><td class="num">${o.avg.toFixed(1)}</td><td class="num">${fmtINR(o.v30)}</td></tr>`).join('')
+  $('#lvLaneBody').innerHTML=arr.map(o=>{
+    const L=o.lane.replace(/"/g,'&quot;');
+    return `<tr style="cursor:pointer" data-lane="${L}" title="Click to drill into the AWB-level detail">
+    <td>${o.lane}</td><td>${o.type}</td>
+    <td class="num drill" data-lane="${L}" title="Show these AWBs below">${fmtN(o.awbs)}</td>
+    <td class="num drill" data-lane="${L}" style="${heatCellStyle(o.value,vMin,vMax)}" title="Show these AWBs below">${fmtINR(o.value)}</td>
+    <td class="num drill" data-lane="${L}" title="Show these AWBs below">${o.share.toFixed(1)}%</td>
+    <td class="num drill" data-lane="${L}" title="Show these AWBs below">${o.avg.toFixed(1)}</td>
+    <td class="num drill" data-lane="${L}" data-aged="31" title="Show only AWBs over 30 days on this lane">${fmtINR(o.v30)}</td></tr>`;}).join('')
     || `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
   $$('#lvLaneHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;
     lvLaneSort.dir=lvLaneSort.k===k?-lvLaneSort.dir:(k==='lane'||k==='type'?1:-1);lvLaneSort.k=k;lvRenderLaneTbl();});
   $$('#lvLaneBody tr[data-lane]').forEach(tr=>tr.onclick=()=>lvFilterByLaneCode(tr.dataset.lane));
+  $$('#lvLaneBody td.drill[data-lane]').forEach(td=>td.onclick=e=>{
+    e.stopPropagation();
+    if(td.dataset.aged) lvFilterByLaneAged(td.dataset.lane,+td.dataset.aged);
+    else lvFilterByLaneCode(td.dataset.lane);
+  });
   lvLaneExport=arr.map(o=>({Lane_Code:o.lane,Lane_Type:o.type,AWB_count:o.awbs,Product_value:Math.round(o.value),
     Pct_of_value:+o.share.toFixed(2),Avg_ageing_days:+o.avg.toFixed(1),Value_30plus:Math.round(o.v30)}));
 }
@@ -2254,6 +2370,35 @@ function mvFilterDetailByLane(lane){
   inp.value=lane; mvColF['Lane Code']={q:lane.toLowerCase()};
   mvRenderDetail(true); document.querySelector('#page-manifest .lv-detail').scrollIntoView({behavior:'smooth',block:'start'});
 }
+/* Drill from the "Top 20 Lanes by Pending Manifest Code" grid into the
+   shipment-level table: lane, optionally the Bag-Creation ageing bucket the
+   number sits under, and optionally the MM_destination child row. */
+function mvFilterDetailBy(opts){
+  const setText=(k,v)=>{
+    const inp=document.querySelector('#mvDetFilters input[data-k="'+k+'"][data-ft="text"]');
+    if(!inp)return;
+    if(v){inp.value=v;mvColF[k]={q:String(v).toLowerCase()};}
+    else {inp.value='';delete mvColF[k];}
+  };
+  const setCat=(k,v)=>{
+    const cs=document.querySelector('#mvDetFilters .lv-csel[data-k="'+k+'"]');
+    if(!cs)return;
+    const btn=cs.querySelector('.lv-csel-btn');
+    if(v){
+      let found=false;
+      cs.querySelectorAll('input').forEach(ch=>{const on=(ch.value===v);ch.checked=on;if(on)found=true;});
+      if(found){mvColF[k]=new Set([v]);btn.textContent='1 sel ▾';btn.classList.add('on');return;}
+    }
+    cs.querySelectorAll('input').forEach(ch=>ch.checked=false);
+    delete mvColF[k]; btn.textContent='All ▾'; btn.classList.remove('on');
+  };
+  setText('Lane Code', opts.lane||'');
+  setText('Manifest_Destination', opts.dest||'');
+  setCat('Ageing bucket', opts.bucket||'');
+  mvRenderDetail(true);
+  const el=document.querySelector('#page-manifest .lv-detail');
+  if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function mvFilterByType(t){
   const cs=document.querySelector('#mvDetFilters .lv-csel[data-k="Lane Type"]'); if(!cs)return;
   cs.querySelectorAll('input').forEach(ch=>ch.checked=(ch.value===t));
@@ -2375,10 +2520,10 @@ function mvRenderLaneTbl(){
     const open=mvExpandedLane===o.lane;
     /* --- parent lane row --- */
     body.push(
-      `<tr class="mv-lane-row${open?' open':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click to expand MM_destination">`+
+      `<tr class="mv-lane-row${open?' open':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click the lane name to expand MM_destination">`+
       `<td><span class="exp-ic">${open?'▼':'▶'}</span>${o.lane}</td>`+
-      ABKT.map(b=>`<td class="num">${cell(o.bkts[b])}</td>`).join('')+
-      `<td class="num tot-col">${fmtINR(o.total)}</td></tr>`
+      ABKT.map(b=>`<td class="num${o.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(o.bkts[b])}</td>`).join('')+
+      `<td class="num tot-col drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Show every manifest on this lane below">${fmtINR(o.total)}</td></tr>`
     );
     /* --- destination child rows (real cells, aligned to the same columns) --- */
     if(open){
@@ -2389,8 +2534,8 @@ function mvRenderLaneTbl(){
           body.push(
             `<tr class="mv-dest">`+
             `<td class="dest-name">${d.dest}</td>`+
-            ABKT.map(b=>`<td class="num">${cell(d.bkts[b])}</td>`).join('')+
-            `<td class="num">${fmtINR(d.total)}</td></tr>`
+            ABKT.map(b=>`<td class="num${d.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(d.bkts[b])}</td>`).join('')+
+            `<td class="num drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" title="Show these manifests below">${fmtINR(d.total)}</td></tr>`
           );
         });
       }
@@ -2398,7 +2543,15 @@ function mvRenderLaneTbl(){
   });
   $('#mvLaneBody').innerHTML=body.join('')
     ||`<tr><td colspan="${NCOL}" style="text-align:center;padding:20px;color:var(--mut)">No lanes in scope.</td></tr>`;
-  $$('#mvLaneBody tr[data-lane]').forEach(tr=>tr.onclick=()=>mvDrillByLane(tr.dataset.lane));
+  $$('#mvLaneBody tr.mv-lane-row').forEach(tr=>{
+    const nameCell=tr.querySelector('td:first-child');
+    if(nameCell)nameCell.style.cursor='pointer';
+    if(nameCell)nameCell.onclick=e=>{e.stopPropagation();mvDrillByLane(tr.dataset.lane);};
+  });
+  $$('#mvLaneBody td.drill').forEach(td=>td.onclick=e=>{
+    e.stopPropagation();
+    mvFilterDetailBy({lane:td.dataset.lane,dest:td.dataset.dest||'',bucket:td.dataset.bkt||''});
+  });
 
   /* --- grand total row for the shown top 20 --- */
   const gt={},gtot=arr.reduce((a,o)=>a+o.total,0);
@@ -2470,9 +2623,9 @@ function mvRenderTypeTbl(){
     `<tr style="cursor:pointer" data-type="${String(o.type).replace(/"/g,'&quot;')}" title="Click to filter the detail table">`+
     `<td>${o.type}</td>`+
     `<td>${o.move}</td>`+
-    `<td class="num">${fmtINR(o.value)}</td>`+
-    `<td class="num">${fmtN(o.awbs)}</td>`+
-    `<td class="num">${fmtN(o.manifests)}</td></tr>`).join('')
+    `<td class="num drill">${fmtINR(o.value)}</td>`+
+    `<td class="num drill">${fmtN(o.awbs)}</td>`+
+    `<td class="num drill">${fmtN(o.manifests)}</td></tr>`).join('')
     ||`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
   $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
 
@@ -2504,102 +2657,206 @@ function mvDetailExport(){
 </script>
 <script>
 /* =============================================================
-   HOV ANALYTICS — reads the workbook's HOV sheet (6 pivot blocks)
-============================================================= */
-const HOV_SECTIONS=[
-  {key:'zone_age',   title:'Zone × Ageing Bucket',        sub:'manifest counts by zone across ageing bands'},
-  {key:'zone_val',   title:'Zone × Product Value',        sub:'value distribution by zone and ageing'},
-  {key:'lane_age',   title:'Lane × Ageing Bucket',        sub:'top lanes across ageing bands'},
-  {key:'lane_val',   title:'Lane × Product Value',        sub:'value at risk by lane'},
-  {key:'vendor_age', title:'Vendor × Ageing Bucket',      sub:'carrier ageing profile'},
-  {key:'vendor_val', title:'Vendor × Product Value',      sub:'value concentration by carrier'},
-];
-let HOV_DATA={};   // key -> {cols:[], rows:[{label, vals:[], total}]}
+   HOV ANALYTICS — six cuts computed from the Dashboard sheet
+   Previously these were read as finished pivot blocks off a separate
+   "HOV" sheet. They are now derived here from the same AWB-level rows
+   every other page uses, so the page needs no extra sheet and responds
+   to the global filter bar.
 
-/* Parse the HOV sheet as array-of-arrays: locate section titles, read each block's header + rows */
-function parseHOVAOA(aoa){
-  const out={}; if(!aoa||!aoa.length)return out;
-  const norm=s=>String(s==null?'':s).trim().toLowerCase();
-  // find rows that look like section markers
-  const markers=[
-    {key:'zone_age',   re:/zone.*age/},
-    {key:'zone_val',   re:/zone.*(value|val)/},
-    {key:'lane_age',   re:/lane.*age/},
-    {key:'lane_val',   re:/lane.*(value|val)/},
-    {key:'vendor_age', re:/vendor.*age/},
-    {key:'vendor_val', re:/vendor.*(value|val)/},
-  ];
-  const hits=[];
-  aoa.forEach((row,ri)=>{
-    const joined=norm(row.join(' '));
-    markers.forEach(m=>{ if(m.re.test(joined)&&!hits.some(h=>h.key===m.key))hits.push({key:m.key,ri}); });
-  });
-  hits.sort((a,b)=>a.ri-b.ri);
-  hits.forEach((h,idx)=>{
-    const startR=h.ri+1;
-    const endR=idx+1<hits.length?hits[idx+1].ri:aoa.length;
-    // header row = first non-empty row after the marker
-    let hr=startR; while(hr<endR && aoa[hr] && aoa[hr].every(c=>c===''||c==null))hr++;
-    const header=(aoa[hr]||[]).map(c=>String(c==null?'':c).trim());
-    const cols=header.slice(1).filter(c=>c!=='');
-    const rows=[];
-    for(let r=hr+1;r<endR;r++){
-      const raw=aoa[r]; if(!raw||raw.every(c=>c===''||c==null))continue;
-      const label=String(raw[0]==null?'':raw[0]).trim(); if(!label)continue;
-      if(/grand total|total/i.test(label)){
-        const vals=cols.map((_,i)=>+raw[i+1]||0);
-        rows.push({label:'Grand Total',vals,total:vals.reduce((a,b)=>a+b,0),isTotal:true});
-        continue;
-      }
-      const vals=cols.map((_,i)=>+raw[i+1]||0);
-      rows.push({label,vals,total:vals.reduce((a,b)=>a+b,0)});
-    }
-    out[h.key]={cols,rows};
-  });
-  return out;
+   Mirrors the Office Script that builds the "HOV Summary" tab:
+     · HOV      -> HOV_flag = "HOV"
+     · HHOV     -> HHOV column = "HOV >7K"   (falls back to Product_value > 6999)
+     · Error    -> error_scan_flag = "yes" AND Lane Type in
+                   {Intracity, Zonal, Tertiary (LM - LM)}
+   Each table is ranked by Grand Total (largest first) and capped at 20 rows.
+============================================================= */
+const HOV_BUCKETS_LANE=['2','3','4','5','6','7','8-10','11-15','16-30'];
+const HOV_BUCKETS_ERR =['7','8-10','11-15','16-30','30+'];
+const HOV_ERR_LANE_TYPES=['intracity','zonal','tertiarylmlm'];
+const HOV_TOP_N=20;
+const HHOV_TOKEN='hov7k';        // normalized form of "HOV >7K"
+const HHOV_FALLBACK_MIN=6999;    // used only when the HHOV column is absent
+
+const HOV_SECTIONS=[
+  {key:'hov_awb',   group:'hov',  metric:'count', buckets:HOV_BUCKETS_LANE, two:false,
+   title:'HOV ACROSS ALL LANE TYPES BY AWB COUNTS',        sub:'top 20 lanes by AWB count'},
+  {key:'hov_val',   group:'hov',  metric:'value', buckets:HOV_BUCKETS_LANE, two:false,
+   title:'HOV ACROSS ALL LANE TYPES BY PRODUCT VALUE',     sub:'top 20 lanes by product value'},
+  {key:'err_awb',   group:'err',  metric:'count', buckets:HOV_BUCKETS_ERR,  two:true,
+   title:'ERROR SCAN LOCATIONS BASED ON AWB COUNT',        sub:'top 20 misroute pairs by AWB count'},
+  {key:'hhov_awb',  group:'hhov', metric:'count', buckets:HOV_BUCKETS_LANE, two:false,
+   title:'HHOV ACROSS ALL LANE TYPES BY AWB COUNT',        sub:'top 20 lanes by AWB count'},
+  {key:'hhov_val',  group:'hhov', metric:'value', buckets:HOV_BUCKETS_LANE, two:false,
+   title:'HHOV ACROSS ALL LANE TYPES BY PRODUCT VALUE',    sub:'top 20 lanes by product value'},
+  {key:'err_val',   group:'err',  metric:'value', buckets:HOV_BUCKETS_ERR,  two:true,
+   title:'ERROR SCAN LOCATIONS BASED ON PRODUCT VALUE',    sub:'top 20 misroute pairs by product value'},
+];
+let HOV_CUTS={};      // sectionKey -> {cols:[], rows:[{l1,l2,vals:[],total}]}
+let HOV_HAS_HHOV_COL=false;
+/* which source columns the current workbook actually carries — drives both the
+   error-scan fallback and the diagnostic empty state */
+let HOV_COLS={errFlag:false,misroute:false,laneType:false,bucket:false};
+
+const hovNormMemo=new Map();
+function hovNorm(v){
+  const k=v==null?'':String(v);
+  let hit=hovNormMemo.get(k);
+  if(hit===undefined){ hit=k.toLowerCase().replace(/[^a-z0-9]/g,''); hovNormMemo.set(k,hit); }
+  return hit;
 }
-function setHOVData(aoa){ HOV_DATA=parseHOVAOA(aoa); renderHOV(); }
+
+/* One pass over the rows tallying all three groupings at once. Each group
+   carries both the AWB count and the Product_value sum, so the "by count"
+   and "by value" tables come out of a single sweep. */
+function hovAggregate(rows){
+  const idxLane={},idxErr={};
+  HOV_BUCKETS_LANE.forEach((b,i)=>idxLane[b]=i);
+  HOV_BUCKETS_ERR.forEach((b,i)=>idxErr[b]=i);
+  const errLT=new Set(HOV_ERR_LANE_TYPES);
+  const maps={hov:new Map(),hhov:new Map(),err:new Map()};
+
+  const bump=(map,key,l1,l2,n,bi,pv)=>{
+    let a=map.get(key);
+    if(!a){ a={ord:map.size,l1,l2,c:new Array(n).fill(0),v:new Array(n).fill(0),tc:0,tv:0}; map.set(key,a); }
+    a.c[bi]++; a.v[bi]+=pv; a.tc++; a.tv+=pv;
+  };
+
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const bk=r.intransit_ageing_bucket;
+    const bl=idxLane[bk], be=idxErr[bk];
+    if(bl===undefined&&be===undefined)continue;
+    const pv=+r.Product_value||0;
+
+    if(bl!==undefined){
+      const isHov=hovNorm(r.HOV_flag)==='hov';
+      const isHhov=HOV_HAS_HHOV_COL ? hovNorm(r.HHOV)===HHOV_TOKEN : pv>HHOV_FALLBACK_MIN;
+      if(isHov||isHhov){
+        const lane=r['Lane Code']||'Unknown Lane';
+        if(isHov) bump(maps.hov,lane,lane,'',HOV_BUCKETS_LANE.length,bl,pv);
+        if(isHhov)bump(maps.hhov,lane,lane,'',HOV_BUCKETS_LANE.length,bl,pv);
+      }
+    }
+    /* an error scan is flagged either by error_scan_flag = "yes", or — when that
+       column is missing from the export — by misroute_location being populated */
+    const flagged = HOV_COLS.errFlag ? (hovNorm(r.error_scan_flag)==='yes') : !!r.misroute_location;
+    if(be!==undefined && flagged && errLT.has(hovNorm(r['Lane Type']))){
+      const d=r.MM_destination||'Unknown', m=r.misroute_location||'Unknown';
+      bump(maps.err,d+'|'+m,d,m,HOV_BUCKETS_ERR.length,be,pv);
+    }
+  }
+  return maps;
+}
+
+/* Rank by Grand Total (largest first), keep the top 20. Ties fall back to
+   order of first appearance, which is how Excel orders pivot items. */
+function hovBuildSection(sec,maps){
+  const arr=[...maps[sec.group].values()];
+  const useCount=sec.metric==='count';
+  arr.sort((a,b)=>{
+    const d=useCount?(b.tc-a.tc):(b.tv-a.tv);
+    return d!==0?d:(a.ord-b.ord);
+  });
+  const top=arr.slice(0,HOV_TOP_N);
+  // a real pivot hides bucket columns that are empty for the rows on show
+  const keep=[];
+  sec.buckets.forEach((_,bi)=>{
+    if(top.some(a=>(useCount?a.c[bi]:a.v[bi])!==0)) keep.push(bi);
+  });
+  const cols=keep.length?keep:sec.buckets.map((_,i)=>i);
+  return {
+    cols:cols.map(i=>sec.buckets[i]),
+    rows:top.map(a=>({
+      l1:a.l1, l2:a.l2,
+      vals:cols.map(i=>useCount?a.c[i]:a.v[i]),
+      total:useCount?a.tc:a.tv
+    }))
+  };
+}
 
 function hovSectionHTML(sec){
-  const d=HOV_DATA[sec.key];
-  if(!d||!d.rows.length){
-    return `<div class="card hov-analysis-card"><div class="hov-analysis-head"><div><h4>${sec.title}</h4><div class="sub">${sec.sub}</div></div></div>
-      <div class="hov-empty">No <b>${sec.title}</b> block found in the HOV sheet. Upload a workbook whose HOV sheet contains this pivot.</div></div>`;
-  }
-  const isVal=/val/.test(sec.key);
-  const body=d.rows.map(r=>{
-    const cls=r.isTotal?'hov-total':'';
-    const cells=r.vals.map(v=>`<td>${isVal?fmtINR(v):fmtN(v)}</td>`).join('');
-    return `<tr class="${cls}"><td>${r.label}</td>${cells}<td><b>${isVal?fmtINR(r.total):fmtN(r.total)}</b></td></tr>`;
-  }).join('');
-  return `<div class="card hov-analysis-card">
-    <div class="hov-analysis-head">
+  const d=HOV_CUTS[sec.key];
+  const head=`<div class="hov-analysis-head">
       <div><h4>${sec.title}</h4><div class="sub">${sec.sub}</div></div>
       <button class="tool hov-tool" data-hov="${sec.key}" title="Download this block as CSV">CSV</button>
-    </div>
+    </div>`;
+  if(!d||!d.rows.length){
+    let why='No rows match this cut in the current selection.';
+    if(sec.group==='err'){
+      const missing=[];
+      if(!HOV_COLS.errFlag && !HOV_COLS.misroute){missing.push('<code>error_scan_flag</code>');missing.push('<code>misroute_location</code>');}
+      else if(!HOV_COLS.misroute) missing.push('<code>misroute_location</code>');
+      if(!HOV_COLS.laneType) missing.push('<code>Lane Type</code>');
+      if(!HOV_COLS.bucket)   missing.push('<code>intransit_ageing_bucket</code>');
+      if(missing.length){
+        const many=missing.length>1;
+        const list=many?missing.slice(0,-1).join(', ')+' and '+missing[missing.length-1]:missing[0];
+        why='This cut needs '+list+', which '+(many?'are':'is')+
+            ' empty or missing in the uploaded Dashboard sheet. Add '+(many?'those columns':'that column')+
+            ' to the export and re-upload.';
+      }else if(!HOV_COLS.errFlag){
+        why='No misrouted shipments found. <code>error_scan_flag</code> is missing, so rows were matched on '+
+            '<code>misroute_location</code> instead and none were populated.';
+      }else{
+        why='No error scans in the current selection for lane types Intracity, Zonal or Tertiary (LM - LM) '+
+            'in ageing buckets 7 and above. Clear the global filters if you expect rows here.';
+      }
+    }else if(sec.group==='hhov' && !HOV_HAS_HHOV_COL){
+      why='No <code>HHOV</code> column in this workbook, so shipments above ₹6,999 were used instead — none matched the current selection.';
+    }
+    return `<div class="card hov-analysis-card">${head}
+      <div class="hov-empty">${why}</div></div>`;
+  }
+  const isVal=sec.metric==='value';
+  const fmt=v=>isVal?fmtINR(v):fmtN(v);
+  const labHead=sec.two?'<th>MM_destination</th><th>misroute_location</th>':'<th>Lanes</th>';
+  const span=(sec.two?2:1)+d.cols.length+1;
+  const body=d.rows.map(r=>{
+    const lab=sec.two?`<td>${r.l1}</td><td>${r.l2}</td>`:`<td>${r.l1}</td>`;
+    return `<tr>${lab}${r.vals.map(v=>`<td>${fmt(v)}</td>`).join('')}<td><b>${fmt(r.total)}</b></td></tr>`;
+  }).join('');
+  return `<div class="card hov-analysis-card">${head}
     <div class="hov-pivot-wrap"><table class="hov-pivot">
-      <thead><tr><th>${sec.title.split('×')[0].trim()}</th>${d.cols.map(c=>`<th>${c}</th>`).join('')}<th>Total</th></tr></thead>
+      <thead>
+        <tr><th colspan="${span}">${sec.title}</th></tr>
+        <tr>${labHead}${d.cols.map(c=>`<th>${c}</th>`).join('')}<th>Grand Total</th></tr>
+      </thead>
       <tbody>${body}</tbody>
     </table></div>
   </div>`;
 }
+
 function renderHOV(){
   const grid=$('#hovSectionGrid'); if(!grid)return;
-  const anyData=Object.keys(HOV_DATA).length>0;
-  if(!anyData){
+  const src=(typeof FILTERED!=='undefined'&&FILTERED&&FILTERED.length)?FILTERED:[];
+  if(!src.length){
+    HOV_CUTS={};
     grid.innerHTML=`<div class="card hov-analysis-card"><div class="hov-empty">
-      The HOV sheet wasn't detected in this workbook. If your file has a sheet named <b>HOV</b> containing the six pivot tables
-      (Zone/Lane/Vendor × Ageing &amp; Value), re-upload it and this section will populate automatically.</div></div>`;
+      No rows in the current selection. Clear the filters to see the HOV cuts.</div></div>`;
     return;
   }
+  HOV_HAS_HHOV_COL=src.some(r=>r.HHOV);
+  HOV_COLS={
+    errFlag : src.some(r=>r.error_scan_flag),
+    misroute: src.some(r=>r.misroute_location),
+    laneType: src.some(r=>r['Lane Type']&&r['Lane Type']!=='Unknown'),
+    bucket  : src.some(r=>r.intransit_ageing_bucket)
+  };
+  const maps=hovAggregate(src);
+  HOV_CUTS={};
+  HOV_SECTIONS.forEach(sec=>{ HOV_CUTS[sec.key]=hovBuildSection(sec,maps); });
   grid.innerHTML=HOV_SECTIONS.map(hovSectionHTML).join('');
   grid.querySelectorAll('[data-hov]').forEach(b=>b.onclick=()=>hovExport(b.dataset.hov));
 }
+
 function hovExport(key){
-  const d=HOV_DATA[key]; if(!d)return;
+  const d=HOV_CUTS[key]; if(!d)return;
   const sec=HOV_SECTIONS.find(s=>s.key===key);
-  const header=[sec.title.split('×')[0].trim(),...d.cols,'Total'];
-  const lines=[header.join(',')].concat(d.rows.map(r=>[r.label,...r.vals,r.total].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')));
+  const head=(sec.two?['MM_destination','misroute_location']:['Lanes']).concat(d.cols,['Grand Total']);
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const lines=[head.map(q).join(',')].concat(
+    d.rows.map(r=>(sec.two?[r.l1,r.l2]:[r.l1]).concat(r.vals,[r.total]).map(q).join(','))
+  );
   dl(new Blob([lines.join('\n')],{type:'text/csv'}),'hov_'+key+'.csv');
 }
 </script>
@@ -2763,7 +3020,40 @@ function lhrRenderSummary(){
     : '';
   lhrRenderChart(rows);
 }
-/* ---- Table 2: line chart of the same series ---- */
+/* ---- Table 2: line chart of the same series ----
+   Values are printed permanently next to every dot (month on top, value below)
+   rather than only appearing on hover. Drawn by a local plugin so the page
+   keeps working offline — no extra CDN dependency. */
+const lhrPointLabels={
+  id:'lhrPointLabels',
+  afterDatasetsDraw(chart){
+    const meta=chart.getDatasetMeta(0);
+    if(!meta||!meta.data||!meta.data.length)return;
+    const ctx=chart.ctx, area=chart.chartArea;
+    const labels=chart.data.labels||[], data=chart.data.datasets[0].data||[];
+    ctx.save();
+    ctx.textAlign='center';
+    meta.data.forEach((pt,i)=>{
+      const month=String(labels[i]==null?'':labels[i]);
+      const val=fmtINR(data[i]||0);
+      /* place above the dot; flip below if it would clip the top of the plot */
+      let yTop=pt.y-30, below=false;
+      if(yTop<area.top+4){ yTop=pt.y+12; below=true; }
+      /* keep the text inside the plot horizontally */
+      const x=Math.min(Math.max(pt.x,area.left+30),area.right-30);
+      const rows=[{t:month,f:'600 9.5px Inter,system-ui,sans-serif',c:'#8A8699'},
+                  {t:val,  f:'800 11px Inter,system-ui,sans-serif',  c:'#3730A3'}];
+      rows.forEach((r,k)=>{
+        const y=yTop+(k*13)+(below?4:0);
+        ctx.font=r.f;
+        ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineJoin='round';
+        ctx.strokeText(r.t,x,y);
+        ctx.fillStyle=r.c; ctx.fillText(r.t,x,y);
+      });
+    });
+    ctx.restore();
+  }
+};
 function lhrRenderChart(rows){
   const ctx=$('#lhrSummaryChart'); if(!ctx)return;
   const cfg={type:'line',
@@ -2774,9 +3064,12 @@ function lhrRenderChart(rows){
         pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#4F46E5',
         pointBorderColor:'#fff',pointBorderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)}}},
+      /* headroom so the labels above the highest dot are never clipped */
+      layout:{padding:{top:34,left:8,right:8}},
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
       scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},
-              y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}}};
+              y:{beginAtZero:true,grace:'12%',grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}},
+    plugins:[lhrPointLabels]};
   if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.options=cfg.options;lhrSummaryChart.update();}
   else lhrSummaryChart=new Chart(ctx,cfg);
 }
@@ -2916,7 +3209,7 @@ const DOC_SECTIONS=[
 {sec:'Data foundation', note:'Applies to every page unless stated otherwise.', items:[
  {t:'panel', n:'Source workbook', what:'Everything on this dashboard comes from one uploaded Excel file with three sheets.',
   src:'Dashboard.xlsx',
-  logic:'Dashboard sheet      -> RAW (AWB-level rows, one row per shipment)\nCN Working sheet     -> LH Recovery page only\nHOV sheet            -> HOV Analytics page only',
+  logic:'Dashboard sheet      -> RAW (AWB-level rows, one row per shipment)\nCN Working sheet     -> LH Recovery page only',
   fields:'Sheet is matched by name: /dashboard|data|pendency/i, /cn working|lh recovery/i, /hov/i'},
 
  {t:'panel', n:'RAW vs FILTERED', what:'RAW is every row in the file. FILTERED is what survives the global filter bar. Almost every KPI and chart reads FILTERED, so numbers move as you filter.',
@@ -3073,10 +3366,11 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'HOV Analytics', items:[
- {t:'table', n:'Six HOV pivots', what:'Pre-built pivot blocks read straight from the HOV sheet.',
-  src:'HOV sheet',
-  logic:'Zone x Ageing bucket     | Zone x Product value\nLane x Ageing bucket     | Lane x Product value\nVendor x Ageing bucket   | Vendor x Product value',
-  note:'These are read as-is from the workbook, not recalculated here. The global filter bar does not affect them. If the HOV sheet is missing the page shows an empty-state message.'}
+ {t:'table', n:'Six HOV cuts', what:'HOV, HHOV and error-scan pivots calculated from the Dashboard sheet.',
+  src:'Dashboard sheet',
+  fields:'<code>Lane Code</code>, <code>Lane Type</code>, <code>MM_destination</code>, <code>misroute_location</code>, <code>Product_value</code>, <code>HOV_flag</code>, <code>HHOV</code>, <code>error_scan_flag</code>, <code>intransit_ageing_bucket</code>',
+  logic:'HOV      = HOV_flag "HOV"           | rows: Lane Code\nHHOV     = HHOV "HOV >7K"           | rows: Lane Code\nError    = error_scan_flag "yes" AND Lane Type in\n           Intracity / Zonal / Tertiary (LM - LM)\n           | rows: MM_destination + misroute_location\n\nColumns  = intransit_ageing_bucket\n           HOV/HHOV  2,3,4,5,6,7,8-10,11-15,16-30\n           Error     7,8-10,11-15,16-30,30+\nEach table sorted by Grand Total (largest first), top 20 rows.',
+  note:'Matches the "HOV Summary" Office Script. Empty bucket columns are hidden, as a pivot would. HHOV falls back to Product_value > 6999 only if the HHOV column is missing. Unlike before, these cuts DO respond to the global filter bar.'}
 ]},
 
 {sec:'LH Recovery', note:'Every figure on this page comes from the CN Working sheet, not the Dashboard sheet.', items:[
@@ -3183,6 +3477,9 @@ function applyLHRecoveryAccess(u){
 function applyAdminAccess(u){
   applyLHRecoveryAccess(u);
   const isAdmin=u&&u.isAdmin;
+  /* activity log is an admin-only view */
+  const act=document.querySelector('.nav button[data-page="activity"]');
+  if(act)act.style.display=isAdmin?'':'none';
   /* upload controls: only admin can upload files */
   const uc=$('#uploadControls');
   if(uc) uc.style.display=isAdmin?'':'none';
@@ -3214,6 +3511,7 @@ function doLogin(){
   }
   CURRENT_USER={id:user,...rec};
   try{sessionStorage.setItem('sfx_user',user);}catch(e){}
+  logEvent('login',CURRENT_USER.name||user);
   $('#loginErr').style.display='none';
   applyAdminAccess(CURRENT_USER);
   $('#loginScreen').style.display='none';
@@ -3245,11 +3543,23 @@ $('#resetEmail').addEventListener('keydown',e=>{if(e.key==='Enter')$('#resetBtn'
 /* restore session */
 (function restoreSession(){
   let u=null; try{u=sessionStorage.getItem('sfx_user');}catch(e){}
-  if(u&&AUTH_USERS[u]){CURRENT_USER={id:u,...AUTH_USERS[u]};applyAdminAccess(CURRENT_USER);$('#loginScreen').style.display='none';$('#uploadScreen').style.display='block';loadFromSupabase();}
+  if(u&&AUTH_USERS[u]){
+    CURRENT_USER={id:u,...AUTH_USERS[u]};
+    applyAdminAccess(CURRENT_USER);
+    $('#loginScreen').style.display='none';
+    $('#uploadScreen').style.display='block';
+    /* refresh should not throw the user back to the upload screen:
+       restore the cached workbook first, and only hit the network if
+       there is nothing cached */
+    restoreFromCache().then(ok=>{ if(!ok) loadFromSupabase(); });
+  }
 })();
 
 $('#logoutBtn').onclick=()=>{
-  CURRENT_USER=null; try{sessionStorage.removeItem('sfx_user');}catch(e){}
+  logEvent('logout',CURRENT_USER?(CURRENT_USER.name||CURRENT_USER.id):'-');
+  idbDel(IDB_KEY);
+  CURRENT_USER=null;
+  try{sessionStorage.removeItem('sfx_user');sessionStorage.removeItem('sfx_page');}catch(e){}
   $('#app').style.display='none';$('#uploadScreen').style.display='none';
   $('#loginScreen').style.display='flex';showSignin();
   $('#loginUser').value='';$('#loginPass').value='';
@@ -3268,15 +3578,44 @@ dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)parseFile(f)
 $('#reUpload').onclick=()=>{$('#app').style.display='none';$('#uploadScreen').style.display='block';};
 
 function showParse(msg){$('#parseStatus').style.display='flex';$('#parseMsg').textContent=msg;}
-function hideParse(){$('#parseStatus').style.display='none';}
+function hideParse(){$('#parseStatus').style.display='none';setParse(null,0,'');}
+/* msg=null keeps the current message; pct 0-100; sub = small grey detail line */
+function setParse(msg,pct,sub){
+  const st=$('#parseStatus'); if(!st)return;
+  st.style.display='flex';
+  if(msg!=null)$('#parseMsg').textContent=msg;
+  if(pct!=null){
+    const v=Math.max(0,Math.min(100,Math.round(pct)));
+    $('#parseBar').style.width=v+'%';
+    $('#parsePct').textContent=v+'%';
+  }
+  if(sub!=null)$('#parseSub').textContent=sub;
+}
+/* yields to the browser so the bar actually repaints between stages */
+const uiTick=()=>new Promise(r=>setTimeout(r,0));
+/* map a big array in chunks, reporting progress across [from,to] */
+async function mapProgress(rows,fn,from,to,msg){
+  const out=new Array(rows.length), CH=20000;
+  for(let i=0;i<rows.length;i+=CH){
+    const end=Math.min(i+CH,rows.length);
+    for(let j=i;j<end;j++)out[j]=fn(rows[j]);
+    setParse(msg,from+(to-from)*(end/rows.length),fmtN(end)+' of '+fmtN(rows.length)+' rows');
+    await uiTick();
+  }
+  return out;
+}
 
 function parseFile(file){
-  showParse('Reading '+file.name+' …');
+  setParse('Reading '+file.name+' …',0,'');
   const reader=new FileReader();
-  reader.onload=e=>{
+  reader.onprogress=ev=>{ if(ev.lengthComputable) setParse(null,ev.loaded/ev.total*12,
+    Math.round(ev.loaded/1048576)+' MB of '+Math.round(ev.total/1048576)+' MB'); };
+  reader.onload=async e=>{
     try{
       const buf=e.target.result;
-      parseWorkbookBuffer(buf);
+      /* keep a local copy so a browser refresh restores instantly */
+      cacheWorkbook(buf.slice(0), file.name);
+      await parseWorkbookBuffer(buf);
       /* Admin: also push to Supabase — use a copy to avoid buffer conflicts */
       if(CURRENT_USER&&CURRENT_USER.isAdmin){
         pushToSupabase(buf.slice(0), file.name);
@@ -3286,36 +3625,44 @@ function parseFile(file){
   reader.onerror=()=>{hideParse();alert('File read failed.');};
   reader.readAsArrayBuffer(file);
 }
-function parseWorkbookBuffer(buf){
-  showParse('Parsing workbook …');
-  setTimeout(()=>{
-    const wb=XLSX.read(new Uint8Array(buf),{type:'array',dense:true,cellDates:true});
-    console.log('[Parse] SheetNames:', wb.SheetNames);
-    // main data sheet: first sheet, or one named like Dashboard/Data
-    let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
-    console.log('[Parse] Using main sheet:', mainName);
-    const mainWs=wb.Sheets[mainName];
-    const rows=XLSX.utils.sheet_to_json(mainWs,{raw:true,defval:''});
-    console.log('[Parse] Raw rows:', rows.length);
-    console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
-    resolveMoveKey(rows[0]);
-    RAW=rows.map(normalize);
-    console.log('[Parse] Rows with a Movement value:', RAW.filter(r=>r.Movement).length, 'of', RAW.length);
-    FILTERED=RAW.slice(); // ensure FILTERED is a fresh copy of all RAW rows
-    // HOV sheet
-    const hovName=wb.SheetNames.find(n=>/hov/i.test(n));
-    if(hovName){const aoa=XLSX.utils.sheet_to_json(wb.Sheets[hovName],{header:1,defval:''});setHOVData(aoa);}
-    else{HOV_DATA={};}
-    // CN Working / LH Recovery sheet
-    const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
-    // raw:false → cells arrive as the text Excel displays, so the date columns
-    // read exactly as they appear in the sheet (DD-MM-YYYY per the column header).
-    if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
-    else{LHR_RAW=[];LHR_COLS=[];}
-    boot();
-    hideParse();
-    $('#uploadScreen').style.display='none';$('#app').style.display='block';
-  },30);
+
+async function parseWorkbookBuffer(buf){
+  setParse('Opening workbook …',15,'this is the heavy step on large files');
+  await uiTick();
+  const wb=XLSX.read(new Uint8Array(buf),{type:'array',dense:true,cellDates:true});
+  console.log('[Parse] SheetNames:', wb.SheetNames);
+  let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
+  console.log('[Parse] Using main sheet:', mainName);
+
+  setParse('Reading rows …',35,'sheet: '+mainName);
+  await uiTick();
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[mainName],{raw:true,defval:''});
+  console.log('[Parse] Raw rows:', rows.length);
+  console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
+  resolveMoveKey(rows[0]);
+
+  RAW=await mapProgress(rows,normalize,45,80,'Preparing shipments …');
+  console.log('[Parse] Rows with a Movement value:', RAW.filter(r=>r.Movement).length, 'of', RAW.length);
+  FILTERED=RAW.slice();
+  // HOV cuts are derived from the Dashboard sheet in renderHOV() —
+  // no separate HOV sheet is read any more.
+
+  setParse('Reading LH Recovery …',84,'');
+  await uiTick();
+  const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
+  // raw:false → cells arrive as the text Excel displays, so the date columns
+  // read exactly as they appear in the sheet (DD-MM-YYYY per the column header).
+  if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
+  else{LHR_RAW=[];LHR_COLS=[];}
+
+  setParse('Building the dashboard …',90,'');
+  await uiTick();
+  boot();
+  setParse('Ready',100,'');
+  await uiTick();
+  hideParse();
+  $('#uploadScreen').style.display='none';$('#app').style.display='block';
+  restoreLastPage();
 }
 
 /* ---- sample data generator (preview) ---- */
@@ -3338,13 +3685,165 @@ $('#sampleBtn').onclick=()=>{
         Manifest_code:'MF'+(50000+Math.floor(i/3)),trip_code:'TR'+(9000+Math.floor(i/5)),MM_code:'MM'+i,
         'Lane Type':ltypes[i%ltypes.length],seal_number:Math.random()>.4?'SL'+(3000+i):'',Client:'Client'+(i%6),
         Manifest_origin:o,Manifest_Destination:dd,Manifest_status:Math.random()>.5?'In Transit':'Pending',
+        HHOV:'', misroute_location:Math.random()>.9?dests[(i*5)%dests.length]+' DC':'',
+        error_scan_flag:Math.random()>.9?'yes':'no',
         intransit_ageing_bucket:bucketOf(age)});
     }
-    RAW=rows.map(normalize);FILTERED=RAW;HOV_DATA={};LHR_RAW=[];LHR_COLS=[];
+    RAW=rows.map(normalize);FILTERED=RAW;HOV_CUTS={};LHR_RAW=[];LHR_COLS=[];
     boot();hideParse();
     $('#uploadScreen').style.display='none';$('#app').style.display='block';
   },30);
 };
+
+/* ================================================================
+   LOCAL CACHE  —  keeps the last workbook in IndexedDB so a browser
+   refresh restores the dashboard without re-downloading or waiting on
+   the network. Cleared on logout.
+   ================================================================ */
+const IDB_NAME='sfx_dashboard', IDB_STORE='cache', IDB_KEY='workbook';
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const rq=indexedDB.open(IDB_NAME,1);
+    rq.onupgradeneeded=()=>{const db=rq.result;
+      if(!db.objectStoreNames.contains(IDB_STORE))db.createObjectStore(IDB_STORE);};
+    rq.onsuccess=()=>res(rq.result);
+    rq.onerror=()=>rej(rq.error);
+  });
+}
+async function idbSet(key,val){
+  try{
+    const db=await idbOpen();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).put(val,key);
+      tx.oncomplete=res; tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){console.warn('[cache] write failed',e);}
+}
+async function idbGet(key){
+  try{
+    const db=await idbOpen();
+    return await new Promise((res,rej)=>{
+      const tx=db.transaction(IDB_STORE,'readonly');
+      const rq=tx.objectStore(IDB_STORE).get(key);
+      rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);
+    });
+  }catch(e){console.warn('[cache] read failed',e);return null;}
+}
+async function idbDel(key){
+  try{
+    const db=await idbOpen();
+    await new Promise(res=>{const tx=db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).delete(key);tx.oncomplete=res;tx.onerror=res;});
+  }catch(e){}
+}
+function cacheWorkbook(buf,name){
+  idbSet(IDB_KEY,{buf,name:name||'workbook.xlsx',saved:Date.now()});
+}
+/* remember which page the user was on so a refresh lands back there */
+function rememberPage(p){ try{sessionStorage.setItem('sfx_page',p);}catch(e){} }
+function restoreLastPage(){
+  let p=null; try{p=sessionStorage.getItem('sfx_page');}catch(e){}
+  if(!p)return;
+  const btn=document.querySelector('.nav button[data-page="'+p+'"]');
+  if(btn && btn.style.display!=='none') btn.click();
+}
+/* try the local cache first; returns true if the dashboard was restored */
+async function restoreFromCache(){
+  const hit=await idbGet(IDB_KEY);
+  if(!hit||!hit.buf)return false;
+  try{
+    const age=Math.round((Date.now()-(hit.saved||0))/60000);
+    setParse('Restoring your last session …',5,
+      'cached '+(age<1?'just now':age<60?age+' min ago':Math.round(age/60)+' h ago'));
+    await parseWorkbookBuffer(hit.buf);
+    return true;
+  }catch(e){ console.warn('[cache] restore failed',e); await idbDel(IDB_KEY); return false; }
+}
+
+/* ================================================================
+   ACTIVITY LOG  —  one small object per event in Supabase Storage.
+   The filename carries the whole record, so the admin viewer only has
+   to list the folder rather than fetch every file.
+   ================================================================ */
+const LOG_PREFIX='logs/';
+const logSafe=v=>String(v==null?'':v).replace(/[^A-Za-z0-9._-]+/g,'-').slice(0,60)||'-';
+async function logEvent(action,detail){
+  if(!CURRENT_USER)return;
+  const ts=new Date().toISOString().replace(/[:.]/g,'-');
+  const name=LOG_PREFIX+ts+'__'+logSafe(CURRENT_USER.id)+'__'+logSafe(action)+'__'+logSafe(detail)+'.json';
+  const body=JSON.stringify({user:CURRENT_USER.id,name:CURRENT_USER.name,
+    action,detail:String(detail||''),at:new Date().toISOString()});
+  try{ await supaUpload(name,new Blob([body],{type:'application/json'})); }
+  catch(e){ console.warn('[log] could not record',action,e.message); }
+}
+async function fetchLogs(limit){
+  const res=await fetch(SUPA_URL+'/storage/v1/object/list/'+SUPA_BUCKET,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({prefix:LOG_PREFIX,limit:limit||1000,offset:0,
+      sortBy:{column:'name',order:'desc'}})
+  });
+  if(!res.ok)throw new Error('list failed: '+res.status);
+  const items=await res.json();
+  return (items||[]).map(it=>{
+    const base=String(it.name||'').replace(/\.json$/,'');
+    const parts=base.split('__');
+    if(parts.length<3)return null;
+    const iso=parts[0].replace(/-/g,':').replace(/^(\d{4}):(\d{2}):(\d{2})T/,'$1-$2-$3T');
+    const when=new Date(iso.slice(0,23)+'Z');
+    return {when:isNaN(when)?null:when,user:parts[1],action:parts[2],detail:parts.slice(3).join('__')||''};
+  }).filter(Boolean).sort((a,b)=>(b.when||0)-(a.when||0));
+}
+
+/* ---- Activity Log page ---- */
+let ACT_ROWS=[];
+const actFmtWhen=d=>d?d.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+function actFiltered(){
+  const u=($('#actUser')&&$('#actUser').value||'').trim().toLowerCase();
+  const a=($('#actAction')&&$('#actAction').value)||'';
+  return ACT_ROWS.filter(r=>(!u||r.user.toLowerCase().includes(u))&&(!a||r.action===a));
+}
+function renderActivity(){
+  const body=$('#actBody'); if(!body)return;
+  const rows=actFiltered();
+  const badge=a=>a==='login'?'b-fwd':a==='download'?'b-crit':'b-rev';
+  body.innerHTML=rows.slice(0,600).map(r=>
+    `<tr><td>${actFmtWhen(r.when)}</td><td><b>${r.user}</b></td>`+
+    `<td><span class="badge ${badge(r.action)}">${r.action}</span></td>`+
+    `<td class="mono" style="max-width:420px;overflow:hidden;text-overflow:ellipsis">${r.detail||'—'}</td></tr>`).join('')
+    || `<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--mut)">No activity recorded yet.</td></tr>`;
+  $('#actCount').textContent=fmtN(rows.length)+' events';
+  const users=new Set(ACT_ROWS.map(r=>r.user));
+  const dls=ACT_ROWS.filter(r=>r.action==='download').length;
+  const logins=ACT_ROWS.filter(r=>r.action==='login').length;
+  const last=ACT_ROWS[0];
+  $('#actCards').innerHTML=[
+    {l:'EVENTS',v:fmtN(ACT_ROWS.length),s:'recorded in Supabase'},
+    {l:'USERS SEEN',v:fmtN(users.size),s:'distinct accounts'},
+    {l:'SIGN-INS',v:fmtN(logins),s:'total logins'},
+    {l:'DOWNLOADS',v:fmtN(dls),s:last?('last: '+actFmtWhen(last.when)):'—'}
+  ].map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+}
+async function loadActivity(){
+  const body=$('#actBody'); if(!body)return;
+  body.innerHTML='<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--mut)">Loading activity…</td></tr>';
+  try{ ACT_ROWS=await fetchLogs(1000); renderActivity(); }
+  catch(e){ body.innerHTML='<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--mut)">Could not read the log folder: '+e.message+'</td></tr>'; }
+}
+function wireActivity(){
+  const r=$('#actRefresh'); if(r)r.onclick=loadActivity;
+  const u=$('#actUser'); if(u)u.oninput=renderActivity;
+  const a=$('#actAction'); if(a)a.onchange=renderActivity;
+  const c=$('#actCsv'); if(c)c.onclick=()=>{
+    const rows=actFiltered();
+    if(!rows.length)return;
+    const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+    const csv=[['When','User','Action','Detail'].map(q).join(',')]
+      .concat(rows.map(x=>[x.when?x.when.toISOString():'',x.user,x.action,x.detail].map(q).join(','))).join('\n');
+    dl(new Blob([csv],{type:'text/csv'}),'activity_log.csv');
+  };
+}
 
 /* ================================================================
    SUPABASE CONFIG
@@ -3407,14 +3906,14 @@ async function loadFromSupabase(){
   const btn=$('#supaRefreshBtn');
   if(btn)btn.disabled=true;
   try{
-    showParse('Connecting to Supabase…');
+    setParse('Connecting to Supabase…',2,'');
     const meta=await (await supaFetch('meta.json')).json();
     const n=meta.chunks||1;
     /* collect all decoded chunks first, then concatenate */
     const parts=[];
     let totalLen=0;
     for(let i=0;i<n;i++){
-      showParse('Loading data — part '+(i+1)+' of '+n+'…');
+      setParse('Downloading data …',2+(i/n)*40,'part '+(i+1)+' of '+n);
       const b64=await (await supaFetch('chunk_'+i+'.b64')).text();
       /* atob → Uint8Array */
       const bin=atob(b64.trim());
@@ -3424,13 +3923,14 @@ async function loadFromSupabase(){
       totalLen+=bytes.length;
     }
     /* concatenate all parts into one buffer */
-    showParse('Assembling file…');
+    setParse('Assembling file…',44,'');
     const full=new Uint8Array(totalLen);
     let offset=0;
     for(const p of parts){full.set(p,offset);offset+=p.length;}
     console.log('[Supabase] Assembled buffer:',totalLen,'bytes, chunks:',n);
-    showParse('Parsing workbook…');
-    parseWorkbookBuffer(full.buffer);
+    /* keep a local copy so the next refresh is instant */
+    cacheWorkbook(full.buffer.slice(0), meta.name||'workbook.xlsx');
+    await parseWorkbookBuffer(full.buffer);
     if(btn)btn.disabled=false;
   }catch(err){
     console.error('loadFromSupabase error:',err);
@@ -3448,13 +3948,14 @@ $('#supaRefreshBtn').onclick=()=>loadFromSupabase();
 /* ---- boot: build UI once data is loaded ---- */
 const PAGE_META={
   overview:{t:'Executive Overview',c:'Snapshot of all in-transit pendency'},
+  activity:{t:'Activity Log',c:'Who signed in and what they downloaded'},
   pendency:{t:'Pendency Analytics',c:'Shipment counts, ageing mix, congestion points'},
   value:{t:'Value-at-Risk',c:'Where the money is stuck — vendors, HOV, ABC, PODs'},
   rootcause:{t:'Root Cause & What-If',c:'Diagnose slow lanes and simulate recovery'},
   laneview:{t:'Lane View',c:'Top lanes, lane-type rollups and AWB-level detail'},
   manifest:{t:'Bag wise View',c:'Lane→manifest pivots and shipment-level detail'},
   investigate:{t:'Base Data',c:'Searchable AWB-level base table'},
-  hov:{t:'HOV Analytics',c:'High-order-value pivots from the HOV sheet'},
+  hov:{t:'HOV Analytics',c:'HOV, HHOV and error-scan cuts from the Dashboard sheet'},
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
@@ -3476,6 +3977,7 @@ function boot(){
 }
 
 function navTo(page){
+  rememberPage(page);
   $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
   $$('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
   const meta=PAGE_META[page]||{t:page,c:''};
@@ -3483,12 +3985,14 @@ function navTo(page){
   document.body.className=page+'-page';
   /* documentation is static — build it once, on first visit */
   if(page==='docs'&&!$('#docBody').innerHTML)renderDocs();
+  if(page==='activity')loadActivity();
   closeSidebar();
 }
 function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
 function closeSidebar(){$('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');}
 
 function wireControls(){
+  wireActivity();
   $$('.nav button').forEach(b=>b.onclick=()=>navTo(b.dataset.page));
   $('#hamb').onclick=openSidebar;
   $('#overlay').onclick=closeSidebar;
