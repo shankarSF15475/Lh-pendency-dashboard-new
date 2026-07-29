@@ -568,6 +568,21 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .lhr-tbl thead tr.hdr th:hover{background:#E7E9F5;}
 .lhr-fb button:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
 
+/* ---- In-app loading veil ---- */
+#appLoading{display:none;position:fixed;inset:0;z-index:900;background:rgba(247,248,252,.82);
+  backdrop-filter:blur(3px);align-items:center;justify-content:center}
+#appLoading.show{display:flex}
+.al-card{width:min(480px,88vw);background:#fff;border:1px solid var(--line);border-radius:16px;
+  padding:22px 24px;box-shadow:0 18px 50px rgba(30,32,60,.16);font-size:13px;color:var(--text)}
+.al-card .ps-top{display:flex;align-items:center;gap:10px;font-weight:700}
+#alPct{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;color:var(--pine)}
+#alBarWrap{height:7px;border-radius:99px;background:#EDEFF6;overflow:hidden;margin-top:10px}
+#alBar{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#F13724,#FD913E,#FECC68);transition:width .25s ease}
+#alSub{font-size:11.5px;color:var(--mut);margin-top:8px;min-height:14px}
+#alError{display:none;margin-top:12px;padding:12px 14px;border-radius:10px;background:#FEF1F1;
+  border:1px solid #F6CFCB;color:#B42318;font-size:12.5px;line-height:1.55}
+#alError.show{display:block}
+
 /* ---- Activity Log ---- */
 .act-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
 #actTbl td{padding:7px 10px;border-bottom:1px solid var(--line);font-size:12.5px}
@@ -744,6 +759,22 @@ thead th{background:#F1F3FB;color:var(--pine);}
 
 <!-- ================= APP ================= -->
 <div id="app">
+
+<!-- in-app loading veil: refresh reloads data HERE, never on the upload screen -->
+<div id="appLoading">
+  <div class="al-card">
+    <div class="ps-top"><span class="spinner"></span><span id="alMsg">Reloading data …</span><span id="alPct">0%</span></div>
+    <div id="alBarWrap"><div id="alBar"></div></div>
+    <div id="alSub"></div>
+    <div id="alError">
+      <div id="alErrText"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="tool" id="alRetry">Try again</button>
+        <button class="tool" id="alGoUpload" style="display:none">Upload a file instead</button>
+      </div>
+    </div>
+  </div>
+</div>
   <div class="overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
     <div class="brand">
@@ -3540,20 +3571,50 @@ $('#resetBtn').onclick=()=>{
 };
 $('#resetEmail').addEventListener('keydown',e=>{if(e.key==='Enter')$('#resetBtn').click();});
 
-/* restore session */
-(function restoreSession(){
-  let u=null; try{u=sessionStorage.getItem('sfx_user');}catch(e){}
-  if(u&&AUTH_USERS[u]){
-    CURRENT_USER={id:u,...AUTH_USERS[u]};
-    applyAdminAccess(CURRENT_USER);
-    $('#loginScreen').style.display='none';
-    $('#uploadScreen').style.display='block';
-    /* refresh should not throw the user back to the upload screen:
-       restore the cached workbook first, and only hit the network if
-       there is nothing cached */
-    restoreFromCache().then(ok=>{ if(!ok) loadFromSupabase(); });
+/* Set when a refresh restores a session; cleared once the section has actually
+   been re-selected. Declared here (ahead of restoreSession) because the nav
+   click handlers only exist after boot(), so the first restore attempt runs
+   early and calls navTo() directly. */
+var PAGE_RESTORE_PENDING=false;
+
+/* restore session — a browser refresh must NEVER land on the upload screen.
+   With a live session we show the dashboard shell immediately, restore the
+   section the user was reading, and reload the data behind an in-app veil
+   (local cache first, Supabase only if the cache is empty). */
+async function reloadInPlace(){
+  appVeilShow();
+  setParse('Reloading data …',0,'');
+  try{
+    const ok=await restoreFromCache();
+    if(!ok) await loadFromSupabase();
+  }catch(e){
+    console.error('reloadInPlace:',e);
+    appVeilError('Could not reload the data: '+e.message,CURRENT_USER&&CURRENT_USER.isAdmin);
   }
-})();
+}
+function restoreSession(){
+  let u=null; try{u=sessionStorage.getItem('sfx_user');}catch(e){}
+  if(!u||!AUTH_USERS[u])return;
+  CURRENT_USER={id:u,...AUTH_USERS[u]};
+  applyAdminAccess(CURRENT_USER);
+  $('#loginScreen').style.display='none';
+  /* dashboard shell straight away — even before data lands */
+  $('#uploadScreen').style.display='none';
+  $('#app').style.display='block';
+  PAGE_RESTORE_PENDING=true;
+  try{restoreLastPage();}catch(e){}   /* shows the right section straight away */
+  reloadInPlace();
+}
+/* Deferred by one tick so every helper and constant declared further down this
+   file has finished initialising before the session is restored. */
+setTimeout(restoreSession,0);
+/* veil error actions */
+$('#alRetry').onclick=()=>reloadInPlace();
+$('#alGoUpload').onclick=()=>{
+  appVeilHide();
+  $('#app').style.display='none';
+  $('#uploadScreen').style.display='block';
+};
 
 $('#logoutBtn').onclick=()=>{
   logEvent('logout',CURRENT_USER?(CURRENT_USER.name||CURRENT_USER.id):'-');
@@ -3577,10 +3638,39 @@ fileInput.onchange=e=>{const f=e.target.files[0];if(f)parseFile(f);};
 dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)parseFile(f);});
 $('#reUpload').onclick=()=>{$('#app').style.display='none';$('#uploadScreen').style.display='block';};
 
-function showParse(msg){$('#parseStatus').style.display='flex';$('#parseMsg').textContent=msg;}
-function hideParse(){$('#parseStatus').style.display='none';setParse(null,0,'');}
+function showParse(msg){
+  if(IN_APP_LOAD){$('#alMsg').textContent=msg;return;}
+  $('#parseStatus').style.display='flex';$('#parseMsg').textContent=msg;
+}
+function hideParse(){
+  if(IN_APP_LOAD){appVeilHide();return;}
+  $('#parseStatus').style.display='none';setParse(null,0,'');
+}
+/* When the dashboard itself is on screen (an in-place reload after a browser
+   refresh, or the Load-from-Supabase button), progress renders on the in-app
+   veil. The upload screen's bar is only used on the very first load of a
+   session, when there is genuinely nothing behind it to show. */
+let IN_APP_LOAD=false;
+function appVeilShow(){IN_APP_LOAD=true;$('#alError').classList.remove('show');$('#appLoading').classList.add('show');}
+function appVeilHide(){IN_APP_LOAD=false;$('#appLoading').classList.remove('show');$('#alError').classList.remove('show');}
+function appVeilError(msg,offerUpload){
+  $('#appLoading').classList.add('show');
+  $('#alErrText').innerHTML=msg;
+  $('#alError').classList.add('show');
+  $('#alGoUpload').style.display=offerUpload?'':'none';
+}
 /* msg=null keeps the current message; pct 0-100; sub = small grey detail line */
 function setParse(msg,pct,sub){
+  if(IN_APP_LOAD){
+    if(msg!=null)$('#alMsg').textContent=msg;
+    if(pct!=null){
+      const v=Math.max(0,Math.min(100,Math.round(pct)));
+      $('#alBar').style.width=v+'%';
+      $('#alPct').textContent=v+'%';
+    }
+    if(sub!=null)$('#alSub').textContent=sub;
+    return;
+  }
   const st=$('#parseStatus'); if(!st)return;
   st.style.display='flex';
   if(msg!=null)$('#parseMsg').textContent=msg;
@@ -3657,12 +3747,16 @@ async function parseWorkbookBuffer(buf){
 
   setParse('Building the dashboard …',90,'');
   await uiTick();
+  const firstEntry=($('#app').style.display!=='block');
   boot();
   setParse('Ready',100,'');
   await uiTick();
   hideParse();
   $('#uploadScreen').style.display='none';$('#app').style.display='block';
-  restoreLastPage();
+  /* Steer the view on first entry, or when a refresh asked for a section that
+     couldn't be selected yet. During a later in-place reload the user is
+     already sitting on their page and must not be yanked elsewhere. */
+  if(firstEntry||PAGE_RESTORE_PENDING)restoreLastPage();
 }
 
 /* ---- sample data generator (preview) ---- */
@@ -3740,13 +3834,35 @@ async function idbDel(key){
 function cacheWorkbook(buf,name){
   idbSet(IDB_KEY,{buf,name:name||'workbook.xlsx',saved:Date.now()});
 }
-/* remember which page the user was on so a refresh lands back there */
-function rememberPage(p){ try{sessionStorage.setItem('sfx_page',p);}catch(e){} }
+/* remember which page the user was on so a refresh lands back there.
+   Stored in BOTH sessionStorage and the URL hash (#hov, #lhrecovery …) —
+   the hash survives storage loss and makes sections bookmarkable. */
+function rememberPage(p){
+  try{sessionStorage.setItem('sfx_page',p);}catch(e){}
+  try{if(('#'+p)!==location.hash)history.replaceState(null,'','#'+p);}catch(e){}
+}
+function savedPage(){
+  const h=(location.hash||'').replace('#','');
+  if(h)return h;
+  try{return sessionStorage.getItem('sfx_page')||null;}catch(e){return null;}
+}
 function restoreLastPage(){
-  let p=null; try{p=sessionStorage.getItem('sfx_page');}catch(e){}
-  if(!p)return;
+  const p=savedPage();
+  if(!p){PAGE_RESTORE_PENDING=false;return false;}
   const btn=document.querySelector('.nav button[data-page="'+p+'"]');
-  if(btn && btn.style.display!=='none') btn.click();
+  /* fall back silently if the page doesn't exist or is role-hidden
+     (e.g. a non-admin refreshing on #activity) */
+  if(!btn||btn.style.display==='none'||typeof navTo!=='function'){PAGE_RESTORE_PENDING=false;return false;}
+  try{
+    navTo(p);
+    PAGE_RESTORE_PENDING=false;
+    return true;
+  }catch(e){
+    /* called before the page metadata further down the file has initialised —
+       leave the flag set so boot() re-applies it once everything exists */
+    PAGE_RESTORE_PENDING=true;
+    return false;
+  }
 }
 /* try the local cache first; returns true if the dashboard was restored */
 async function restoreFromCache(){
@@ -3934,16 +4050,27 @@ async function loadFromSupabase(){
     if(btn)btn.disabled=false;
   }catch(err){
     console.error('loadFromSupabase error:',err);
-    hideParse();
-    if(CURRENT_USER&&CURRENT_USER.isAdmin){
-      showParse('⚠ Could not load from Supabase: '+err.message+'. Upload Dashboard.xlsx manually above.');
+    if(IN_APP_LOAD){
+      /* already inside the dashboard: report inline, offer retry; admins also
+         get a path to the upload screen — but only by their own choice */
+      appVeilError('⚠ Could not load the latest data: '+err.message+
+        '<br>You can retry'+((CURRENT_USER&&CURRENT_USER.isAdmin)?' or upload Dashboard.xlsx manually.':' — or contact your admin if this persists.'),
+        CURRENT_USER&&CURRENT_USER.isAdmin);
     }else{
-      $('#uploadWaitMsg').style.display='block';
+      hideParse();
+      if(CURRENT_USER&&CURRENT_USER.isAdmin){
+        showParse('⚠ Could not load from Supabase: '+err.message+'. Upload Dashboard.xlsx manually above.');
+      }else{
+        $('#uploadWaitMsg').style.display='block';
+      }
     }
     if(btn)btn.disabled=false;
   }
 }
-$('#supaRefreshBtn').onclick=()=>loadFromSupabase();
+$('#supaRefreshBtn').onclick=()=>{
+  if($('#app').style.display==='block'){appVeilShow();setParse('Fetching latest data …',0,'');}
+  loadFromSupabase();
+};
 
 /* ---- boot: build UI once data is loaded ---- */
 const PAGE_META={
