@@ -402,7 +402,8 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 .hov-export,.lk-export{display:flex;gap:8px;margin-bottom:12px}
 .hov-chart,.lk-chart{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(10,42,30,.08);margin:15px 0}
 .hov-chart canvas,.lk-chart canvas{max-height:300px}
-body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar{display:none}
+body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
+body.activity-page .filterbar,body.docs-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start}
 .lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
 .lhr-chart-pane{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(10,42,30,.09);height:100%;box-sizing:border-box}
@@ -567,6 +568,11 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .lhr-tbl thead tr.hdr th{background:#F1F3FB;color:var(--pine);border-right:1px solid var(--line);}
 .lhr-tbl thead tr.hdr th:hover{background:#E7E9F5;}
 .lhr-fb button:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+
+/* Activity Log header buttons had no room and collided — give them space */
+#page-activity .card-head{gap:12px;flex-wrap:wrap}
+#page-activity .card-tools{display:flex;gap:8px;flex:none}
+#page-activity .card-tools .tool{white-space:nowrap;padding:6px 12px}
 
 /* ---- In-app loading veil ---- */
 #appLoading{display:none;position:fixed;inset:0;z-index:900;background:rgba(247,248,252,.82);
@@ -1245,8 +1251,10 @@ thead th{background:#F1F3FB;color:var(--pine);}
         <div class="lv-mini-wrap" style="max-height:520px">
           <table class="lv-mini" id="actTbl">
             <thead><tr>
-              <th style="text-align:left">When</th><th style="text-align:left">User</th>
-              <th style="text-align:left">Action</th><th style="text-align:left">Detail</th>
+              <th style="text-align:left">User</th>
+              <th style="text-align:left">Action</th>
+              <th style="text-align:left">Date/Time stamp</th>
+              <th style="text-align:left">Details</th>
             </tr></thead>
             <tbody id="actBody"></tbody>
           </table>
@@ -3902,19 +3910,41 @@ async function fetchLogs(limit){
   });
   if(!res.ok)throw new Error('list failed: '+res.status);
   const items=await res.json();
+  /* Filenames sanitise "@" and "." out of the user id, so map the sanitised
+     form back to the real account name where we recognise it. */
+  const unsafe={};
+  Object.keys(AUTH_USERS).forEach(k=>{unsafe[logSafe(k)]=k;});
   return (items||[]).map(it=>{
     const base=String(it.name||'').replace(/\.json$/,'');
     const parts=base.split('__');
     if(parts.length<3)return null;
-    const iso=parts[0].replace(/-/g,':').replace(/^(\d{4}):(\d{2}):(\d{2})T/,'$1-$2-$3T');
-    const when=new Date(iso.slice(0,23)+'Z');
-    return {when:isNaN(when)?null:when,user:parts[1],action:parts[2],detail:parts.slice(3).join('__')||''};
-  }).filter(Boolean).sort((a,b)=>(b.when||0)-(a.when||0));
+    /* stamp is an ISO string with ":" and "." swapped for "-", e.g.
+       2026-07-30T12-30-45-123Z — rebuild it field by field rather than
+       string-replacing, which previously produced an invalid date */
+    let when=null;
+    const m=parts[0].match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})(?:-(\d{1,3}))?Z?$/);
+    if(m){
+      const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6],+(m[7]||0)));
+      if(!isNaN(d))when=d;
+    }
+    /* fall back to the object's own creation time from Supabase */
+    if(!when&&it.created_at){const d2=new Date(it.created_at);if(!isNaN(d2))when=d2;}
+    const rawUser=parts[1];
+    const user=unsafe[rawUser]||rawUser;
+    const action=parts[2];
+    let detail=parts.slice(3).join('__')||'';
+    /* sign-in/out rows carry the person's name, which the filename sanitiser
+       hyphenates — take the clean version from the account list instead */
+    if((action==='login'||action==='logout')&&AUTH_USERS[user]&&AUTH_USERS[user].name)
+      detail=AUTH_USERS[user].name;
+    return {when,user,action,detail};
+  }).filter(Boolean).sort((a,b)=>(b.when?b.when.getTime():0)-(a.when?a.when.getTime():0));
 }
 
 /* ---- Activity Log page ---- */
 let ACT_ROWS=[];
-const actFmtWhen=d=>d?d.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+const actFmtWhen=d=>d?d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',
+  hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}):'—';
 function actFiltered(){
   const u=($('#actUser')&&$('#actUser').value||'').trim().toLowerCase();
   const a=($('#actAction')&&$('#actAction').value)||'';
@@ -3925,20 +3955,21 @@ function renderActivity(){
   const rows=actFiltered();
   const badge=a=>a==='login'?'b-fwd':a==='download'?'b-crit':'b-rev';
   body.innerHTML=rows.slice(0,600).map(r=>
-    `<tr><td>${actFmtWhen(r.when)}</td><td><b>${r.user}</b></td>`+
+    `<tr><td><b>${r.user}</b></td>`+
     `<td><span class="badge ${badge(r.action)}">${r.action}</span></td>`+
+    `<td class="mono">${actFmtWhen(r.when)}</td>`+
     `<td class="mono" style="max-width:420px;overflow:hidden;text-overflow:ellipsis">${r.detail||'—'}</td></tr>`).join('')
     || `<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--mut)">No activity recorded yet.</td></tr>`;
   $('#actCount').textContent=fmtN(rows.length)+' events';
   const users=new Set(ACT_ROWS.map(r=>r.user));
   const dls=ACT_ROWS.filter(r=>r.action==='download').length;
   const logins=ACT_ROWS.filter(r=>r.action==='login').length;
-  const last=ACT_ROWS[0];
+  const lastDl=ACT_ROWS.find(r=>r.action==='download');
   $('#actCards').innerHTML=[
     {l:'EVENTS',v:fmtN(ACT_ROWS.length),s:'recorded in Supabase'},
     {l:'USERS SEEN',v:fmtN(users.size),s:'distinct accounts'},
     {l:'SIGN-INS',v:fmtN(logins),s:'total logins'},
-    {l:'DOWNLOADS',v:fmtN(dls),s:last?('last: '+actFmtWhen(last.when)):'—'}
+    {l:'DOWNLOADS',v:fmtN(dls),s:lastDl?('last: '+actFmtWhen(lastDl.when)):'none yet'}
   ].map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
 }
 async function loadActivity(){
@@ -3955,8 +3986,8 @@ function wireActivity(){
     const rows=actFiltered();
     if(!rows.length)return;
     const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
-    const csv=[['When','User','Action','Detail'].map(q).join(',')]
-      .concat(rows.map(x=>[x.when?x.when.toISOString():'',x.user,x.action,x.detail].map(q).join(','))).join('\n');
+    const csv=[['User','Action','Date/Time stamp','Details'].map(q).join(',')]
+      .concat(rows.map(x=>[x.user,x.action,x.when?x.when.toISOString():'',x.detail].map(q).join(','))).join('\n');
     dl(new Blob([csv],{type:'text/csv'}),'activity_log.csv');
   };
 }
