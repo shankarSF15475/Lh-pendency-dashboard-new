@@ -744,13 +744,13 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <p id="uploadSub">Drop the daily <b>Dashboard.xlsx</b> export (intransit pendency snapshot). Expected columns: Zone, movement_type, Awb_number, MM_origin/destination (+types), Product_value, flag, Lane Code, HOV_flag, intransit_ageing, vendor_name, POD Name, Volumetric_flag, manifest/trip codes.</p>
       <div id="uploadControls">
         <div id="dropZone">
-          <div class="big">⬆ Drag & drop the Excel file here</div>
-          <div class="sub">.xlsx / .xls / .csv — large files (270k+ rows) can take 20–60 seconds to parse</div>
+          <div class="big">⬆ Drag &amp; drop the data file here</div>
+          <div class="sub">.csv / .xlsx / .xls — <b>CSV is recommended for the daily drop</b>: a 300k-row export loads in seconds, while the same data as .xlsx can exceed what a browser can open.<br>Uploading CSV? Select <b>both</b> Dashboard.csv and CN_Working.csv together — LH Recovery reads the CN file.</div>
         </div>
         <div class="upload-actions">
           <button class="btn btn-lime" id="browseBtn">Browse file…</button>
           <button class="btn btn-ghost" id="sampleBtn">Load sample data (preview)</button>
-          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple style="display:none">
         </div>
       </div>
       <div id="uploadWaitMsg">Today's data isn't loaded yet. Please check back in a moment, or contact your admin if this persists.</div>
@@ -3648,10 +3648,10 @@ $('#todayLbl').textContent=new Date().toLocaleDateString('en-IN',{day:'2-digit',
 /* ---- upload wiring ---- */
 const dz=$('#dropZone'),fileInput=$('#fileInput');
 $('#browseBtn').onclick=()=>fileInput.click();
-fileInput.onchange=e=>{const f=e.target.files[0];if(f)parseFile(f);};
+fileInput.onchange=e=>{if(e.target.files&&e.target.files.length)parseFiles(e.target.files);};
 ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
-dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)parseFile(f);});
+dz.addEventListener('drop',e=>{if(e.dataTransfer.files&&e.dataTransfer.files.length)parseFiles(e.dataTransfer.files);});
 $('#reUpload').onclick=()=>{$('#app').style.display='none';$('#uploadScreen').style.display='block';};
 
 function showParse(msg){
@@ -3711,6 +3711,109 @@ async function mapProgress(rows,fn,from,to,msg){
   return out;
 }
 
+/* ============================================================
+   MULTI-FILE ROUTER
+   ------------------------------------------------------------
+   An .xlsx carries both sheets, so one file is enough. When the
+   data arrives as CSV the two sheets become two files, so accept
+   both at once (browse or drag together) and route each to the
+   right place:
+       Dashboard.csv   -> main shipment rows
+       CN_Working.csv  -> LH Recovery section
+   Either can also be uploaded on its own: a CN file alone just
+   refreshes LH Recovery and leaves the shipment data untouched.
+   ============================================================ */
+const readBuf=file=>new Promise((res,rej)=>{
+  const r=new FileReader();
+  r.onload=e=>res(e.target.result);
+  r.onerror=()=>rej(new Error('Could not read '+file.name));
+  r.readAsArrayBuffer(file);
+});
+
+/* Look at the header row rather than trusting the filename. */
+async function sniffKind(file){
+  const nm=file.name.toLowerCase();
+  if(/\.(xlsx|xls)$/.test(nm))return 'workbook';
+  let head='';
+  try{
+    const slice=file.slice(0,8192);
+    head=new TextDecoder('utf-8').decode(await readBuf(slice)).split('\n')[0].toLowerCase();
+  }catch(e){}
+  if(/impacted\s*awb|email\s*subject|cn\s*received/.test(head))return 'cn';
+  if(/awb_number|intransit_ageing|product_value/.test(head))return 'main';
+  /* header gave nothing away — fall back to the filename */
+  if(/cn[_\s-]*working|recovery|lhr/.test(nm))return 'cn';
+  return 'main';
+}
+
+async function applyCNBuffer(buf,name){
+  const rows=await parseCSVBuffer(buf);
+  if(!rows.length)throw new Error('No rows found in '+name);
+  setLHRData(rows);
+  console.log('[Parse] LH Recovery rows from '+name+':',rows.length);
+}
+
+async function parseFiles(list){
+  const files=Array.from(list).filter(Boolean);
+  if(!files.length)return;
+
+  let mainFile=null,cnFile=null,workbook=null;
+  for(const f of files){
+    const kind=await sniffKind(f);
+    if(kind==='workbook')workbook=f;
+    else if(kind==='cn')cnFile=f;
+    else mainFile=f;
+  }
+
+  /* a workbook already contains both sheets — old behaviour, unchanged */
+  if(workbook){parseFile(workbook);return;}
+
+  if(!mainFile&&!cnFile)return;
+
+  /* CN on its own: refresh LH Recovery only, keep shipments loaded */
+  if(!mainFile&&cnFile){
+    if(!RAW.length){
+      alert('That looks like the CN Working file.\n\nUpload Dashboard.csv as well '+
+            '(you can select both at once) so the shipment data loads too.');
+      return;
+    }
+    setParse('Updating LH Recovery …',10,cnFile.name);
+    try{
+      const buf=await readBuf(cnFile);
+      await applyCNBuffer(buf,cnFile.name);
+      await idbSet(IDB_KEY_CN,{buf,name:cnFile.name,saved:Date.now()});
+      boot();
+      hideParse();
+    }catch(err){hideParse();alert('Could not load '+cnFile.name+'\n\n'+err.message);}
+    return;
+  }
+
+  /* main file (optionally with its CN companion) */
+  setParse('Reading '+mainFile.name+' …',0,cnFile?'+ '+cnFile.name:'');
+  try{
+    const mainBuf=await readBuf(mainFile);
+    cacheWorkbook(mainBuf.slice(0),mainFile.name);
+    let cnBuf=null;
+    if(cnFile){
+      cnBuf=await readBuf(cnFile);
+      await idbSet(IDB_KEY_CN,{buf:cnBuf.slice(0),name:cnFile.name,saved:Date.now()});
+    }else{
+      /* no CN supplied this time — drop any stale cached copy */
+      try{await idbDel(IDB_KEY_CN);}catch(e){}
+    }
+    await parseWorkbookBuffer(mainBuf,mainFile.name,cnBuf?{cnBuf,cnName:cnFile.name}:null);
+    if(CURRENT_USER&&CURRENT_USER.isAdmin){
+      pushToSupabase(mainBuf.slice(0),mainFile.name);
+      if(cnBuf)pushCNToSupabase(cnBuf.slice(0),cnFile.name);
+    }
+  }catch(err){
+    hideParse();
+    console.error('[Parse] failed:',err);
+    try{idbDel(IDB_KEY);}catch(e){}
+    alert('Could not load '+mainFile.name+'\n\n'+err.message);
+  }
+}
+
 function parseFile(file){
   setParse('Reading '+file.name+' …',0,'');
   const reader=new FileReader();
@@ -3721,31 +3824,171 @@ function parseFile(file){
       const buf=e.target.result;
       /* keep a local copy so a browser refresh restores instantly */
       cacheWorkbook(buf.slice(0), file.name);
-      await parseWorkbookBuffer(buf);
+      await parseWorkbookBuffer(buf, file.name);
       /* Admin: also push to Supabase — use a copy to avoid buffer conflicts */
       if(CURRENT_USER&&CURRENT_USER.isAdmin){
         pushToSupabase(buf.slice(0), file.name);
       }
-    }catch(err){ hideParse(); alert('Could not parse file: '+err.message); }
+    }catch(err){
+      hideParse();
+      console.error('[Parse] failed:',err);
+      /* A failed parse must not leave a stale/empty cache behind, or the next
+         refresh silently restores the same broken state. */
+      try{ idbDel(IDB_KEY); }catch(e){}
+      alert('Could not load '+file.name+'\n\n'+err.message);
+    }
   };
   reader.onerror=()=>{hideParse();alert('File read failed.');};
   reader.readAsArrayBuffer(file);
 }
 
-async function parseWorkbookBuffer(buf){
-  setParse('Opening workbook …',15,'this is the heavy step on large files');
+/* ============================================================
+   FAST CSV PARSER
+   ------------------------------------------------------------
+   A browser caps any single JS string at ~512 MB (V8
+   MAX_STRING_LENGTH). A 320k-row / 38-column worksheet inflates
+   to ~640 MB of sheet XML, so SheetJS cannot materialise it and
+   silently drops the sheet — the dashboard then boots with zero
+   rows. CSV sidesteps the whole problem: the same data is ~115 MB
+   and parses in seconds. This is the supported path for large drops.
+   ============================================================ */
+async function parseCSVBuffer(buf){
+  setParse('Decoding CSV …',16,'');
   await uiTick();
-  const wb=XLSX.read(new Uint8Array(buf),{type:'array',dense:true,cellDates:true});
-  console.log('[Parse] SheetNames:', wb.SheetNames);
-  let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
-  console.log('[Parse] Using main sheet:', mainName);
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let text = new TextDecoder('utf-8').decode(bytes);
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);           // strip BOM
+  text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  while(text.endsWith('\n')) text=text.slice(0,-1);
 
-  setParse('Reading rows …',35,'sheet: '+mainName);
-  await uiTick();
-  const rows=XLSX.utils.sheet_to_json(wb.Sheets[mainName],{raw:true,defval:''});
-  console.log('[Parse] Raw rows:', rows.length);
-  console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
-  resolveMoveKey(rows[0]);
+  /* Hybrid strategy: quoted fields are rare in ops exports (a few hundred in
+     100+ MB), so splitting on newlines and only running the quote-aware
+     splitter on the lines that need it is ~10x faster than scanning every
+     character. Lines holding an unbalanced quote are re-joined with the
+     following line first, so quoted fields containing newlines stay correct. */
+  const countQuotes=str=>{let n=0,p=-1;while((p=str.indexOf('"',p+1))!==-1)n++;return n;};
+  const splitQuoted=line=>{
+    const out=[];let field='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(inQ){
+        if(c==='"'){ if(line[i+1]==='"'){field+='"';i++;} else inQ=false; }
+        else field+=c;
+      }else if(c==='"') inQ=true;
+      else if(c===','){ out.push(field); field=''; }
+      else field+=c;
+    }
+    out.push(field);
+    return out;
+  };
+
+  const lines=text.split('\n');
+  const grid=[];
+  const CH=20000;
+  for(let i=0;i<lines.length;i+=CH){
+    const end=Math.min(i+CH,lines.length);
+    for(let j=i;j<end;j++){
+      let line=lines[j];
+      if(!line.length) continue;
+      if(line.indexOf('"')===-1){ grid.push(line.split(',')); continue; }
+      /* unbalanced quotes → the field runs into the next physical line */
+      while((countQuotes(line)%2)===1 && j+1<lines.length){ line+='\n'+lines[++j]; }
+      grid.push(splitQuoted(line));
+    }
+    setParse('Reading rows …',16+24*(end/lines.length),fmtN(grid.length)+' rows');
+    await uiTick();
+  }
+
+  if(!grid.length) throw new Error('The CSV file is empty.');
+  /* headers are kept verbatim — some exports ship a trailing space
+     ("movement ") and resolveMoveKey() relies on seeing the real key */
+  const hdr=grid[0];
+  const out=new Array(grid.length-1);
+  const CH2=20000;
+  for(let i=1;i<grid.length;i+=CH2){
+    const end=Math.min(i+CH2,grid.length);
+    for(let j=i;j<end;j++){
+      const src=grid[j], o={};
+      for(let c=0;c<hdr.length;c++) o[hdr[c]] = src[c]===undefined ? '' : src[c];
+      out[j-1]=o;
+    }
+    setParse('Preparing rows …',40+8*(end/grid.length),fmtN(end-1)+' of '+fmtN(grid.length-1));
+    await uiTick();
+  }
+  return out;
+}
+
+/* Detects the "worksheet too large for the browser" condition and
+   explains it, instead of silently rendering an empty dashboard. */
+function bigSheetError(sheetName){
+  return new Error(
+    'The worksheet "'+sheetName+'" is too large for a browser to open.\n\n'+
+    'Excel stores this sheet as roughly 640 MB of internal XML, and browsers '+
+    'cap any single text block at about 512 MB — so the sheet gets dropped '+
+    'and the dashboard would show 0 rows.\n\n'+
+    'Fix: save the sheet as CSV (in Excel: File → Save As → CSV UTF-8) and '+
+    'upload that instead. It is roughly 115 MB, loads far faster, and every '+
+    'chart works exactly the same.'
+  );
+}
+
+async function parseWorkbookBuffer(buf,fileName,extra){
+  const name=String(fileName||'').toLowerCase();
+  let rows;
+
+  if(name.endsWith('.csv')||name.endsWith('.txt')){
+    /* ---------- CSV path ---------- */
+    rows=await parseCSVBuffer(buf);
+    console.log('[Parse] CSV rows:', rows.length);
+    console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
+    if(!rows.length) throw new Error('No data rows found in the CSV file.');
+    LHR_RAW=[];LHR_COLS=[];
+    /* CSV splits the workbook into two files — pull LH Recovery from its
+       companion CSV if one came with it (or was cached from last time). */
+    if(extra&&extra.cnBuf){
+      setParse('Reading LH Recovery …',44,extra.cnName||'');
+      await uiTick();
+      try{await applyCNBuffer(extra.cnBuf,extra.cnName||'CN Working');}
+      catch(e){console.warn('[Parse] CN Working file failed:',e);}
+    }
+    resolveMoveKey(rows[0]);
+  }else{
+    /* ---------- XLSX path ---------- */
+    setParse('Opening workbook …',15,'this is the heavy step on large files');
+    await uiTick();
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array',dense:true,cellDates:true});
+    console.log('[Parse] SheetNames:', wb.SheetNames);
+    let mainName=wb.SheetNames.find(n=>/dashboard|data|pendency/i.test(n))||wb.SheetNames[0];
+    console.log('[Parse] Using main sheet:', mainName);
+
+    /* GUARD 1 — the sheet is named in the workbook but was never
+       materialised, which is exactly what an oversized sheet looks like. */
+    if(!mainName) throw new Error('This workbook has no worksheets.');
+    if(!wb.Sheets[mainName]){
+      console.error('[Parse] Sheet dropped by parser. Listed:',wb.SheetNames,
+                    'Available:',Object.keys(wb.Sheets));
+      throw bigSheetError(mainName);
+    }
+
+    setParse('Reading rows …',35,'sheet: '+mainName);
+    await uiTick();
+    rows=XLSX.utils.sheet_to_json(wb.Sheets[mainName],{raw:true,defval:''});
+    console.log('[Parse] Raw rows:', rows.length);
+    console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
+
+    /* GUARD 2 — sheet opened but yielded nothing usable. Never boot empty. */
+    if(!rows.length) throw bigSheetError(mainName);
+
+    resolveMoveKey(rows[0]);
+
+    setParse('Reading LH Recovery …',84,'');
+    await uiTick();
+    const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
+    /* raw:false → cells arrive as the text Excel displays, so the date columns
+       read exactly as they appear in the sheet (DD-MM-YYYY per the column header). */
+    if(cnName&&wb.Sheets[cnName]){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
+    else{LHR_RAW=[];LHR_COLS=[];}
+  }
 
   RAW=await mapProgress(rows,normalize,45,80,'Preparing shipments …');
   console.log('[Parse] Rows with a Movement value:', RAW.filter(r=>r.Movement).length, 'of', RAW.length);
@@ -3753,13 +3996,10 @@ async function parseWorkbookBuffer(buf){
   // HOV cuts are derived from the Dashboard sheet in renderHOV() —
   // no separate HOV sheet is read any more.
 
-  setParse('Reading LH Recovery …',84,'');
-  await uiTick();
-  const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
-  // raw:false → cells arrive as the text Excel displays, so the date columns
-  // read exactly as they appear in the sheet (DD-MM-YYYY per the column header).
-  if(cnName){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
-  else{LHR_RAW=[];LHR_COLS=[];}
+  /* GUARD 3 — last line of defence: never show an empty dashboard silently. */
+  if(!RAW.length) throw new Error('The file was read but produced 0 usable rows. '+
+    'Check that the sheet has a header row matching the expected columns '+
+    '(Zone, Awb_number, Product_value, intransit_ageing …).');
 
   setParse('Building the dashboard …',90,'');
   await uiTick();
@@ -3810,7 +4050,7 @@ $('#sampleBtn').onclick=()=>{
    refresh restores the dashboard without re-downloading or waiting on
    the network. Cleared on logout.
    ================================================================ */
-const IDB_NAME='sfx_dashboard', IDB_STORE='cache', IDB_KEY='workbook';
+const IDB_NAME='sfx_dashboard', IDB_STORE='cache', IDB_KEY='workbook', IDB_KEY_CN='cnworking';
 function idbOpen(){
   return new Promise((res,rej)=>{
     const rq=indexedDB.open(IDB_NAME,1);
@@ -3888,7 +4128,9 @@ async function restoreFromCache(){
     const age=Math.round((Date.now()-(hit.saved||0))/60000);
     setParse('Restoring your last session …',5,
       'cached '+(age<1?'just now':age<60?age+' min ago':Math.round(age/60)+' h ago'));
-    await parseWorkbookBuffer(hit.buf);
+    const cnHit=await idbGet(IDB_KEY_CN);
+    await parseWorkbookBuffer(hit.buf, hit.name,
+      (cnHit&&cnHit.buf)?{cnBuf:cnHit.buf,cnName:cnHit.name}:null);
     return true;
   }catch(e){ console.warn('[cache] restore failed',e); await idbDel(IDB_KEY); return false; }
 }
@@ -4028,6 +4270,20 @@ async function supaFetch(path){
   return res;
 }
 
+/* CN Working is small (tens of rows), so it goes up as a single object
+   rather than the chunked path the main file needs. */
+async function pushCNToSupabase(arrayBuffer, fileName){
+  try{
+    await supaUpload('cn_working.csv', new Blob([arrayBuffer],{type:'text/csv'}));
+    await supaUpload('cn_meta.json', new Blob([JSON.stringify({
+      name:fileName, uploaded:new Date().toISOString(), size:arrayBuffer.byteLength
+    })],{type:'application/json'}));
+    console.log('[Supabase] CN Working uploaded:',fileName);
+  }catch(err){
+    console.error('pushCNToSupabase error:',err);
+  }
+}
+
 async function pushToSupabase(arrayBuffer, fileName){
   const bytes=new Uint8Array(arrayBuffer), total=bytes.length;
   const numChunks=Math.ceil(total/CHUNK_SIZE);
@@ -4085,7 +4341,19 @@ async function loadFromSupabase(){
     console.log('[Supabase] Assembled buffer:',totalLen,'bytes, chunks:',n);
     /* keep a local copy so the next refresh is instant */
     cacheWorkbook(full.buffer.slice(0), meta.name||'workbook.xlsx');
-    await parseWorkbookBuffer(full.buffer);
+    /* CSV drops split the workbook in two — pick up the CN companion if the
+       admin uploaded one. Absent or failed, LH Recovery just stays empty. */
+    let cnExtra=null;
+    const mainName=meta.name||'workbook.xlsx';
+    if(/\.(csv|txt)$/i.test(mainName)){
+      try{
+        setParse('Downloading LH Recovery …',46,'');
+        const cnBuf=await (await supaFetch('cn_working.csv')).arrayBuffer();
+        cnExtra={cnBuf,cnName:'cn_working.csv'};
+        await idbSet(IDB_KEY_CN,{buf:cnBuf.slice(0),name:'cn_working.csv',saved:Date.now()});
+      }catch(e){console.warn('[Supabase] no CN Working file:',e.message);}
+    }
+    await parseWorkbookBuffer(full.buffer, mainName, cnExtra);
     if(btn)btn.disabled=false;
   }catch(err){
     console.error('loadFromSupabase error:',err);
