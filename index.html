@@ -204,9 +204,6 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--pine);box-shadow:var(--shadow)}
 .pill b{color:var(--ink)}
 #reUpload{background:var(--pine);color:var(--lime);border:none;border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
-#supaRefreshBtn{background:#fff;color:var(--pine);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:12px;font-weight:700}
-#supaRefreshBtn:hover{background:var(--bg)}
-#supaRefreshBtn:disabled{opacity:.55;cursor:default}
 #uploadWaitMsg{display:none;margin-top:22px;padding:16px 18px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--lime-soft);font-size:13px;line-height:1.6}
 
 /* ---------- FILTER BAR ---------- */
@@ -970,7 +967,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
     </nav>
     <div class="side-foot">
-      <div>Data refresh: <b id="footRows" style="color:#1E293B">—</b></div>
+      <div>Signed in as <b id="footUser" style="color:#1E293B">—</b></div>
       <button class="btn-ghost btn" id="logoutBtn">Sign out</button>
     </div>
   </aside>
@@ -985,7 +982,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="top-right">
         <span class="pill">📅 <b id="todayLbl"></b></span>
         <span class="pill">Showing <b id="rowCountLbl">0</b> of <b id="rowTotalLbl">0</b> AWBs</span>
-        <button id="supaRefreshBtn" title="Pull the latest data from Supabase">🔄 Load from Supabase</button>
+        <span class="pill" id="refreshPill" title="When the admin last published this data">🕒 Data refresh: <b id="dataRefreshLbl">—</b></span>
         <button id="reUpload">⬆ New file</button>
       </div>
     </div>
@@ -3684,6 +3681,24 @@ const AUTH_USERS={
   'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true},
 };
 let CURRENT_USER=null;
+/* When the admin last published the data — read from Supabase meta.json so
+   every user sees the SAME value, not the moment their own browser loaded it. */
+let DATA_UPLOADED_AT=null;
+function renderRefreshTime(){
+  const el=document.getElementById('dataRefreshLbl');
+  if(!el)return;
+  if(!DATA_UPLOADED_AT){el.textContent='—';return;}
+  const d=new Date(DATA_UPLOADED_AT);
+  if(isNaN(d)){el.textContent='—';return;}
+  const time=d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const sameDay=d.toDateString()===new Date().toDateString();
+  /* show the date too once the file is older than today, so nobody mistakes
+     yesterday's 9am upload for this morning's */
+  el.textContent = sameDay ? time
+    : d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+time;
+  const pill=document.getElementById('refreshPill');
+  if(pill)pill.title='Data published by admin on '+d.toLocaleString('en-IN');
+}
 
 function applyLHRecoveryAccess(u){
   const btn=document.querySelector('.nav button[data-page="lhrecovery"]');
@@ -3710,9 +3725,8 @@ function applyAdminAccess(u){
   /* New file button: admin only */
   const reUp=$('#reUpload');
   if(reUp) reUp.style.display=isAdmin?'':'none';
-  /* Supabase refresh button: visible to all */
-  const supa=$('#supaRefreshBtn');
-  if(supa) supa.style.display='';
+  /* the Supabase refresh button was removed — users get fresh data on login,
+     or by refreshing the page */
 }
 
 function doLogin(){
@@ -3977,6 +3991,7 @@ async function parseFiles(list){
   setParse('Reading '+mainFile.name+' …',0,cnFile?'+ '+cnFile.name:'');
   try{
     const mainBuf=await readBuf(mainFile);
+    DATA_UPLOADED_AT=new Date().toISOString();
     cacheWorkbook(mainBuf.slice(0),mainFile.name);
     let cnBuf=null;
     if(cnFile){
@@ -4008,6 +4023,7 @@ function parseFile(file){
     try{
       const buf=e.target.result;
       /* keep a local copy so a browser refresh restores instantly */
+      DATA_UPLOADED_AT=new Date().toISOString();
       cacheWorkbook(buf.slice(0), file.name);
       await parseWorkbookBuffer(buf, file.name);
       /* Admin: also push to Supabase — use a copy to avoid buffer conflicts */
@@ -4273,7 +4289,10 @@ async function idbDel(key){
   }catch(e){}
 }
 function cacheWorkbook(buf,name){
-  idbSet(IDB_KEY,{buf,name:name||'workbook.xlsx',saved:Date.now()});
+  /* uploadedAt rides along with the cache so a page refresh still shows the
+     publish time instead of falling back to a dash */
+  idbSet(IDB_KEY,{buf,name:name||'workbook.xlsx',saved:Date.now(),
+                  uploadedAt:DATA_UPLOADED_AT||new Date().toISOString()});
 }
 /* remember which page the user was on so a refresh lands back there.
    Stored in BOTH sessionStorage and the URL hash (#hov, #lhrecovery …) —
@@ -4313,6 +4332,7 @@ async function restoreFromCache(){
     const age=Math.round((Date.now()-(hit.saved||0))/60000);
     setParse('Restoring your last session …',5,
       'cached '+(age<1?'just now':age<60?age+' min ago':Math.round(age/60)+' h ago'));
+    if(hit.uploadedAt)DATA_UPLOADED_AT=hit.uploadedAt;
     const cnHit=await idbGet(IDB_KEY_CN);
     await parseWorkbookBuffer(hit.buf, hit.name,
       (cnHit&&cnHit.buf)?{cnBuf:cnHit.buf,cnName:cnHit.name}:null);
@@ -4499,11 +4519,11 @@ async function pushToSupabase(arrayBuffer, fileName){
 }
 
 async function loadFromSupabase(){
-  const btn=$('#supaRefreshBtn');
-  if(btn)btn.disabled=true;
   try{
     setParse('Connecting to Supabase…',2,'');
     const meta=await (await supaFetch('meta.json')).json();
+    /* the authoritative publish time — identical for every user */
+    DATA_UPLOADED_AT=meta.uploaded||null;
     const n=meta.chunks||1;
     /* collect all decoded chunks first, then concatenate */
     const parts=[];
@@ -4539,7 +4559,6 @@ async function loadFromSupabase(){
       }catch(e){console.warn('[Supabase] no CN Working file:',e.message);}
     }
     await parseWorkbookBuffer(full.buffer, mainName, cnExtra);
-    if(btn)btn.disabled=false;
   }catch(err){
     console.error('loadFromSupabase error:',err);
     if(IN_APP_LOAD){
@@ -4559,10 +4578,9 @@ async function loadFromSupabase(){
     if(btn)btn.disabled=false;
   }
 }
-$('#supaRefreshBtn').onclick=()=>{
-  if($('#app').style.display==='block'){appVeilShow();setParse('Fetching latest data …',0,'');}
-  loadFromSupabase();
-};
+/* The 'Load from Supabase' button was removed from the UI. Its click handler
+   went with it — binding to a missing element threw at top level and stopped
+   the rest of this script block from running. */
 
 /* ---- boot: build UI once data is loaded ---- */
 const PAGE_META={
@@ -4579,10 +4597,12 @@ const PAGE_META={
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
 };
-let booted=false;
+var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
 function boot(){
   $('#rowTotalLbl').textContent=fmtN(RAW.length);
-  $('#footRows').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const fu=$('#footUser');
+  if(fu)fu.textContent=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name:'—';
+  renderRefreshTime();
   if(!booted){
     buildFilterBar();
     mountCharts();
