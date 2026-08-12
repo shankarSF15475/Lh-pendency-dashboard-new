@@ -729,6 +729,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .mv-pivot-wrap tr:hover td{background:#F1F3FB!important;}
 .mv-dest-chip{background:var(--lime-soft);color:var(--pine);}
 
+/* ---- BAG WISE VIEW · stacked layout ----
+   The Movement Type Matrix used to share a 1.55fr / 1fr grid row with the lane
+   pivot, which pushed its right-hand columns off screen. Both blocks now run
+   full width and stack: matrix first (directly under the filter bar), lane
+   pivot below it. */
+#page-manifest .mv-stack{margin-top:12px;}
+#page-manifest .mv-stack .lv-mini-wrap{max-height:520px;}
+#page-manifest .mv-stack #mvTypeTbl{width:100%;}
+
 /* ---- HOV PIVOT ---- */
 .hov-pivot thead tr:first-child th{background:var(--pine);color:#fff;}
 .hov-pivot thead th{background:#EEF0FF;color:var(--ink);border-color:#D9DCF0;}
@@ -1162,41 +1171,39 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
       </div>
 
-      <div class="lv-grid">
-        <!-- Top 20 Lanes by Pending Manifest Code -->
-        <div class="card lv-sec">
-          <div class="card-head">
-            <div><h3>Top 20 Lanes by Pending Manifest Code</h3>
-              <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · click a lane to expand MM_destination · sorted large → small</span></div>
-            <div class="card-tools">
-              <button class="tool" id="mvLaneCsv">CSV</button>
-            </div>
-          </div>
-          <div class="lv-mini-wrap" style="overflow-x:auto">
-            <table class="lv-mini mv-pivot" id="mvLaneTbl">
-              <thead><tr id="mvLaneHead"></tr></thead>
-              <tbody id="mvLaneBody"></tbody>
-              <tfoot id="mvLaneFoot"></tfoot>
-            </table>
+      <!-- ===== Movement type matrix — full width, directly below the filters ===== -->
+      <div class="card lv-sec mv-stack">
+        <div class="card-head">
+          <div><h3>Movement Type Matrix</h3>
+            <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
+          <div class="card-tools">
+            <button class="tool" id="mvTypeCsv">CSV</button>
           </div>
         </div>
+        <div class="lv-mini-wrap" style="overflow-x:auto">
+          <table class="lv-mini mv-pivot" id="mvTypeTbl" style="min-width:660px">
+            <thead><tr id="mvTypeHead"></tr></thead>
+            <tbody id="mvTypeBody"></tbody>
+            <tfoot id="mvTypeFoot"></tfoot>
+          </table>
+        </div>
+      </div>
 
-        <!-- Movement type matrix -->
-        <div class="card lv-sec">
-          <div class="card-head">
-            <div><h3>Movement Type Matrix</h3>
-              <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
-            <div class="card-tools">
-              <button class="tool" id="mvTypeCsv">CSV</button>
-            </div>
+      <!-- ===== Top 20 Lanes by Pending Manifest Code — full width, below the matrix ===== -->
+      <div class="card lv-sec mv-stack">
+        <div class="card-head">
+          <div><h3>Top 20 Lanes by Pending Manifest Code</h3>
+            <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · click a lane to expand MM_destination · sorted large → small</span></div>
+          <div class="card-tools">
+            <button class="tool" id="mvLaneCsv">CSV</button>
           </div>
-          <div class="lv-mini-wrap" style="overflow-x:auto">
-            <table class="lv-mini mv-pivot" id="mvTypeTbl" style="min-width:660px">
-              <thead><tr id="mvTypeHead"></tr></thead>
-              <tbody id="mvTypeBody"></tbody>
-              <tfoot id="mvTypeFoot"></tfoot>
-            </table>
-          </div>
+        </div>
+        <div class="lv-mini-wrap" style="overflow-x:auto">
+          <table class="lv-mini mv-pivot" id="mvLaneTbl">
+            <thead><tr id="mvLaneHead"></tr></thead>
+            <tbody id="mvLaneBody"></tbody>
+            <tfoot id="mvLaneFoot"></tfoot>
+          </table>
         </div>
       </div>
 
@@ -3549,14 +3556,14 @@ const DOC_SECTIONS=[
  {t:'panel', n:'Page filters', what:'Three page-level filters that apply on top of the global filter bar.',
   fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>',
   logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nmulti-select, OR within a filter, AND across the three'},
+ {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
+  fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
+  logic:'per movement_type:\n  movement              = the Movement column value (sheet column H)\n  Sum of Product_value  = SUM(Product_value)\n  Count of Awb_number   = COUNT(rows)\n  Count of Manifest_code= DISTINCT Manifest_code\nsorted by value descending',
+  note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
  {t:'table', n:'Top 20 Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
   logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nsorted by row total descending, top 20\nclicking a lane expands SUM(Product_value) by MM_destination',
   note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row covers only the 20 lanes shown, not all lanes.'},
- {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
-  fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
-  logic:'per movement_type:\n  movement              = the Movement column value (sheet column H)\n  Sum of Product_value  = SUM(Product_value)\n  Count of Awb_number   = COUNT(rows)\n  Count of Manifest_code= DISTINCT Manifest_code\nsorted by value descending',
-  note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
   fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
@@ -4575,7 +4582,6 @@ async function loadFromSupabase(){
         $('#uploadWaitMsg').style.display='block';
       }
     }
-    if(btn)btn.disabled=false;
   }
 }
 /* The 'Load from Supabase' button was removed from the UI. Its click handler
