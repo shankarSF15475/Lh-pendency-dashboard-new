@@ -508,7 +508,8 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 .hov-chart,.lk-chart{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(10,42,30,.08);margin:15px 0}
 .hov-chart canvas,.lk-chart canvas{max-height:300px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
-body.activity-page .filterbar,body.docs-page .filterbar{display:none}
+body.activity-page .filterbar,body.docs-page .filterbar,
+body.remarks-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start}
 .lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
 .lhr-chart-pane{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(10,42,30,.09);height:100%;box-sizing:border-box}
@@ -738,6 +739,79 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #page-manifest .mv-stack .lv-mini-wrap{max-height:520px;}
 #page-manifest .mv-stack #mvTypeTbl{width:100%;}
 
+/* ---- LANE REMARKS · Bag wise View follow-up log ---- */
+.mv-pivot th.rm-col{background:#EEF0FF;color:var(--pine);text-align:center;}
+.mv-pivot td.rm-cell{cursor:pointer;text-align:center;white-space:nowrap;}
+.mv-pivot td.rm-cell .rm-add{color:#9AA3B8;font-weight:700;font-size:11px;}
+.mv-pivot tbody tr.mv-lane-row td.rm-cell:hover{background:#EEF0FF!important;}
+.mv-pivot td.rm-cell:hover .rm-add{color:var(--pine);}
+.rm-badge{display:inline-block;min-width:18px;padding:1px 7px;border-radius:999px;background:var(--pine);
+  color:#fff;font-size:10.5px;font-weight:800;margin-right:6px;}
+.rm-date{font-size:11px;color:var(--mut);font-weight:600;}
+#rmModal{display:none;position:fixed;inset:0;z-index:950;background:rgba(20,24,40,.42);
+  align-items:center;justify-content:center;padding:18px;}
+#rmModal.show{display:flex;}
+.rm-card{width:min(560px,96vw);max-height:86vh;display:flex;flex-direction:column;background:#fff;
+  border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px rgba(20,24,40,.24);overflow:hidden;}
+.rm-head{display:flex;align-items:flex-start;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);}
+.rm-head h3{font-size:15px;color:var(--ink);margin:0;}
+.rm-head .sub{display:block;font-size:11px;color:var(--mut);margin-top:3px;}
+#rmCount{font-size:11px;font-weight:700;color:var(--mut);align-self:center;margin-left:auto;}
+#rmClose{border:none;background:#F1F3FB;color:var(--pine);width:30px;height:30px;border-radius:8px;
+  font-size:14px;flex:none;}
+#rmClose:hover{background:var(--pine);color:#fff;}
+.rm-form{display:grid;grid-template-columns:150px 1fr auto;gap:8px;padding:14px 18px;
+  border-bottom:1px solid var(--line);background:#FBFBFE;align-items:start;}
+.rm-form input[type=date],.rm-form textarea{border:1px solid var(--line);border-radius:9px;padding:8px 10px;
+  font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
+.rm-form textarea{resize:vertical;min-height:38px;}
+.rm-form input:focus,.rm-form textarea:focus{border-color:var(--pine);}
+#rmAddBtn{border:none;border-radius:9px;background:var(--pine);color:#fff;font-weight:700;font-size:12.5px;padding:9px 14px;}
+#rmAddBtn:hover{background:#4338CA;}
+#rmAddBtn:disabled{opacity:.5;cursor:default;}
+.rm-note{padding:11px 18px;font-size:12px;color:#B45309;background:#FEF9EF;border-bottom:1px solid var(--line);}
+.rm-list{overflow:auto;padding:10px 18px;flex:1;}
+.rm-item{border-left:3px solid var(--pine);background:#F8F9FC;border-radius:0 9px 9px 0;padding:9px 12px;margin-bottom:9px;}
+.rm-item-head{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
+.rm-item-date{font-size:11.5px;font-weight:800;color:var(--pine);}
+.rm-item-by{font-size:11px;color:var(--mut);}
+.rm-del{margin-left:auto;border:none;background:transparent;color:#C0C5D6;font-size:12px;line-height:1;}
+.rm-del:hover{color:var(--red);}
+.rm-item-text{font-size:12.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word;}
+.rm-empty{padding:22px;text-align:center;color:var(--mut);font-size:12.5px;}
+.rm-foot{display:flex;align-items:center;gap:10px;padding:11px 18px;border-top:1px solid var(--line);background:#FBFBFE;}
+#rmStatus{font-size:11.5px;color:var(--mut);}
+.rm-foot .tool{margin-left:auto;width:auto;padding:0 12px;font-size:10px;font-weight:800;}
+@media(max-width:640px){.rm-form{grid-template-columns:1fr;}}
+
+/* ---- Remarks page ---- */
+.rmpg-new{display:grid;grid-template-columns:210px 150px 1fr auto;gap:8px;align-items:start;
+  background:#FBFBFE;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
+.rmpg-new input,.rmpg-new textarea{border:1px solid var(--line);border-radius:9px;padding:8px 10px;
+  font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
+.rmpg-new textarea{resize:vertical;min-height:36px;}
+.rmpg-new input:focus,.rmpg-new textarea:focus{border-color:var(--pine);}
+#rmPgAdd{border:none;border-radius:9px;background:var(--pine);color:#fff;font-weight:700;font-size:12.5px;padding:9px 14px;}
+#rmPgAdd:hover{background:#4338CA;}
+#rmPgAdd:disabled{opacity:.5;cursor:default;}
+#rmPgTbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:normal;}
+#rmPgTbl td.rmpg-lane{font-weight:800;color:var(--ink);white-space:nowrap;}
+#rmPgTbl td.rmpg-date{white-space:nowrap;font-weight:700;color:var(--pine);}
+#rmPgTbl td.rmpg-text{min-width:280px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+#rmPgTbl td.rmpg-meta{white-space:nowrap;color:var(--mut);font-size:11px;}
+#rmPgTbl td.rmpg-act{white-space:nowrap;}
+#rmPgTbl input,#rmPgTbl textarea{border:1px solid var(--line);border-radius:8px;padding:6px 8px;
+  font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
+#rmPgTbl textarea{resize:vertical;min-height:52px;}
+#rmPgTbl input:focus,#rmPgTbl textarea:focus{border-color:var(--pine);}
+#rmPgTbl tr.rmpg-editing td{background:#F4F6FF;}
+.rmpg-btn{border:1px solid var(--line);background:#fff;color:var(--pine);border-radius:8px;
+  padding:5px 11px;font-size:11.5px;font-weight:700;margin-right:6px;}
+.rmpg-btn:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+.rmpg-btn.danger{color:var(--red);}
+.rmpg-btn.danger:hover{background:var(--red);color:#fff;border-color:var(--red);}
+@media(max-width:900px){.rmpg-new{grid-template-columns:1fr;}}
+
 /* ---- HOV PIVOT ---- */
 .hov-pivot thead tr:first-child th{background:var(--pine);color:#fff;}
 .hov-pivot thead th{background:#EEF0FF;color:var(--ink);border-color:#D9DCF0;}
@@ -955,6 +1029,31 @@ thead th{background:#F1F3FB;color:var(--pine);}
     </div>
   </div>
 </div>
+
+<!-- lane remarks: follow-up log opened from the Top 20 Lanes pivot -->
+<div id="rmModal">
+  <div class="rm-card">
+    <div class="rm-head">
+      <div>
+        <h3 id="rmLane">—</h3>
+        <span class="sub">Follow-up remarks for this lane · newest first</span>
+      </div>
+      <span id="rmCount"></span>
+      <button id="rmClose" title="Close">✕</button>
+    </div>
+    <div class="rm-form" id="rmForm">
+      <input type="date" id="rmDate" title="Date this remark relates to">
+      <textarea id="rmText" rows="2" placeholder="What was done, what is pending, who is following up…"></textarea>
+      <button id="rmAddBtn">Add remark</button>
+    </div>
+    <div class="rm-note" id="rmReadonly" style="display:none">View only — your account can read the follow-up trail but not add remarks.</div>
+    <div class="rm-list" id="rmList"></div>
+    <div class="rm-foot">
+      <span id="rmStatus"></span>
+      <button class="tool" id="rmCsv" title="Download every remark across all lanes">CSV · ALL LANES</button>
+    </div>
+  </div>
+</div>
   <div class="overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
     <div class="brand">
@@ -974,6 +1073,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
+      <button data-page="remarks"><span class="ic">📝</span>Remarks</button>
     </nav>
     <div class="side-foot">
       <div>Signed in as <b id="footUser" style="color:#1E293B">—</b></div>
@@ -1416,6 +1516,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <option value="">All activity</option>
             <option value="login">Sign-ins</option>
             <option value="download">Downloads</option>
+            <option value="remark">Lane remarks</option>
             <option value="logout">Sign-outs</option>
           </select>
           <span class="pill" id="actCount">0 events</span>
@@ -1449,6 +1550,53 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
       </div>
       <div id="docBody"></div>
+    </section>
+
+    <!-- ============ PAGE: REMARKS ============ -->
+    <section class="page" id="page-remarks">
+      <div class="card" style="margin-top:12px;padding:18px">
+        <div class="card-head">
+          <div><h3>Lane Remarks</h3>
+            <span class="sub">every follow-up remark added on the Top 20 Lanes pivot in Bag wise View · newest date first · edit or delete here</span></div>
+          <div class="card-tools">
+            <button class="tool" id="rmPgRefresh">Refresh</button>
+            <button class="tool" id="rmPgCsv">CSV</button>
+          </div>
+        </div>
+
+        <div class="rmpg-new" id="rmPgNew">
+          <input id="rmPgLane" list="rmPgLaneList" placeholder="Lane code…" autocomplete="off">
+          <datalist id="rmPgLaneList"></datalist>
+          <input type="date" id="rmPgDate">
+          <textarea id="rmPgText" rows="1" placeholder="New remark — what was done, what is pending…"></textarea>
+          <button id="rmPgAdd">Add remark</button>
+        </div>
+        <div class="rm-note" id="rmPgReadonly" style="display:none;margin-top:12px;border-radius:9px">
+          View only — your account can read the follow-up trail but not add or edit remarks.</div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px">
+          <input id="rmPgFilter" placeholder="filter by lane, remark text or person…"
+            style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;min-width:250px">
+          <span class="pill" id="rmPgCount">0 remarks</span>
+          <span id="rmPgStatus" style="font-size:11.5px;color:var(--mut)"></span>
+        </div>
+
+        <div class="lv-mini-wrap" style="max-height:560px">
+          <table class="lv-mini" id="rmPgTbl">
+            <thead><tr>
+              <th style="text-align:left">Lane Code</th>
+              <th style="text-align:left">Date</th>
+              <th style="text-align:left">Remark</th>
+              <th style="text-align:left">Added by</th>
+              <th style="text-align:left">Recorded</th>
+              <th style="text-align:left">Actions</th>
+            </tr></thead>
+            <tbody id="rmPgBody"></tbody>
+          </table>
+        </div>
+        <div class="hint" style="margin-top:10px">Remarks live in Supabase alongside the data file, so this trail is the
+          same for everyone. Editing a remark keeps its original author and recorded time.</div>
+      </div>
     </section>
   </main>
 </div>
@@ -2701,7 +2849,7 @@ function mvRenderLaneTbl(){
     });
   }
 
-  const NCOL=1+ABKT.length+1;
+  const NCOL=1+ABKT.length+2;   // lane + buckets + total + remarks
   const mark=k=>mvLaneSort.k===k?(mvLaneSort.dir<0?' ▼':' ▲'):'';
 
   /* fixed column widths keep parent rows and destination rows perfectly aligned */
@@ -2712,13 +2860,14 @@ function mvRenderLaneTbl(){
     tbl.insertAdjacentHTML('afterbegin',
       '<colgroup><col style="width:230px">'+
       ABKT.map(()=>'<col style="width:118px">').join('')+
-      '<col style="width:130px"></colgroup>');
+      '<col style="width:130px"><col style="width:170px"></colgroup>');
   }
 
   $('#mvLaneHead').innerHTML=
     `<th class="sortable" data-k="lane" style="text-align:left">Lane code${mark('lane')}</th>`+
     ABKT.map((b,i)=>`<th class="sortable num ${ABKT_HCLS[i]}" data-k="${b}">${b}${mark(b)}</th>`).join('')+
-    `<th class="sortable num tot-col" data-k="total">Total${mark('total')}</th>`;
+    `<th class="sortable num tot-col" data-k="total">Total${mark('total')}</th>`+
+    `<th class="rm-col">Remarks</th>`;
   $$('#mvLaneHead th[data-k]').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;
     mvLaneSort.dir = mvLaneSort.k===k ? -mvLaneSort.dir : -1;
@@ -2734,7 +2883,8 @@ function mvRenderLaneTbl(){
       `<tr class="mv-lane-row${open?' open':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click the lane name to expand MM_destination">`+
       `<td><span class="exp-ic">${open?'▼':'▶'}</span>${o.lane}</td>`+
       ABKT.map(b=>`<td class="num${o.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(o.bkts[b])}</td>`).join('')+
-      `<td class="num tot-col drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Show every manifest on this lane below">${fmtINR(o.total)}</td></tr>`
+      `<td class="num tot-col drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Show every manifest on this lane below">${fmtINR(o.total)}</td>`+
+      rmCellHTML(o.lane)+`</tr>`
     );
     /* --- destination child rows (real cells, aligned to the same columns) --- */
     if(open){
@@ -2746,7 +2896,7 @@ function mvRenderLaneTbl(){
             `<tr class="mv-dest">`+
             `<td class="dest-name">${d.dest}</td>`+
             ABKT.map(b=>`<td class="num${d.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(d.bkts[b])}</td>`).join('')+
-            `<td class="num drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" title="Show these manifests below">${fmtINR(d.total)}</td></tr>`
+            `<td class="num drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" title="Show these manifests below">${fmtINR(d.total)}</td><td></td></tr>`
           );
         });
       }
@@ -2763,12 +2913,16 @@ function mvRenderLaneTbl(){
     e.stopPropagation();
     mvFilterDetailBy({lane:td.dataset.lane,dest:td.dataset.dest||'',bucket:td.dataset.bkt||''});
   });
+  $$('#mvLaneBody td.rm-cell').forEach(td=>td.onclick=e=>{
+    e.stopPropagation();
+    rmOpen(td.dataset.rmlane);
+  });
 
   /* --- grand total row for the shown top 20 --- */
   const gt={},gtot=arr.reduce((a,o)=>a+o.total,0);
   ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
   $('#mvLaneFoot').innerHTML=arr.length
-    ? `<tr><td>Total</td>${ABKT.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtINR(gtot)}</td></tr>`
+    ? `<tr><td>Total</td>${ABKT.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtINR(gtot)}</td><td></td></tr>`
     : '';
 
   mvLaneExport=arr.map(o=>{
@@ -3564,6 +3718,11 @@ const DOC_SECTIONS=[
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
   logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nsorted by row total descending, top 20\nclicking a lane expands SUM(Product_value) by MM_destination',
   note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row covers only the 20 lanes shown, not all lanes.'},
+ {t:'panel', n:'Lane Remarks (follow-up log)', what:'A dated follow-up trail attached to each lane in the Top 20 pivot, so a lane can be tracked across days.',
+  src:'Supabase Storage · remarks.json',
+  fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
+  logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
+  note:'Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
   fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
@@ -3667,27 +3826,348 @@ function docFilter(){
 </script>
 <script>
 /* =============================================================
+   LANE REMARKS — follow-up log on the Bag wise View lane pivot
+   -------------------------------------------------------------
+   One JSON object lives in Supabase Storage (remarks.json) so every
+   user reads the same trail:
+       { "BLR-JAI-1": [ {id,date,text,by,byName,at}, … ], … }
+   Many remarks per lane are allowed; the list is kept by date, newest
+   first. A copy is cached in IndexedDB so a refresh shows the last
+   known state instantly even if the network is slow.
+
+   Writes are read-modify-write: the file is re-fetched immediately
+   before saving, so two people adding remarks minutes apart do not
+   overwrite each other. Simultaneous saves are still last-write-wins,
+   which is acceptable at this volume.
+============================================================= */
+let REMARKS={};              // lane -> array of remark objects
+let RM_LANE=null;            // lane currently open in the modal
+const RM_FILE='remarks.json';
+const RM_IDB_KEY='remarks';
+const RM_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function rmEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,
+  m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function rmToday(){const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function rmFmtDate(s){
+  const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?(m[3]+' '+RM_MON[+m[2]-1]+" '"+m[1].slice(-2)):String(s||'');
+}
+/* who may write: the admin, plus any account flagged remarks:true */
+function canRemark(){return !!(CURRENT_USER&&(CURRENT_USER.isAdmin||CURRENT_USER.remarks));}
+/* newest date first; same-date remarks fall back to when they were recorded */
+function rmSort(list){
+  return (list||[]).slice().sort((a,b)=>
+    String(b.date||'').localeCompare(String(a.date||''))||
+    String(b.at||'').localeCompare(String(a.at||'')));
+}
+
+/* the cell shown in the pivot's Remarks column */
+function rmCellHTML(lane){
+  const L=String(lane).replace(/"/g,'&quot;');
+  const list=REMARKS[lane]||[];
+  if(!list.length)
+    return `<td class="rm-cell" data-rmlane="${L}" title="Add a follow-up remark for this lane"><span class="rm-add">+ Remark</span></td>`;
+  const latest=rmSort(list)[0];
+  const tip=rmEsc(String(latest.text||'').slice(0,160));
+  return `<td class="rm-cell" data-rmlane="${L}" title="${tip}">`+
+         `<span class="rm-badge">${list.length}</span><span class="rm-date">${rmFmtDate(latest.date)}</span></td>`;
+}
+
+async function rmFetch(){
+  try{
+    const res=await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+RM_FILE+'?t='+Date.now());
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const j=await res.json();
+    REMARKS=(j&&typeof j==='object'&&!Array.isArray(j))?j:{};
+    idbSet(RM_IDB_KEY,{data:REMARKS,saved:Date.now()});
+    return true;
+  }catch(e){
+    /* a 404 simply means nobody has written a remark yet */
+    console.warn('[remarks] could not read remarks.json:',e.message);
+    return false;
+  }
+}
+async function rmSave(){
+  await supaUpload(RM_FILE,new Blob([JSON.stringify(REMARKS)],{type:'application/json'}));
+  idbSet(RM_IDB_KEY,{data:REMARKS,saved:Date.now()});
+}
+/* called from boot(): show the cached trail immediately, then refresh */
+async function remarksInit(){
+  try{
+    const hit=await idbGet(RM_IDB_KEY);
+    if(hit&&hit.data&&!Object.keys(REMARKS).length)REMARKS=hit.data;
+  }catch(e){}
+  await rmFetch();
+  if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
+}
+
+/* ---------- modal ---------- */
+async function rmOpen(lane){
+  if(!lane)return;
+  RM_LANE=lane;
+  const allowed=canRemark();
+  $('#rmLane').textContent=lane;
+  $('#rmDate').value=rmToday();
+  $('#rmText').value='';
+  $('#rmForm').style.display=allowed?'':'none';
+  $('#rmReadonly').style.display=allowed?'none':'';
+  $('#rmStatus').textContent='Syncing…';
+  $('#rmModal').classList.add('show');
+  rmRenderList();
+  await rmFetch();                       // always show the latest trail
+  if(RM_LANE===lane){$('#rmStatus').textContent='';rmRenderList();}
+}
+function rmClose(){
+  $('#rmModal').classList.remove('show');
+  RM_LANE=null;
+  if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
+  if($('#rmPgBody'))rmPageRender();
+}
+function rmRenderList(){
+  const list=rmSort(REMARKS[RM_LANE]||[]);
+  const own=r=>CURRENT_USER&&(CURRENT_USER.isAdmin||r.by===CURRENT_USER.id);
+  $('#rmList').innerHTML=list.map(r=>
+    `<div class="rm-item">
+       <div class="rm-item-head">
+         <span class="rm-item-date">${rmFmtDate(r.date)}</span>
+         <span class="rm-item-by">${rmEsc(r.byName||r.by||'—')}</span>
+         ${own(r)?`<button class="rm-del" data-id="${rmEsc(r.id)}" title="Delete this remark">✕</button>`:''}
+       </div>
+       <div class="rm-item-text">${rmEsc(r.text)}</div>
+     </div>`).join('')
+    || `<div class="rm-empty">No remarks on this lane yet.</div>`;
+  $('#rmCount').textContent=list.length?(list.length+' remark'+(list.length>1?'s':'')):'';
+  $$('#rmList .rm-del').forEach(b=>b.onclick=()=>rmDelete(b.dataset.id));
+}
+async function rmAdd(){
+  if(!canRemark()||!RM_LANE)return;
+  const lane=RM_LANE;
+  const date=$('#rmDate').value||rmToday();
+  const text=($('#rmText').value||'').trim();
+  if(!text){$('#rmStatus').textContent='Type a remark before saving.';return;}
+  const btn=$('#rmAddBtn');btn.disabled=true;$('#rmStatus').textContent='Saving…';
+  try{
+    await rmFetch();                     // merge with whatever is already stored
+    if(!REMARKS[lane])REMARKS[lane]=[];
+    REMARKS[lane].push({
+      id:'r'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      date,text,
+      by:CURRENT_USER.id,byName:CURRENT_USER.name||CURRENT_USER.id,
+      at:new Date().toISOString()});
+    await rmSave();
+    $('#rmText').value='';
+    $('#rmStatus').textContent='Saved.';
+    setTimeout(()=>{const st=$('#rmStatus');if(st&&st.textContent==='Saved.')st.textContent='';},2500);
+    rmRenderList();
+    try{logEvent('remark',lane+' · '+date);}catch(e){}
+  }catch(e){
+    $('#rmStatus').textContent='Could not save: '+e.message;
+  }
+  btn.disabled=false;
+}
+async function rmDelete(id){
+  if(!RM_LANE||!canRemark())return;
+  if(!confirm('Delete this remark? This cannot be undone.'))return;
+  const lane=RM_LANE;
+  $('#rmStatus').textContent='Deleting…';
+  try{
+    await rmFetch();
+    REMARKS[lane]=(REMARKS[lane]||[]).filter(r=>r.id!==id);
+    if(!REMARKS[lane].length)delete REMARKS[lane];
+    await rmSave();
+    $('#rmStatus').textContent='';
+    rmRenderList();
+  }catch(e){$('#rmStatus').textContent='Could not delete: '+e.message;}
+}
+function rmExportAll(){
+  const rows=rmPageRows(true).map(r=>({
+    Lane_Code:r.lane,Date:r.date||'',Remark:String(r.text||'').replace(/\r?\n/g,' '),
+    Added_by:r.byName||r.by||'',Recorded_at:r.at||''}));
+  if(!rows.length){alert('No remarks have been recorded yet.');return;}
+  lvExport(rows,'csv','lane_remarks','remarks');
+}
+
+/* =============================================================
+   REMARKS PAGE — the whole trail in one editable table
+============================================================= */
+let RM_EDIT=null;               // id of the remark currently being edited
+
+/* flatten lane -> remarks into one list, newest date first */
+function rmPageRows(all){
+  const out=[];
+  Object.keys(REMARKS).forEach(lane=>(REMARKS[lane]||[]).forEach(r=>out.push({...r,lane})));
+  out.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))
+                ||String(b.at||'').localeCompare(String(a.at||'')));
+  if(all)return out;
+  const f=$('#rmPgFilter');
+  const q=((f&&f.value)||'').trim().toLowerCase();
+  if(!q)return out;
+  return out.filter(r=>(r.lane+' '+(r.text||'')+' '+(r.byName||r.by||'')).toLowerCase().includes(q));
+}
+function rmPgStatus(msg){const el=$('#rmPgStatus');if(el)el.textContent=msg||'';}
+function rmPgFmtAt(at){
+  const d=at?new Date(at):null;
+  return (d&&!isNaN(d))?d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'2-digit',
+    hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+}
+
+function rmPageRender(){
+  const body=$('#rmPgBody'); if(!body)return;
+  const allowed=canRemark();
+  const nw=$('#rmPgNew'), ro=$('#rmPgReadonly');
+  if(nw)nw.style.display=allowed?'':'none';
+  if(ro)ro.style.display=allowed?'none':'';
+  const rows=rmPageRows(false);
+  const own=r=>CURRENT_USER&&(CURRENT_USER.isAdmin||r.by===CURRENT_USER.id);
+
+  body.innerHTML=rows.map(r=>{
+    const key=rmEsc(r.id), lane=rmEsc(r.lane);
+    if(RM_EDIT===r.id&&own(r)){
+      return `<tr class="rmpg-editing">
+        <td class="rmpg-lane">${rmEsc(r.lane)}</td>
+        <td class="rmpg-date"><input type="date" id="rmEditDate" value="${rmEsc(r.date||'')}"></td>
+        <td class="rmpg-text"><textarea id="rmEditText">${rmEsc(r.text||'')}</textarea></td>
+        <td class="rmpg-meta">${rmEsc(r.byName||r.by||'—')}</td>
+        <td class="rmpg-meta">${rmPgFmtAt(r.at)}</td>
+        <td class="rmpg-act">
+          <button class="rmpg-btn" data-save="${key}" data-lane="${lane}">Save</button>
+          <button class="rmpg-btn" data-cancel="1">Cancel</button>
+        </td></tr>`;
+    }
+    return `<tr>
+      <td class="rmpg-lane">${rmEsc(r.lane)}</td>
+      <td class="rmpg-date">${rmFmtDate(r.date)}</td>
+      <td class="rmpg-text">${rmEsc(r.text)}</td>
+      <td class="rmpg-meta">${rmEsc(r.byName||r.by||'—')}</td>
+      <td class="rmpg-meta">${rmPgFmtAt(r.at)}</td>
+      <td class="rmpg-act">${own(r)
+        ? `<button class="rmpg-btn" data-edit="${key}">Edit</button>`+
+          `<button class="rmpg-btn danger" data-del="${key}" data-lane="${lane}">Delete</button>`
+        : '<span style="font-size:11px;color:var(--mut)">—</span>'}</td></tr>`;
+  }).join('')
+    || `<tr><td colspan="6" style="text-align:center;padding:26px;color:var(--mut)">
+         ${Object.keys(REMARKS).length?'No remarks match that filter.'
+           :'No remarks yet. Add one here, or from the Remarks column on the Top 20 Lanes pivot in Bag wise View.'}</td></tr>`;
+
+  $('#rmPgCount').textContent=fmtN(rows.length)+' remark'+(rows.length===1?'':'s');
+  body.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{RM_EDIT=b.dataset.edit;rmPageRender();
+    const t=$('#rmEditText'); if(t)t.focus();});
+  body.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{RM_EDIT=null;rmPageRender();});
+  body.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>rmPageSave(b.dataset.lane,b.dataset.save));
+  body.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>rmPageDelete(b.dataset.lane,b.dataset.del));
+}
+
+/* the lane box offers every lane code in the current file */
+function rmPageLaneList(){
+  const dl=$('#rmPgLaneList'); if(!dl)return;
+  const lanes=[...new Set(RAW.map(r=>r['Lane Code']).filter(Boolean))]
+    .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true})).slice(0,1000);
+  dl.innerHTML=lanes.map(l=>`<option value="${rmEsc(l)}"></option>`).join('');
+}
+
+/* called by navTo() whenever the page is opened */
+async function rmPageOpen(){
+  RM_EDIT=null;
+  rmPageLaneList();
+  const d=$('#rmPgDate'); if(d&&!d.value)d.value=rmToday();
+  rmPageRender();
+  rmPgStatus('Syncing…');
+  await rmFetch();
+  rmPgStatus('');
+  rmPageRender();
+}
+
+async function rmPageAdd(){
+  if(!canRemark())return;
+  const lane=($('#rmPgLane').value||'').trim();
+  const date=$('#rmPgDate').value||rmToday();
+  const text=($('#rmPgText').value||'').trim();
+  if(!lane){rmPgStatus('Pick or type a lane code first.');return;}
+  if(!text){rmPgStatus('Type a remark first.');return;}
+  const btn=$('#rmPgAdd'); btn.disabled=true; rmPgStatus('Saving…');
+  try{
+    await rmFetch();
+    if(!REMARKS[lane])REMARKS[lane]=[];
+    REMARKS[lane].push({
+      id:'r'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      date,text,by:CURRENT_USER.id,byName:CURRENT_USER.name||CURRENT_USER.id,
+      at:new Date().toISOString()});
+    await rmSave();
+    $('#rmPgText').value='';
+    rmPgStatus('Saved.');
+    setTimeout(()=>{if($('#rmPgStatus')&&$('#rmPgStatus').textContent==='Saved.')rmPgStatus('');},2500);
+    rmPageRender();
+    if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
+    try{logEvent('remark',lane+' · '+date);}catch(e){}
+  }catch(e){rmPgStatus('Could not save: '+e.message);}
+  btn.disabled=false;
+}
+
+async function rmPageSave(lane,id){
+  if(!canRemark())return;
+  const date=($('#rmEditDate')&&$('#rmEditDate').value)||'';
+  const text=(($('#rmEditText')&&$('#rmEditText').value)||'').trim();
+  if(!text){rmPgStatus('A remark cannot be empty — delete it instead.');return;}
+  rmPgStatus('Saving…');
+  try{
+    await rmFetch();
+    const row=(REMARKS[lane]||[]).find(r=>r.id===id);
+    if(!row){rmPgStatus('That remark no longer exists — it may have been deleted elsewhere.');RM_EDIT=null;rmPageRender();return;}
+    row.date=date||row.date;
+    row.text=text;
+    row.editedBy=CURRENT_USER.name||CURRENT_USER.id;
+    row.editedAt=new Date().toISOString();
+    await rmSave();
+    RM_EDIT=null;
+    rmPgStatus('Saved.');
+    setTimeout(()=>{if($('#rmPgStatus')&&$('#rmPgStatus').textContent==='Saved.')rmPgStatus('');},2500);
+    rmPageRender();
+    if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
+    try{logEvent('remark','edited · '+lane+' · '+(date||row.date));}catch(e){}
+  }catch(e){rmPgStatus('Could not save: '+e.message);}
+}
+
+async function rmPageDelete(lane,id){
+  if(!canRemark())return;
+  if(!confirm('Delete this remark on '+lane+'? This cannot be undone.'))return;
+  rmPgStatus('Deleting…');
+  try{
+    await rmFetch();
+    REMARKS[lane]=(REMARKS[lane]||[]).filter(r=>r.id!==id);
+    if(!REMARKS[lane].length)delete REMARKS[lane];
+    await rmSave();
+    RM_EDIT=null;
+    rmPgStatus('');
+    rmPageRender();
+    if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
+  }catch(e){rmPgStatus('Could not delete: '+e.message);}
+}
+</script>
+<script>
+/* =============================================================
    LOGIN · UPLOAD · NAV · BOOT
 ============================================================= */
 
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
-  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true},
-  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
-  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
-  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true},
-  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true},
-  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true},
-  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true},
-  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true},
-  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true},
-  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true},
-  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true},
-  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true},
-  'udayraj.chaure@shadowfax.in':   {pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true},
-};
+  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true},
+  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true},
+  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true},
+  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'udayraj.chaure@shadowfax.in':   {pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true}, remarks:true}
+;
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
    every user sees the SAME value, not the moment their own browser loaded it. */
@@ -4603,6 +5083,7 @@ const PAGE_META={
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
+  remarks:{t:'Remarks',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
 function boot(){
@@ -4610,6 +5091,7 @@ function boot(){
   const fu=$('#footUser');
   if(fu)fu.textContent=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name:'—';
   renderRefreshTime();
+  remarksInit();
   if(!booted){
     buildFilterBar();
     mountCharts();
@@ -4632,6 +5114,7 @@ function navTo(page){
   /* documentation is static — build it once, on first visit */
   if(page==='docs'&&!$('#docBody').innerHTML)renderDocs();
   if(page==='activity')loadActivity();
+  if(page==='remarks')rmPageOpen();
   closeSidebar();
 }
 function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
@@ -4676,6 +5159,17 @@ function wireControls(){
   $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
   $('#lhrPendCsv').onclick=()=>lvExport(lhrPendingExport(),'csv','lh_pending_for_recovery','pending');
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
+
+  /* lane remarks */
+  $('#rmPgAdd').onclick=rmPageAdd;
+  $('#rmPgFilter').oninput=rmPageRender;
+  $('#rmPgRefresh').onclick=rmPageOpen;
+  $('#rmPgCsv').onclick=rmExportAll;
+  $('#rmClose').onclick=rmClose;
+  $('#rmModal').onclick=e=>{if(e.target===$('#rmModal'))rmClose();};
+  $('#rmAddBtn').onclick=rmAdd;
+  $('#rmCsv').onclick=rmExportAll;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#rmModal').classList.contains('show'))rmClose();});
 
   /* lock */
   $('#lockSealCsv').onclick=()=>lvExport(lockSealExport,'csv','lock_seal_status','seal');
