@@ -4154,20 +4154,21 @@ async function rmPageDelete(lane,id){
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:false, remarks:true},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true},
-  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true, remarks:true},
-  'udayraj.chaure@shadowfax.in':   {pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true}, remarks:true}
-;
+  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true}
+};
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
    every user sees the SAME value, not the moment their own browser loaded it. */
