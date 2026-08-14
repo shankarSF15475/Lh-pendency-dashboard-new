@@ -4418,7 +4418,7 @@ function gsOnLHRPage(){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
@@ -4435,7 +4435,6 @@ const AUTH_USERS={
   'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
   'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
-
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -4467,9 +4466,16 @@ function applyAdminAccess(u){
   /* activity log is an admin-only view */
   const act=document.querySelector('.nav button[data-page="activity"]');
   if(act)act.style.display=isAdmin?'':'none';
-  /* Root Cause & What-If is an admin-only view */
+  /* Root Cause & What-If is admin-only too */
   const rc=document.querySelector('.nav button[data-page="rootcause"]');
   if(rc)rc.style.display=isAdmin?'':'none';
+  /* if a non-admin lands there via a stale #rootcause hash, send them home */
+  if(!isAdmin){
+    const pg=document.getElementById('page-rootcause');
+    if(pg&&pg.classList.contains('active')&&typeof navTo==='function'){
+      try{navTo('overview');}catch(e){}
+    }
+  }
   /* upload controls: only admin can upload files */
   const uc=$('#uploadControls');
   if(uc) uc.style.display=isAdmin?'':'none';
@@ -5382,11 +5388,6 @@ function boot(){
 }
 
 function navTo(page){
-  /* Root Cause & What-If and Activity Log are admin-only; block direct
-     navigation (e.g. via URL hash) even if the nav button is hidden */
-  if((page==='rootcause'||page==='activity')&&!(CURRENT_USER&&CURRENT_USER.isAdmin)){
-    page='overview';
-  }
   rememberPage(page);
   $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
   $$('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
