@@ -1093,7 +1093,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
-      <button data-page="remarks"><span class="ic">📝</span>Remarks</button>
+      <button data-page="remarks"><span class="ic">📝</span>Feedback Manifest Lanes</button>
     </nav>
     <div class="side-foot">
       <div>Signed in as <b id="footUser" style="color:#1E293B">—</b></div>
@@ -1295,7 +1295,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lv-sec mv-stack">
         <div class="card-head">
           <div><h3>Movement Type Matrix</h3>
-            <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
+            <span class="sub">Movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
           <div class="card-tools">
             <button class="tool" id="mvTypeCsv">CSV</button>
           </div>
@@ -3037,9 +3037,9 @@ function mvRenderTypeTbl(){
       `<td class="num">${fmtN(allManifests.size)}</td></tr>`
     : '';
 
-  mvTypeExport=arr.map(o=>({movement_type:o.type,movement:o.move,
-    Sum_of_Product_value:Math.round(o.value),
-    Count_of_Awb_number:o.awbs,Count_of_Manifest_code:o.manifests}));
+  mvTypeExport=arr.map(o=>({Movement_type:o.type,Movement:o.move,
+    Product_value:Math.round(o.value),
+    Awb_number:o.awbs,Manifest_code:o.manifests}));
 }
 
 function renderManifestView(){
@@ -4339,22 +4339,22 @@ function gsOnLHRPage(){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true},
-  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
-  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
-  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true},
-  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true},
-  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true},
-  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true},
-  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true},
-  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true},
-  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true},
-  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true},
-  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true},
-   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true ,rootcause:false},
+  'sachin.r1@shadowfax.in':{pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, rootcause:false},
+  'anna.roy@shadowfax.in':{pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, rootcause:false},
+  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, rootcause:false},
+  'saikat.ghosh@shadowfax.in':{pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'anupam.sharma@shadowfax.in':{pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'isham.dawood@shadowfax.in':{pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'idharmraj.kumar@shadowfax.in':{pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'raj.singh1@shadowfax.in':{pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'gaurav.khati@shadowfax.in':{pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'paswan.hiteshkumar@shadowfax.in':{pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'karan.solanki@shadowfax.in':{pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+  'shyamkumar.raj@shadowfax.in':{pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
+   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true, rootcause:false},
+  'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true, rootcause:false},
+  'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true, rootcause:false},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -5274,7 +5274,7 @@ const PAGE_META={
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
-  remarks:{t:'Remarks',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
+  remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
 function boot(){
