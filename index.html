@@ -716,6 +716,11 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .mv-pivot td.num.drill:hover,.lv-mini td.num.drill:hover{
   background:#FFF3B3!important;color:#7A4B00!important;border-radius:4px;}
 
+/* Movement Type Matrix — darker, bolder cell text (was reading too light) */
+#mvTypeTbl tbody td{color:#111111;font-weight:600;}
+#mvTypeTbl tfoot td{color:#111111!important;}
+#mvTypeTbl thead th{color:#000000!important;}
+
 .lv-mini thead th.age-a,.lv-mini thead th.age-b,.lv-mini thead th.age-c,
 .lv-mini thead th.age-d,.lv-mini thead th.age-e,.lv-mini thead th.age-f{background:#F1F3FB;color:var(--pine);}
 .mv-pivot-wrap td.aged-red{background:transparent;color:var(--text);font-weight:600;}
@@ -3005,11 +3010,11 @@ function mvRenderTypeTbl(){
   }
   const mark=k=>mvTypeSort.k===k?(mvTypeSort.dir<0?' ▼':' ▲'):'';
   const cols=[
-    {k:'type',     label:'movement_type'},
-    {k:'move',     label:'movement'},
-    {k:'value',    label:'Sum of Product_value', num:true},
-    {k:'awbs',     label:'Count of Awb_number',  num:true},
-    {k:'manifests',label:'Count of Manifest_code', num:true}
+    {k:'type',     label:'Movement_Type'},
+    {k:'move',     label:'Movement'},
+    {k:'value',    label:'Product_value', num:true},
+    {k:'awbs',     label:'Awb_Number',  num:true},
+    {k:'manifests',label:'Manifest_Code', num:true}
   ];
   $('#mvTypeHead').innerHTML=cols.map(c=>
     `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${(c.k==='type'||c.k==='move')?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
@@ -3019,11 +3024,12 @@ function mvRenderTypeTbl(){
     mvTypeSort.k=k;mvRenderTypeTbl();
   });
 
+  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
   $('#mvTypeBody').innerHTML=arr.map(o=>
     `<tr style="cursor:pointer" data-type="${String(o.type).replace(/"/g,'&quot;')}" title="Click to filter the detail table">`+
     `<td>${o.type}</td>`+
     `<td>${o.move}</td>`+
-    `<td class="num drill">${fmtINR(o.value)}</td>`+
+    `<td class="num drill" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>`+
     `<td class="num drill">${fmtN(o.awbs)}</td>`+
     `<td class="num drill">${fmtN(o.manifests)}</td></tr>`).join('')
     ||`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
