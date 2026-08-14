@@ -716,11 +716,6 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .mv-pivot td.num.drill:hover,.lv-mini td.num.drill:hover{
   background:#FFF3B3!important;color:#7A4B00!important;border-radius:4px;}
 
-/* Movement Type Matrix — darker, bolder cell text (was reading too light) */
-#mvTypeTbl tbody td{color:#111111;font-weight:600;}
-#mvTypeTbl tfoot td{color:#111111!important;}
-#mvTypeTbl thead th{color:#000000!important;}
-
 .lv-mini thead th.age-a,.lv-mini thead th.age-b,.lv-mini thead th.age-c,
 .lv-mini thead th.age-d,.lv-mini thead th.age-e,.lv-mini thead th.age-f{background:#F1F3FB;color:var(--pine);}
 .mv-pivot-wrap td.aged-red{background:transparent;color:var(--text);font-weight:600;}
@@ -788,6 +783,38 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #rmStatus{font-size:11.5px;color:var(--mut);}
 .rm-foot .tool{margin-left:auto;width:auto;padding:0 12px;font-size:10px;font-weight:800;}
 @media(max-width:640px){.rm-form{grid-template-columns:1fr;}}
+
+/* ---- Movement Type Matrix · green→red value heat ---- */
+.mv-heat-legend{display:flex;align-items:center;gap:6px;margin:12px 0 2px;
+  font-size:10.5px;font-weight:800;color:var(--mut);letter-spacing:.03em;flex-wrap:wrap;}
+.mv-heat-legend .sw{width:26px;height:12px;border-radius:4px;display:inline-block;}
+.mv-heat-legend .hint{font-weight:600;color:#9AA3B8;margin-left:12px;letter-spacing:0;}
+.mv-heat{display:inline-block;min-width:88px;padding:5px 12px;border-radius:8px;
+  font-weight:800;font-size:12px;text-align:center;transition:opacity .15s ease,transform .15s ease;}
+/* spotlight: hovering a row fades the other pills so one value stands out */
+#mvTypeTbl tbody:hover tr:not(:hover) .mv-heat{opacity:.3;}
+#mvTypeTbl tbody tr:hover .mv-heat{transform:scale(1.04);}
+/* Header, body and totals follow the conventions already used elsewhere in
+   this file: tokens rather than one-off hexes, .lv-mini's 10.5px header /
+   11.5px body sizing, and the Consolas/SF-Mono tabular numerals every other
+   numeric table here uses. */
+#mvTypeTbl thead th{background:#FFFFFF;color:var(--mut);font-size:10.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;padding:12px 10px;
+  border-bottom:1px solid var(--line);}
+#mvTypeTbl thead th:hover{background:#F7F8FC;color:var(--pine);}
+#mvTypeTbl thead th .arr{color:var(--mut);}
+#mvTypeTbl tbody td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--line);background:#FFFFFF;}
+#mvTypeTbl tbody tr:hover td{background:#F8F9FE;}
+#mvTypeTbl tbody td:first-child{color:var(--ink);font-weight:600;}
+#mvTypeTbl tbody td:nth-child(2){color:var(--text);font-weight:600;}
+#mvTypeTbl tbody td.num,#mvTypeTbl tfoot td.num{color:var(--ink);font-weight:600;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+#mvTypeTbl .mv-heat{font-family:'Consolas','SF Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;}
+/* grand total sits under a solid rule, plain and unhighlighted */
+#mvTypeTbl tfoot td{border-top:2px solid var(--ink)!important;box-shadow:none!important;
+  color:var(--ink)!important;background:#FFFFFF!important;padding:12px 10px;font-weight:800;
+  font-variant-numeric:tabular-nums;}
 
 /* ---- LH Recovery live source strip ---- */
 .lhr-src{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;}
@@ -1098,7 +1125,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
-      <button data-page="remarks"><span class="ic">📝</span>Feedback Manifest Lanes</button>
+      <button data-page="remarks"><span class="ic">📝</span>Remarks</button>
     </nav>
     <div class="side-foot">
       <div>Signed in as <b id="footUser" style="color:#1E293B">—</b></div>
@@ -1300,10 +1327,22 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lv-sec mv-stack">
         <div class="card-head">
           <div><h3>Movement Type Matrix</h3>
-            <span class="sub">Movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
+            <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
           <div class="card-tools">
             <button class="tool" id="mvTypeCsv">CSV</button>
           </div>
+        </div>
+        <div class="mv-heat-legend">
+          <span>Low</span>
+          <span class="sw" style="background:#E7F6EC"></span>
+          <span class="sw" style="background:#CDECD5"></span>
+          <span class="sw" style="background:#FAF0BE"></span>
+          <span class="sw" style="background:#F9CE7A"></span>
+          <span class="sw" style="background:#F0A44E"></span>
+          <span class="sw" style="background:#EE6B4D"></span>
+          <span class="sw" style="background:#D42B34"></span>
+          <span>High</span>
+          <span class="hint">Hover any value to spotlight it</span>
         </div>
         <div class="lv-mini-wrap" style="overflow-x:auto">
           <table class="lv-mini mv-pivot" id="mvTypeTbl" style="min-width:660px">
@@ -1694,6 +1733,28 @@ function heatCellStyle(v,min,max){
 const BUCKET_CLR={'2':CLR.teal,'3':CLR.teal,'4':CLR.leaf,'5':CLR.leaf,'6':CLR.leaf,
   '7':CLR.yellow,'8-10':CLR.amber,'11-15':CLR.orange,'16-30':CLR.orange,'30+':CLR.red};
 BUCKETS.forEach((b,i)=>{BUCKET_CLR[b]=heatColorHex(i/(BUCKETS.length-1));});
+
+/* ── Green → yellow → orange → red ramp (Movement Type Matrix pills) ──
+   Distinct from HEAT_STOPS above: this one starts at a pale green so the
+   cheapest rows read as "fine" rather than merely "less hot". */
+const HEAT_GR=[
+  [231,246,236],[205,236,213],[250,240,190],[249,206,122],
+  [240,164,78],[238,107,77],[212,43,52]
+];
+function heatColorGR(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  const n=HEAT_GR.length-1,pos=t*n,idx=Math.min(n-1,Math.floor(pos)),f=pos-idx;
+  const c1=HEAT_GR[idx],c2=HEAT_GR[idx+1];
+  const r=Math.round(c1[0]+(c2[0]-c1[0])*f),g=Math.round(c1[1]+(c2[1]-c1[1])*f),b=Math.round(c1[2]+(c2[2]-c1[2])*f);
+  return `rgb(${r},${g},${b})`;
+}
+/* readable ink for each band: dark green on the pale end, brown mid, white hot */
+function heatTextGR(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  if(t>=.62)return '#FFFFFF';
+  if(t<=.30)return '#1F6B44';
+  return '#7A3A00';
+}
 
 /* 0=low … 1=high → smooth yellow-orange-red heat ramp (used by bar charts) */
 function riskRamp(t){return heatColor(t);}
@@ -3010,11 +3071,11 @@ function mvRenderTypeTbl(){
   }
   const mark=k=>mvTypeSort.k===k?(mvTypeSort.dir<0?' ▼':' ▲'):'';
   const cols=[
-    {k:'type',     label:'Movement_Type'},
-    {k:'move',     label:'Movement'},
-    {k:'value',    label:'Product_value', num:true},
-    {k:'awbs',     label:'Awb_Number',  num:true},
-    {k:'manifests',label:'Manifest_Code', num:true}
+    {k:'type',     label:'MOVEMENT_TYPE'},
+    {k:'move',     label:'MOVEMENT'},
+    {k:'value',    label:'PRODUCT_VALUE', num:true},
+    {k:'awbs',     label:'AWB_NUMBER',    num:true},
+    {k:'manifests',label:'MANIFEST_CODE', num:true}
   ];
   $('#mvTypeHead').innerHTML=cols.map(c=>
     `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${(c.k==='type'||c.k==='move')?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
@@ -3024,12 +3085,24 @@ function mvRenderTypeTbl(){
     mvTypeSort.k=k;mvRenderTypeTbl();
   });
 
-  const vMin=Math.min(...arr.map(o=>o.value),0),vMax=Math.max(...arr.map(o=>o.value),1);
+  /* Heat is ranked, not linear: with one row at ₹3.7 Cr and the tail under
+     ₹10 L a straight min/max scale would wash every row but the top out to
+     pale green. Ranking by value spreads the whole ramp across the rows on
+     screen, which is what the reference layout shows. Ranks come from the
+     value order, so re-sorting a column never repaints the colours. */
+  const byVal=[...arr].sort((a,b)=>b.value-a.value);
+  const rank=new Map();
+  byVal.forEach((o,i)=>rank.set(o.type+'\u0000'+o.move, byVal.length>1?1-(i/(byVal.length-1)):1));
+  const heatPill=o=>{
+    const t=rank.get(o.type+'\u0000'+o.move)||0;
+    return `<span class="mv-heat" style="background:${heatColorGR(t)};color:${heatTextGR(t)}">${fmtINR(o.value)}</span>`;
+  };
+
   $('#mvTypeBody').innerHTML=arr.map(o=>
     `<tr style="cursor:pointer" data-type="${String(o.type).replace(/"/g,'&quot;')}" title="Click to filter the detail table">`+
     `<td>${o.type}</td>`+
     `<td>${o.move}</td>`+
-    `<td class="num drill" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>`+
+    `<td class="num">${heatPill(o)}</td>`+
     `<td class="num drill">${fmtN(o.awbs)}</td>`+
     `<td class="num drill">${fmtN(o.manifests)}</td></tr>`).join('')
     ||`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
@@ -3043,9 +3116,9 @@ function mvRenderTypeTbl(){
       `<td class="num">${fmtN(allManifests.size)}</td></tr>`
     : '';
 
-  mvTypeExport=arr.map(o=>({Movement_type:o.type,Movement:o.move,
-    Product_value:Math.round(o.value),
-    Awb_number:o.awbs,Manifest_code:o.manifests}));
+  mvTypeExport=arr.map(o=>({movement_type:o.type,movement:o.move,
+    Sum_of_Product_value:Math.round(o.value),
+    Count_of_Awb_number:o.awbs,Count_of_Manifest_code:o.manifests}));
 }
 
 function renderManifestView(){
@@ -3755,7 +3828,7 @@ const DOC_SECTIONS=[
   logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nmulti-select, OR within a filter, AND across the three'},
  {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
   fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
-  logic:'per movement_type:\n  movement              = the Movement column value (sheet column H)\n  Sum of Product_value  = SUM(Product_value)\n  Count of Awb_number   = COUNT(rows)\n  Count of Manifest_code= DISTINCT Manifest_code\nsorted by value descending',
+  logic:'per movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
   note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
  {t:'table', n:'Top 20 Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
@@ -4345,22 +4418,24 @@ function gsOnLHRPage(){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true ,rootcause:false},
-  'sachin.r1@shadowfax.in':{pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, rootcause:false},
-  'anna.roy@shadowfax.in':{pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, rootcause:false},
-  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, rootcause:false},
-  'saikat.ghosh@shadowfax.in':{pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'anupam.sharma@shadowfax.in':{pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'isham.dawood@shadowfax.in':{pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'idharmraj.kumar@shadowfax.in':{pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'raj.singh1@shadowfax.in':{pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'gaurav.khati@shadowfax.in':{pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'paswan.hiteshkumar@shadowfax.in':{pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'karan.solanki@shadowfax.in':{pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-  'shyamkumar.raj@shadowfax.in':{pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true, remarks:true, rootcause:false},
-   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true, rootcause:false},
-  'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true, rootcause:false},
-  'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true, rootcause:false},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true},
+  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
+  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
+  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true},
+  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true},
+  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true},
+  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true},
+  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true},
+  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true},
+  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true},
+  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true},
+  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true},
+   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
+
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -5283,7 +5358,7 @@ const PAGE_META={
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
-  remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
+  remarks:{t:'Remarks',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
 function boot(){
@@ -5307,6 +5382,11 @@ function boot(){
 }
 
 function navTo(page){
+  /* Root Cause & What-If and Activity Log are admin-only; block direct
+     navigation (e.g. via URL hash) even if the nav button is hidden */
+  if((page==='rootcause'||page==='activity')&&!(CURRENT_USER&&CURRENT_USER.isAdmin)){
+    page='overview';
+  }
   rememberPage(page);
   $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
   $$('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
