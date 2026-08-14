@@ -784,6 +784,26 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .rm-foot .tool{margin-left:auto;width:auto;padding:0 12px;font-size:10px;font-weight:800;}
 @media(max-width:640px){.rm-form{grid-template-columns:1fr;}}
 
+/* ---- LH Recovery live source strip ---- */
+.lhr-src{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;}
+.lhr-src-dot{width:9px;height:9px;border-radius:50%;background:#CBD2E0;flex:none;
+  box-shadow:0 0 0 3px rgba(203,210,224,.28);transition:.2s;}
+.lhr-src-dot.ok{background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.22);}
+.lhr-src-dot.busy{background:#F59E0B;box-shadow:0 0 0 3px rgba(245,158,11,.22);}
+.lhr-src-dot.err{background:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.22);}
+.lhr-src-txt b{font-size:13px;color:var(--ink);display:block;}
+.lhr-src-txt span{font-size:11px;color:var(--mut);}
+.lhr-auto{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--mut);cursor:pointer;}
+.lhr-auto input{accent-color:var(--pine);width:14px;height:14px;}
+#lhrSync{width:auto;padding:0 12px;font-size:10px;font-weight:800;letter-spacing:.02em;}
+.lhr-src-link{font-size:11.5px;font-weight:700;color:var(--pine);text-decoration:none;white-space:nowrap;}
+.lhr-src-link:hover{text-decoration:underline;}
+.lhr-src-err{display:none;margin-top:10px;padding:12px 15px;border-radius:12px;background:#FEF1F1;
+  border:1px solid #F6CFCB;color:#B42318;font-size:12.5px;line-height:1.6;}
+.lhr-src-err.show{display:block;}
+.lhr-src-err code{background:#fff;border-radius:4px;padding:1px 6px;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px;}
+
 /* ---- Remarks page ---- */
 .rmpg-new{display:grid;grid-template-columns:210px 150px 1fr auto;gap:8px;align-items:start;
   background:#FBFBFE;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
@@ -993,7 +1013,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div id="uploadControls">
         <div id="dropZone">
           <div class="big">⬆ Drag &amp; drop the data file here</div>
-          <div class="sub">.csv / .xlsx / .xls — <b>CSV is recommended for the daily drop</b>: a 300k-row export loads in seconds, while the same data as .xlsx can exceed what a browser can open.<br>Uploading CSV? Select <b>both</b> Dashboard.csv and CN_Working.csv together — LH Recovery reads the CN file.</div>
+          <div class="sub">.csv / .xlsx / .xls — <b>CSV is recommended for the daily drop</b>: a 300k-row export loads in seconds, while the same data as .xlsx can exceed what a browser can open.<br>LH Recovery now reads its own Google Sheet automatically, so only <b>Dashboard.csv</b> is needed here.</div>
         </div>
         <div class="upload-actions">
           <button class="btn btn-lime" id="browseBtn">Browse file…</button>
@@ -1374,6 +1394,21 @@ thead th{background:#F1F3FB;color:var(--pine);}
 
     <!-- ============ PAGE: LH RECOVERY ============ -->
     <section class="page" id="page-lhrecovery">
+      <!-- ===== live source strip: Google Sheet → CN Working ===== -->
+      <div class="card lhr-src" id="lhrSrcBar">
+        <span class="lhr-src-dot" id="lhrSrcDot"></span>
+        <div class="lhr-src-txt">
+          <b>Live source · Google Sheet</b>
+          <span id="lhrSrcSub">AuditShield – CN &amp; Loss Reporting (Responses_Final) · sheet “CN Working”</span>
+        </div>
+        <span class="pill" id="lhrSyncLbl">not synced yet</span>
+        <label class="lhr-auto"><input type="checkbox" id="lhrAuto" checked> auto-refresh</label>
+        <button class="tool" id="lhrSync">REFRESH NOW</button>
+        <a class="lhr-src-link" id="lhrSrcLink" target="_blank" rel="noopener"
+           href="https://docs.google.com/spreadsheets/d/1FogKKrNVCmNAEStJmXIi9iv-WBRk0aO1HKN0f8zxH2E/edit#gid=818597049">Open sheet ↗</a>
+      </div>
+      <div class="lhr-src-err" id="lhrSrcErr"></div>
+
       <!-- ===== Table 1 + Table 2 : Recovery Amount by month + line chart ===== -->
       <div class="card" style="margin-top:12px;padding:18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -3478,14 +3513,16 @@ function lhrRenderPending(){
 }
 function renderLHRecovery(){
   if(!LHR_RAW.length){
-    $('#lhrSummaryBody').innerHTML=`<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">Upload a workbook containing a <b>CN Working</b> / <b>LH Recovery</b> sheet to populate this view.</td></tr>`;
+    $('#lhrSummaryBody').innerHTML=`<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">Waiting for the <b>CN Working</b> sheet — press <b>REFRESH NOW</b> above, or upload <b>CN_Working.csv</b> with the daily file.</td></tr>`;
     $('#lhrSummaryFoot').innerHTML='';
-    $('#lhrPendBody').innerHTML=`<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
+    $('#lhrPendBody').innerHTML=`<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">No CN Working rows loaded yet.</td></tr>`;
     $('#lhrPendFoot').innerHTML=''; $('#lhrPendCount').textContent='';
     $('#lhrTblBody').innerHTML=`<tr><td style="text-align:center;padding:24px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
     return;
   }
   lhrRenderSummary(); lhrRenderPending(); lhrRenderTable();
+  const lbl=document.getElementById('lhrSyncLbl');
+  if(lbl&&typeof gsSyncLabel==='function'&&LHR_SOURCE==='sheet')lbl.textContent=gsSyncLabel();
 }
 function lhrSummaryExport(){
   return lhrSummaryRows().map(o=>({Month:o.month,CN_Received_Value:Math.round(o.value)}));
@@ -3744,6 +3781,10 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'LH Recovery', note:'Every figure on this page comes from the CN Working sheet, not the Dashboard sheet.', items:[
+ {t:'panel', n:'Live Google Sheet source', what:'CN Working is read straight from the response workbook instead of being uploaded.',
+  src:'Google Sheet · AuditShield – CN & Loss Reporting (Responses_Final) · tab "CN Working"',
+  logic:'read via the sheet\u0027s CSV endpoint (gviz), no key required\nrefreshed on sign-in, on opening this page if the last pull is over a minute old,\nevery 5 minutes while the browser tab is visible, and on REFRESH NOW\nthe green dot and timestamp on the strip show the last successful read',
+  note:'The workbook must be shared "Anyone with the link · Viewer", otherwise Google returns a sign-in page and the strip turns red. Uploading CN_Working.csv still works as a fallback and does not overwrite sheet data. A browser cannot be pushed to, so "real time" here means polling — edits in the sheet appear on the next pull.'},
  {t:'panel', n:'How dates are read', what:'The two date columns are stored inconsistently in the source sheet, so they are read as the text Excel displays.',
   src:'CN Working sheet',
   logic:'dashes  26-02-2026 -> day first (matches the column header)\nslashes 3/25/26    -> month first (how a real date cell renders)\nif the month lands above 12 the two parts are swapped\nblank and "-" both mean no date',
@@ -4147,28 +4188,173 @@ async function rmPageDelete(lane,id){
 </script>
 <script>
 /* =============================================================
+   LH RECOVERY LIVE SOURCE — Google Sheet "CN Working"
+   -------------------------------------------------------------
+   The CN Working data no longer has to be uploaded as a CSV. It is
+   pulled straight from the response workbook:
+
+     AuditShield – CN & Loss Reporting (Responses_Final)
+     tab: CN Working   (gid 818597049)
+
+   A browser cannot ask Google for a private file, so the sheet must be
+   shared "Anyone with the link -> Viewer" (or File -> Share -> Publish
+   to web). With that in place the gviz endpoint returns plain CSV with
+   permissive CORS headers and no key is needed.
+
+   "Real time" in a static HTML page means polling: the sheet is re-read
+   on login, whenever the LH Recovery page is opened, every few minutes
+   while the tab is visible, and on demand from REFRESH NOW. Anything
+   typed into the sheet appears on the next pull.
+
+   If the workspace ever blocks anonymous link sharing, deploy a two-line
+   Apps Script web app that returns the tab as CSV and put its /exec URL
+   in GS_PROXY below — everything else keeps working unchanged.
+============================================================= */
+const GS_ID    = '1FogKKrNVCmNAEStJmXIi9iv-WBRk0aO1HKN0f8zxH2E';
+const GS_GID   = '818597049';
+const GS_SHEET = 'CN Working';
+const GS_PROXY = '';                       // optional Apps Script /exec URL
+const GS_AUTO_MS = 5*60*1000;              // poll every 5 minutes
+const GS_STALE_MS = 60*1000;               // re-pull on page open if older than this
+
+let LHR_SOURCE='';        // 'sheet' | 'file' | ''
+let LHR_SYNCED_AT=null;
+let GS_BUSY=false, GS_TIMER=null;
+
+/* candidate URLs, tried in order — first one that returns CSV wins */
+function gsUrls(){
+  const base='https://docs.google.com/spreadsheets/d/'+GS_ID;
+  const cb='&_cb='+Date.now();            // defeat any intermediate cache
+  const list=[];
+  if(GS_PROXY)list.push(GS_PROXY+(GS_PROXY.indexOf('?')<0?'?':'&')+'sheet='+encodeURIComponent(GS_SHEET)+cb);
+  list.push(base+'/gviz/tq?tqx=out:csv&headers=1&gid='+encodeURIComponent(GS_GID)+cb);
+  list.push(base+'/gviz/tq?tqx=out:csv&headers=1&sheet='+encodeURIComponent(GS_SHEET)+cb);
+  list.push(base+'/export?format=csv&gid='+encodeURIComponent(GS_GID)+cb);
+  return list;
+}
+
+/* small synchronous CSV reader — the CN sheet is a few hundred rows, so
+   this stays off the chunked parser used for the 300k-row shipment file
+   (and therefore never touches the upload progress bar) */
+function gsParseCSV(text){
+  if(!text)return [];
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  while(text.endsWith('\n'))text=text.slice(0,-1);
+  const grid=[];let field='',row=[],inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQ=false; }
+      else field+=c;
+    }
+    else if(c==='"')inQ=true;
+    else if(c===','){row.push(field);field='';}
+    else if(c==='\n'){row.push(field);field='';grid.push(row);row=[];}
+    else field+=c;
+  }
+  row.push(field);grid.push(row);
+  if(!grid.length)return [];
+  const hdr=grid[0].map(h=>String(h==null?'':h).trim());
+  return grid.slice(1)
+    .filter(r=>r.some(v=>String(v==null?'':v).trim()!==''))   // drop blank rows
+    .map(r=>{const o={};hdr.forEach((h,i)=>{if(h)o[h]=(r[i]===undefined?'':r[i]);});return o;});
+}
+
+function gsStatus(state,label,err){
+  const dot=$('#lhrSrcDot'), lbl=$('#lhrSyncLbl'), box=$('#lhrSrcErr');
+  if(dot)dot.className='lhr-src-dot '+(state||'');
+  if(lbl&&label!=null)lbl.textContent=label;
+  if(box){
+    if(err){box.innerHTML=err;box.classList.add('show');}
+    else box.classList.remove('show');
+  }
+}
+function gsSyncLabel(){
+  if(!LHR_SYNCED_AT)return 'not synced yet';
+  const t=new Date(LHR_SYNCED_AT).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  return 'synced '+t+' · '+fmtN(LHR_RAW.length)+' rows';
+}
+
+/* the one call that refreshes LH Recovery from the sheet */
+async function gsSyncCN(quiet){
+  if(GS_BUSY)return false;
+  GS_BUSY=true;
+  if(!quiet)gsStatus('busy','reading sheet…',null);
+  let lastErr=null;
+  for(const url of gsUrls()){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      /* a sign-in page comes back as HTML, not CSV — that means the file
+         is still private rather than link-shared */
+      if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
+      const rows=gsParseCSV(text);
+      if(!rows.length)throw new Error('the sheet returned no rows');
+      setLHRData(rows);
+      LHR_SOURCE='sheet';
+      LHR_SYNCED_AT=new Date().toISOString();
+      gsStatus('ok',gsSyncLabel(),null);
+      GS_BUSY=false;
+      console.log('[Sheet] CN Working rows:',rows.length,'via',url.split('?')[0]);
+      return true;
+    }catch(e){ lastErr=e; }
+  }
+  GS_BUSY=false;
+  const haveData=LHR_RAW.length>0;
+  gsStatus(haveData?'err':'err', haveData?gsSyncLabel():'sync failed',
+    'Could not read the Google Sheet ('+(lastErr?lastErr.message:'unknown error')+').<br>'+
+    'Open the workbook, choose <b>Share</b> and set <b>General access</b> to '+
+    '<b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.'+
+    (haveData?' The figures below are from the last successful read.':
+              ' Until then, LH Recovery can still be loaded by uploading <code>CN_Working.csv</code> with the daily file.'));
+  return false;
+}
+
+/* poll while the tab is actually on screen; a hidden tab wastes requests */
+function gsStopAuto(){if(GS_TIMER){clearInterval(GS_TIMER);GS_TIMER=null;}}
+function gsStartAuto(){
+  gsStopAuto();
+  const on=$('#lhrAuto');
+  if(on&&!on.checked)return;
+  GS_TIMER=setInterval(()=>{
+    if(document.hidden)return;
+    if(!CURRENT_USER)return;
+    gsSyncCN(true);
+  },GS_AUTO_MS);
+}
+/* called by navTo() — refresh on entry when the last pull has gone stale */
+function gsOnLHRPage(){
+  gsStatus(LHR_SOURCE==='sheet'?'ok':'',gsSyncLabel(),null);
+  const age=LHR_SYNCED_AT?(Date.now()-new Date(LHR_SYNCED_AT).getTime()):Infinity;
+  if(age>GS_STALE_MS)gsSyncCN(true);
+}
+</script>
+<script>
+/* =============================================================
    LOGIN · UPLOAD · NAV · BOOT
 ============================================================= */
 
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:false, remarks:true},
-  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true},
-  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true},
-  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true},
+  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false},
+  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false},
+  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:true},
+  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:true},
+  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:true},
+  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:true},
+  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:true},
+  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:true},
+  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:true},
+  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:true},
+  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:true},
+   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true},
   'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true}
+  'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -4439,6 +4625,7 @@ async function applyCNBuffer(buf,name){
   const rows=await parseCSVBuffer(buf);
   if(!rows.length)throw new Error('No rows found in '+name);
   setLHRData(rows);
+  LHR_SOURCE='file';
   console.log('[Parse] LH Recovery rows from '+name+':',rows.length);
 }
 
@@ -4633,7 +4820,9 @@ async function parseWorkbookBuffer(buf,fileName,extra){
     console.log('[Parse] CSV rows:', rows.length);
     console.log('[Parse] All columns:', rows.length?Object.keys(rows[0]):'none');
     if(!rows.length) throw new Error('No data rows found in the CSV file.');
-    LHR_RAW=[];LHR_COLS=[];
+    /* the sheet is the live source for LH Recovery — a shipment upload
+       must not blank it out */
+    if(LHR_SOURCE!=='sheet'){LHR_RAW=[];LHR_COLS=[];}
     /* CSV splits the workbook into two files — pull LH Recovery from its
        companion CSV if one came with it (or was cached from last time). */
     if(extra&&extra.cnBuf){
@@ -4677,8 +4866,8 @@ async function parseWorkbookBuffer(buf,fileName,extra){
     const cnName=wb.SheetNames.find(n=>/cn working|lh recovery|recovery/i.test(n));
     /* raw:false → cells arrive as the text Excel displays, so the date columns
        read exactly as they appear in the sheet (DD-MM-YYYY per the column header). */
-    if(cnName&&wb.Sheets[cnName]){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));}
-    else{LHR_RAW=[];LHR_COLS=[];}
+    if(cnName&&wb.Sheets[cnName]){setLHRData(XLSX.utils.sheet_to_json(wb.Sheets[cnName],{raw:false,defval:''}));LHR_SOURCE='file';}
+    else if(LHR_SOURCE!=='sheet'){LHR_RAW=[];LHR_COLS=[];}
   }
 
   RAW=await mapProgress(rows,normalize,45,80,'Preparing shipments …');
@@ -5094,6 +5283,8 @@ function boot(){
   if(fu)fu.textContent=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name:'—';
   renderRefreshTime();
   remarksInit();
+  gsSyncCN(true);
+  gsStartAuto();
   if(!booted){
     buildFilterBar();
     mountCharts();
@@ -5117,6 +5308,7 @@ function navTo(page){
   if(page==='docs'&&!$('#docBody').innerHTML)renderDocs();
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
+  if(page==='lhrecovery')gsOnLHRPage();
   closeSidebar();
 }
 function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
@@ -5156,6 +5348,10 @@ function wireControls(){
   $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','manifest_detail');
   $('#mvPrev').onclick=()=>{mvPage--;mvRenderDetail();};
   $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
+
+  /* lh recovery — live Google Sheet source */
+  $('#lhrSync').onclick=()=>gsSyncCN(false);
+  $('#lhrAuto').onchange=gsStartAuto;
 
   /* lh recovery */
   $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
