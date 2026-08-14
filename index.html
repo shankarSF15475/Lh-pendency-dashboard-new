@@ -4345,7 +4345,7 @@ function gsOnLHRPage(){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true ,rootcause:false},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true ,rootcause:false},
   'sachin.r1@shadowfax.in':{pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, rootcause:false},
   'anna.roy@shadowfax.in':{pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, rootcause:false},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, rootcause:false},
@@ -4392,6 +4392,9 @@ function applyAdminAccess(u){
   /* activity log is an admin-only view */
   const act=document.querySelector('.nav button[data-page="activity"]');
   if(act)act.style.display=isAdmin?'':'none';
+  /* Root Cause & What-If is an admin-only view */
+  const rc=document.querySelector('.nav button[data-page="rootcause"]');
+  if(rc)rc.style.display=isAdmin?'':'none';
   /* upload controls: only admin can upload files */
   const uc=$('#uploadControls');
   if(uc) uc.style.display=isAdmin?'':'none';
