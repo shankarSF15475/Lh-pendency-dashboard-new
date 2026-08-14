@@ -1125,7 +1125,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
-      <button data-page="remarks"><span class="ic">📝</span>Remarks</button>
+      <button data-page="remarks"><span class="ic">📝</span>Feedback Manifest Lanes</button>
     </nav>
     <div class="side-foot">
       <div>Signed in as <b id="footUser" style="color:#1E293B">—</b></div>
@@ -1635,7 +1635,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
     <section class="page" id="page-remarks">
       <div class="card" style="margin-top:12px;padding:18px">
         <div class="card-head">
-          <div><h3>Lane Remarks</h3>
+          <div><h3>Feedback Manifest Lanes</h3>
             <span class="sub">every follow-up remark added on the Top 20 Lanes pivot in Bag wise View · newest date first · edit or delete here</span></div>
           <div class="card-tools">
             <button class="tool" id="rmPgRefresh">Refresh</button>
@@ -3834,7 +3834,7 @@ const DOC_SECTIONS=[
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
   logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nsorted by row total descending, top 20\nclicking a lane expands SUM(Product_value) by MM_destination',
   note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row covers only the 20 lanes shown, not all lanes.'},
- {t:'panel', n:'Lane Remarks (follow-up log)', what:'A dated follow-up trail attached to each lane in the Top 20 pivot, so a lane can be tracked across days.',
+ {t:'panel', n:'Feedback Manifest Lanes (follow-up log)', what:'A dated follow-up trail attached to each lane in the Top 20 pivot, so a lane can be tracked across days.',
   src:'Supabase Storage · remarks.json',
   fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
   logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
@@ -5364,7 +5364,7 @@ const PAGE_META={
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
-  remarks:{t:'Remarks',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
+  remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
 function boot(){
