@@ -816,6 +816,19 @@ thead th{background:#F1F3FB;color:var(--pine);}
   color:var(--ink)!important;background:#FFFFFF!important;padding:12px 10px;font-weight:800;
   font-variant-numeric:tabular-nums;}
 
+/* ===== Lane ageing status dot (Top 20 Lanes pivot) ===== */
+.lane-status-dot{display:inline-block;width:9px;height:9px;min-width:9px;border-radius:50%;
+  margin:0 7px 0 4px;vertical-align:middle;border:1px solid rgba(0,0,0,.12);}
+.lane-dot-green{background:#2DBE74;}        /* only 0–6 days */
+.lane-dot-yellow{background:#EAB308;}       /* reaches 7–13  */
+.lane-dot-orange{background:#F97316;}       /* reaches 14–20 */
+.lane-dot-darkorange{background:#EA580C;}   /* reaches 21–27 */
+.lane-dot-red{background:#EF4444;}          /* reaches 28–34 */
+.lane-dot-darkred{background:#B91C1C;}      /* reaches 35+   */
+.lane-dot-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:11px;color:var(--mut);}
+.lane-dot-legend span{display:inline-flex;align-items:center;gap:4px;}
+.lane-dot-legend .lane-status-dot{width:8px;height:8px;min-width:8px;margin:0;}
+
 /* ---- LH Recovery live source strip ---- */
 .lhr-src{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;}
 .lhr-src-dot{width:9px;height:9px;border-radius:50%;background:#CBD2E0;flex:none;
@@ -1366,7 +1379,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lv-sec mv-stack">
         <div class="card-head">
           <div><h3>Top 20 Lanes by Pending Manifest Code</h3>
-            <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · click a lane to expand MM_destination · sorted large → small</span></div>
+            <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · click a lane to expand MM_destination · sorted large → small</span>
+            <div class="lane-dot-legend">
+              <span><i class="lane-status-dot lane-dot-green"></i>0–6 days</span>
+              <span><i class="lane-status-dot lane-dot-yellow"></i>7–13 days</span>
+              <span><i class="lane-status-dot lane-dot-orange"></i>14–20 days</span>
+              <span><i class="lane-status-dot lane-dot-darkorange"></i>21–27 days</span>
+              <span><i class="lane-status-dot lane-dot-red"></i>28–34 days</span>
+              <span><i class="lane-status-dot lane-dot-darkred"></i>35+ days</span>
+            </div></div>
           <div class="card-tools">
             <button class="tool" id="mvLaneCsv">CSV</button>
           </div>
@@ -1713,10 +1734,20 @@ const CLR={
   purple:'#6B46C1', purpleL:'rgba(107,70,193,0.18)',
   pink:'#B83280', pinkL:'rgba(184,50,128,0.18)',
 };
-/* ── Yellow → Orange → Red heat scale (matches reference swatch): 0=low … 1=high ── */
+/* ── Table heat scale: pale green → yellow → orange → red, 0=low … 1=high.
+   Same swatch as the Movement Type Matrix pills, so every heat-shaded cell in
+   the dashboard reads on one scale. Kept pale because these are cell fills
+   sitting behind text. ── */
 const HEAT_STOPS=[
-  [255,255,204],[255,237,160],[254,217,118],[254,178,76],
-  [253,141,60],[252,78,42],[227,26,28],[177,0,38]
+  [231,246,236],[205,236,213],[250,240,190],[249,206,122],
+  [240,164,78],[238,107,77],[212,43,52]
+];
+/* ── Chart version of the same progression, saturated enough to work as a
+   solid fill in a bar, slice or line. Greens/ambers/reds match the lane
+   status dots so a red bar and a red dot mean the same thing. ── */
+const CHART_GR=[
+  [45,190,116],[132,204,84],[234,179,8],[249,115,22],
+  [234,88,12],[239,68,68],[185,28,28]
 ];
 function heatColor(t){
   t=Math.max(0,Math.min(1,+t||0));
@@ -1732,8 +1763,29 @@ function heatColorHex(t){
   const h=v=>Math.round(v).toString(16).padStart(2,'0');
   return '#'+h(c1[0]+(c2[0]-c1[0])*f)+h(c1[1]+(c2[1]-c1[1])*f)+h(c1[2]+(c2[2]-c1[2])*f);
 }
-/* readable text colour for a given heat t (dark on pale yellow, white on deep red) */
-function heatText(t){return t>=.6?'#fff':'#4A2F00';}
+function chartRamp(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  const n=CHART_GR.length-1,pos=t*n,idx=Math.min(n-1,Math.floor(pos)),f=pos-idx;
+  const c1=CHART_GR[idx],c2=CHART_GR[idx+1];
+  const r=Math.round(c1[0]+(c2[0]-c1[0])*f),g=Math.round(c1[1]+(c2[1]-c1[1])*f),b=Math.round(c1[2]+(c2[2]-c1[2])*f);
+  return `rgb(${r},${g},${b})`;
+}
+function chartRampHex(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  const n=CHART_GR.length-1,pos=t*n,idx=Math.min(n-1,Math.floor(pos)),f=pos-idx;
+  const c1=CHART_GR[idx],c2=CHART_GR[idx+1];
+  const x=v=>Math.round(v).toString(16).padStart(2,'0');
+  return '#'+x(c1[0]+(c2[0]-c1[0])*f)+x(c1[1]+(c2[1]-c1[1])*f)+x(c1[2]+(c2[2]-c1[2])*f);
+}
+/* evenly sample the ramp for a set of n marks, hottest first */
+function rampAt(i,n){return chartRamp(n<=1?1:1-(i/(n-1)));}
+/* readable ink for a heat-shaded cell: dark green low, brown mid, white hot */
+function heatText(t){
+  t=Math.max(0,Math.min(1,+t||0));
+  if(t>=.62)return '#FFFFFF';
+  if(t<=.30)return '#1F6B44';
+  return '#7A3A00';
+}
 /* normalise a value against a min/max range → 0..1 */
 function heatT(v,min,max){if(max===min)return .5;return Math.max(0,Math.min(1,(v-min)/(max-min)));}
 /* inline style string for a table cell, given raw value + column range */
@@ -1744,35 +1796,18 @@ function heatCellStyle(v,min,max){
 /* Semantic colours for ageing buckets */
 const BUCKET_CLR={'2':CLR.teal,'3':CLR.teal,'4':CLR.leaf,'5':CLR.leaf,'6':CLR.leaf,
   '7':CLR.yellow,'8-10':CLR.amber,'11-15':CLR.orange,'16-30':CLR.orange,'30+':CLR.red};
-BUCKETS.forEach((b,i)=>{BUCKET_CLR[b]=heatColorHex(i/(BUCKETS.length-1));});
+BUCKETS.forEach((b,i)=>{BUCKET_CLR[b]=chartRampHex(i/(BUCKETS.length-1));});
 
-/* ── Green → yellow → orange → red ramp (Movement Type Matrix pills) ──
-   Distinct from HEAT_STOPS above: this one starts at a pale green so the
-   cheapest rows read as "fine" rather than merely "less hot". */
-const HEAT_GR=[
-  [231,246,236],[205,236,213],[250,240,190],[249,206,122],
-  [240,164,78],[238,107,77],[212,43,52]
-];
-function heatColorGR(t){
-  t=Math.max(0,Math.min(1,+t||0));
-  const n=HEAT_GR.length-1,pos=t*n,idx=Math.min(n-1,Math.floor(pos)),f=pos-idx;
-  const c1=HEAT_GR[idx],c2=HEAT_GR[idx+1];
-  const r=Math.round(c1[0]+(c2[0]-c1[0])*f),g=Math.round(c1[1]+(c2[1]-c1[1])*f),b=Math.round(c1[2]+(c2[2]-c1[2])*f);
-  return `rgb(${r},${g},${b})`;
-}
-/* readable ink for each band: dark green on the pale end, brown mid, white hot */
-function heatTextGR(t){
-  t=Math.max(0,Math.min(1,+t||0));
-  if(t>=.62)return '#FFFFFF';
-  if(t<=.30)return '#1F6B44';
-  return '#7A3A00';
-}
+/* The Movement Type Matrix pills use the shared table ramp — these aliases
+   keep the call sites readable and guarantee the two never drift apart. */
+const heatColorGR=heatColor;
+const heatTextGR=heatText;
 
 /* 0=low … 1=high → smooth yellow-orange-red heat ramp (used by bar charts) */
-function riskRamp(t){return heatColor(t);}
-function riskRampL(t){t=Math.max(0,Math.min(1,+t||0));return heatColor(t).replace('rgb','rgba').replace(')',',0.18)');}
+function riskRamp(t){return chartRamp(t);}
+function riskRampL(t){t=Math.max(0,Math.min(1,+t||0));return chartRamp(t).replace('rgb','rgba').replace(')',',0.18)');}
 /* rank-based: i=index in sorted-descending array, n=total bars */
-function rankColor(i,n){return riskRamp(n<=1?1:1-(i/(n-1)));}
+function rankColor(i,n){return rampAt(i,n);}
 
 /* Diverse multi-series palette (enough for doughnuts/stacked) */
 const MPALET=['#E53E3E','#DD6B20','#D69E2E','#276749','#2C7A7B','#2B6CB0','#6B46C1','#B83280','#3FA56F','#C6A000','#E8A13A','#48BB78'];
@@ -2134,22 +2169,12 @@ function dl(blob,name){
 }
 
 /* ---------- chart render ---------- */
-/* Warm sequential ramp — used ONLY by the two charts named in the brief:
-   c_flag (Forward vs Reverse Pendency) and c_zoneflag (Forward/Reverse by Zone). */
-const WARM_PALETTE=['#F13724','#FC6330','#FD913E','#FEAE4A','#FECC68','#FEE289','#FFF1AA','#FFFFCC'];
+/* Every mark on every chart is sampled from the one green→red ramp: slices,
+   bars, stacked series and lines alike. Marks arrive sorted largest first, so
+   index 0 is the hottest colour and the tail fades to green. */
 const WARM_CHARTS=['c_flag','c_zoneflag'];
-/* sample evenly across the legible span of the ramp (the last swatches are
-   almost white, so fills stop at index 4) */
-function warmAt(i,n){
-  const span=5;
-  if(n<=1)return WARM_PALETTE[0];
-  return WARM_PALETTE[Math.round(i*((span-1)/(n-1)))%WARM_PALETTE.length];
-}
-function chartLabelColor(def,label,index,count){
-  if(WARM_CHARTS.includes(def.id))return warmAt(index,count||2);
-  if(def.id==='c_flag'&&FLAG_CLR[label])return FLAG_CLR[label];
-  return MPALET[index%MPALET.length];
-}
+function warmAt(i,n){return rampAt(i,Math.max(n||2,2));}
+function chartLabelColor(def,label,index,count){return rampAt(index,Math.max(count||2,2));}
 function renderChart(def,built,force){
   if(!built)return;
   def.snapshot=built;
@@ -2179,7 +2204,7 @@ function renderChart(def,built,force){
 
     /* ── Line: coloured lines ── */
     if(lineLike){
-      const lc=i===0?CLR.teal:(i===1?CLR.orange:CLR.purple);
+      const lc=i===0?chartRamp(1):(i===1?'#1E293B':chartRamp(.45));
       return{...base,type:'line',borderColor:lc,backgroundColor:lc.replace(')',',0.12)').replace('rgb','rgba'),
         fill:def.kind==='line',tension:.4,pointRadius:4,pointHoverRadius:7,
         pointBackgroundColor:lc,pointBorderColor:'#fff',pointBorderWidth:2,
@@ -2196,9 +2221,9 @@ function renderChart(def,built,force){
       // bucket chart: semantic colours per bucket
       bgColors=built.labels.map(l=>BUCKET_CLR[l]||CLR.leaf);
     } else if(built.series.length>1){
-      // multi-series stacked/grouped: distinct series colours
-      const sc=[CLR.teal,CLR.orange,CLR.amber,CLR.purple,CLR.sky,CLR.pink];
-      bgColors=vals.map(()=>sc[i%sc.length]);
+      // multi-series stacked/grouped: one ramp step per series
+      const sc=rampAt(i,Math.max(built.series.length,2));
+      bgColors=vals.map(()=>sc);
     } else if(isAgeing){
       // ageing charts: higher = worse → red
       bgColors=vals.map(v=>riskRamp(v/max));
@@ -2295,11 +2320,11 @@ function renderHero(){
   const v=groupSum(FILTERED,'bucket','Product_value');
   const labels=BUCKETS.filter(b=>v.has(b));
   const data=labels.map(l=>v.get(l));
-  const cfg={type:'line',data:{labels,datasets:[{data,borderColor:'#C7D2FE',backgroundColor:'rgba(199,210,254,.18)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#C7D2FE'}]},
+  const cfg={type:'line',data:{labels,datasets:[{data,borderColor:'#F9CE7A',backgroundColor:'rgba(249,206,122,.20)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#F9CE7A'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
       tooltip:{callbacks:{label:c=>' '+fmtINR(c.parsed.y)+' in '+c.label+' day bucket'}}},
-      scales:{x:{ticks:{color:'#C7D2FE',font:{size:10}},grid:{display:false}},
-              y:{ticks:{color:'#C7D2FE',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'rgba(255,255,255,.12)'}}}}};
+      scales:{x:{ticks:{color:'#FDE7BF',font:{size:10}},grid:{display:false}},
+              y:{ticks:{color:'#FDE7BF',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'rgba(255,255,255,.12)'}}}}};
   if(heroChart){heroChart.data=cfg.data;heroChart.update();}else heroChart=new Chart($('#heroSpark'),cfg);
 }
 function renderInsights(){
@@ -2947,6 +2972,27 @@ function mvLaneAgg(){
     dests:[...e.dests.values()].sort((a,b)=>b.total-a.total)}));
 }
 
+/* =========================================================
+   LANE DOT — colour comes from the worst Bag-Creation ageing
+   bucket that still carries Product_value on that lane.
+   Driven off ABKT's own order rather than hard-coded bucket
+   names, so a rename or re-band in ABKT can never silently
+   break the mapping (the sheet writes "days" in some bands and
+   "Days" in others, which literal string tests would miss).
+   ========================================================= */
+const LANE_DOT_CLS=['lane-dot-green','lane-dot-yellow','lane-dot-orange',
+                    'lane-dot-darkorange','lane-dot-red','lane-dot-darkred'];
+function laneDotIndex(o){
+  for(let i=ABKT.length-1;i>0;i--){ if((o.bkts[ABKT[i]]||0)>0) return i; }
+  return 0;
+}
+function laneDotHTML(o){
+  const i=laneDotIndex(o);
+  const cls=LANE_DOT_CLS[i]||LANE_DOT_CLS[0];
+  const worst=(o.bkts[ABKT[i]]||0)>0?ABKT[i]:ABKT[0];
+  return `<span class="lane-status-dot ${cls}" title="Worst ageing bucket carrying value: ${worst}"></span>`;
+}
+
 function mvRenderLaneTbl(){
   let arr=mvLaneAgg();
   /* MUST: sort large → small on total, then take top 20 */
@@ -2994,7 +3040,7 @@ function mvRenderLaneTbl(){
     /* --- parent lane row --- */
     body.push(
       `<tr class="mv-lane-row${open?' open':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click the lane name to expand MM_destination">`+
-      `<td><span class="exp-ic">${open?'▼':'▶'}</span>${o.lane}</td>`+
+      `<td><span class="exp-ic">${open?'▼':'▶'}</span>${laneDotHTML(o)}${o.lane}</td>`+
       ABKT.map(b=>`<td class="num${o.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(o.bkts[b])}</td>`).join('')+
       `<td class="num tot-col drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Show every manifest on this lane below">${fmtINR(o.total)}</td>`+
       rmCellHTML(o.lane)+`</tr>`
@@ -3575,7 +3621,7 @@ const lhrPointLabels={
       /* keep the text inside the plot horizontally */
       const x=Math.min(Math.max(pt.x,area.left+30),area.right-30);
       const rows=[{t:month,f:'600 9.5px Inter,system-ui,sans-serif',c:'#8A8699'},
-                  {t:val,  f:'800 11px Inter,system-ui,sans-serif',  c:'#3730A3'}];
+                  {t:val,  f:'800 11px Inter,system-ui,sans-serif',  c:'#166534'}];
       rows.forEach((r,k)=>{
         const y=yTop+(k*13)+(below?4:0);
         ctx.font=r.f;
@@ -3592,9 +3638,9 @@ function lhrRenderChart(rows){
   const cfg={type:'line',
     data:{labels:rows.map(o=>o.month),
       datasets:[{label:'CN Received Value',data:rows.map(o=>o.value),
-        borderColor:'#4F46E5',backgroundColor:'rgba(79,70,229,.12)',
+        borderColor:'#2DBE74',backgroundColor:'rgba(45,190,116,.14)',
         fill:true,tension:.34,borderWidth:2.5,
-        pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#4F46E5',
+        pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#2DBE74',
         pointBorderColor:'#fff',pointBorderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
       /* headroom so the labels above the highest dot are never clipped */
@@ -3694,7 +3740,7 @@ function renderLock(){
   lockSealExport=[{Status:'Sealed',AWBs:locked.length,Value:Math.round(lockedVal)},
                   {Status:'Unsealed',AWBs:unlocked,Value:Math.round(sumV(d)-lockedVal)}];
   const sealCfg={type:'doughnut',data:{labels:['Sealed','Unsealed'],datasets:[{data:[locked.length,unlocked],
-      backgroundColor:['#22A06B','#E31A1C'],borderColor:'#fff',borderWidth:2}]},
+      backgroundColor:[chartRamp(0),chartRamp(1)],borderColor:'#fff',borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},
       tooltip:{callbacks:{label:c=>' '+c.label+': '+fmtN(c.parsed)+' ('+pct(c.parsed,d.length)+')'}}}}};
   if(lockSealChart){lockSealChart.data=sealCfg.data;lockSealChart.update();}else lockSealChart=new Chart($('#lockSealChart'),sealCfg);
@@ -3705,8 +3751,8 @@ function renderLock(){
   const unsealByMove=moves.map(mt=>d.filter(r=>r.movement_type===mt&&!isLocked(r)).length);
   lockMoveExport=moves.map((mt,i)=>({Movement_type:mt,Sealed:sealedByMove[i],Unsealed:unsealByMove[i]}));
   const moveCfg={type:'bar',data:{labels:moves,datasets:[
-      {label:'Sealed',data:sealedByMove,backgroundColor:'#22A06B',borderRadius:5},
-      {label:'Unsealed',data:unsealByMove,backgroundColor:'#E31A1C',borderRadius:5}]},
+      {label:'Sealed',data:sealedByMove,backgroundColor:chartRamp(0),borderRadius:5},
+      {label:'Unsealed',data:unsealByMove,backgroundColor:chartRamp(1),borderRadius:5}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},
       tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtN(c.parsed.y)}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6B667D'}},
@@ -3888,6 +3934,10 @@ const DOC_SECTIONS=[
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
   logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nsorted by row total descending, top 20\nclicking a lane expands SUM(Product_value) by MM_destination',
   note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row covers only the 20 lanes shown, not all lanes.'},
+ {t:'panel', n:'Lane status dot', what:'The coloured dot beside each lane code — how far the oldest money on that lane has aged.',
+  fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>',
+  logic:'walk the six Bag Creation bands from oldest to newest\ntake the first band that still carries any Product_value\n  F. 35+      -> dark red\n  E. 28 to 34 -> red\n  D. 21 to 27 -> dark orange\n  C. 14 to 20 -> orange\n  B. 7 to 13  -> yellow\n  otherwise   -> green (nothing older than 6 days)',
+  note:'It reads the filtered scope, so narrowing Bag Creation Ageing to 0-6 days turns every dot green — the dot describes what is on screen, not the lane\u0027s all-time worst.'},
  {t:'panel', n:'Feedback Manifest Lanes (follow-up log)', what:'A dated follow-up trail attached to each lane in the Top 20 pivot, so a lane can be tracked across days.',
   src:'Supabase Storage · remarks.json',
   fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
