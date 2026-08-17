@@ -836,6 +836,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .lhr-src-err code{background:#fff;border-radius:4px;padding:1px 6px;
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px;}
 
+.lhr-diag{display:none;margin-top:10px;padding:9px 12px;border-radius:9px;background:#F4F6FB;
+  border:1px solid var(--line);color:var(--mut);font-size:11.5px;line-height:1.6;}
+.lhr-diag.show{display:block;}
+.lhr-diag b{color:var(--ink);}
+.lhr-diag.warn{background:#FEF9EF;border-color:#F3E2C4;color:#8A5A12;}
+.lhr-diag.warn b{color:#7A3A00;}
+.lhr-diag code{background:#fff;border-radius:4px;padding:1px 6px;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11px;}
+
 /* ---- Remarks page ---- */
 .rmpg-new{display:grid;grid-template-columns:210px 150px 1fr auto;gap:8px;align-items:start;
   background:#FBFBFE;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
@@ -1463,12 +1472,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <div class="card-tools"><button class="tool" id="lhrSummaryCsv" title="Download summary CSV">CSV</button></div>
         </div>
         <div class="lhr-summary-row">
+          <div>
           <div class="lhr-tbl-wrap" style="max-width:620px">
             <table class="lhr-tbl" style="min-width:420px">
               <thead><tr class="hdr"><th>Month</th><th class="num">CN Received Value</th></tr></thead>
               <tbody id="lhrSummaryBody"></tbody>
               <tfoot id="lhrSummaryFoot"></tfoot>
             </table>
+          </div>
+          <div class="lhr-diag" id="lhrDiag"></div>
           </div>
           <div class="lhr-chart-pane">
             <span class="sub" style="display:block;margin-bottom:8px">Month vs CN Received Value</span>
@@ -3371,7 +3383,11 @@ function parseCNDate(v){
   if(v instanceof Date&&!isNaN(v))return v;
   const s=String(v).trim();
   if(!s||s==='-')return null;
-  let m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);            // ISO
+  /* the gviz feed sometimes hands back a Date() constructor literal for a
+     genuine date cell — month is zero-based in that form */
+  let m=s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})/i);
+  if(m)return new Date(+m[1],+m[2],+m[3]);
+  m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);                // ISO
   if(m)return new Date(+m[1],+m[2]-1,+m[3]);
   m=s.match(/^(\d{1,2})([-\/])(\d{1,2})\2(\d{2,4})$/);
   if(m){
@@ -3384,6 +3400,7 @@ function parseCNDate(v){
     if(mon<1||mon>12||day<1||day>31)return null;
     return new Date(y,mon-1,day);
   }
+  /* text months: 15-Jan-2026, Jan 15 2026, 15 January 2026 … */
   const d=new Date(s);
   return isNaN(d)?null:d;
 }
@@ -3476,18 +3493,33 @@ function lhrRenderTable(){
   $('#lhrRowCount').textContent=fmtN(rows.length)+' rows'+(rows.length>cap?' (showing '+fmtN(cap)+')':'');
 }
 /* ---- Table 1: Recovery Amount — month of CN Received Date vs CN Received Value ---- */
+/* Counters filled on every rebuild. If the table ever disagrees with the
+   sheet's own pivot, these numbers say why: a row is only counted when its
+   CN Received Date can actually be read, so "skipped" is the gap. */
+let LHR_DIAG={rows:0,dated:0,blank:0,skipped:0,dateCol:'',valueCol:'',total:0};
 function lhrSummaryRows(){
   const cd=lhrColCnDate(), cv=lhrColCnValue();
+  LHR_DIAG={rows:LHR_RAW.length,dated:0,blank:0,skipped:0,
+            dateCol:cd||'(column not found)',valueCol:cv||'(column not found)',total:0};
   if(!cd)return [];
   const m=new Map();
   for(const r of LHR_RAW){
-    if(parseCNDate(r[cd])===null)continue;          // only rows where CN was received
-    const label=lhrMonLabel(r[cd]), key=lhrMonKey(r[cd]);
-    const o=m.get(label)||{month:label,key,value:0};
+    const raw=r[cd];
+    const isBlank=(raw==null||String(raw).trim()===''||String(raw).trim()==='-');
+    if(parseCNDate(raw)===null){                    // nothing recovered yet, or unreadable
+      if(isBlank)LHR_DIAG.blank++; else LHR_DIAG.skipped++;
+      continue;
+    }
+    LHR_DIAG.dated++;
+    const label=lhrMonLabel(raw), key=lhrMonKey(raw);
+    const o=m.get(label)||{month:label,key,value:0,n:0};
     o.value+=cv?lhrNum(r[cv]):0;
+    o.n++;
     m.set(label,o);
   }
-  return [...m.values()].sort((a,b)=>a.key-b.key);
+  const out=[...m.values()].sort((a,b)=>a.key-b.key);
+  LHR_DIAG.total=out.reduce((a,o)=>a+o.value,0);
+  return out;
 }
 function lhrRenderSummary(){
   const rows=lhrSummaryRows();
@@ -3497,7 +3529,29 @@ function lhrRenderSummary(){
   $('#lhrSummaryFoot').innerHTML=rows.length
     ? `<tr><td>Total</td><td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
     : '';
+  lhrRenderDiag();
   lhrRenderChart(rows);
+}
+/* A short reconciliation line so this table can be checked against the
+   sheet's own pivot without opening the console. */
+function lhrRenderDiag(){
+  const el=document.getElementById('lhrDiag'); if(!el)return;
+  const d=LHR_DIAG;
+  if(!d.rows){el.innerHTML='';el.className='lhr-diag';return;}
+  const bits=[
+    `<b>${fmtN(d.rows)}</b> rows read from CN Working`,
+    `<b>${fmtN(d.dated)}</b> counted here (CN Received Date present)`,
+    `<b>${fmtN(d.blank)}</b> still pending (no CN date)`,
+    `total <b>${(+d.total||0).toLocaleString('en-IN')}</b>`
+  ];
+  let cls='lhr-diag show';
+  if(d.skipped){
+    cls+=' warn';
+    bits.splice(3,0,`<b>${fmtN(d.skipped)}</b> skipped — the date in <code>${rmEsc(d.dateCol)}</code> could not be read`);
+  }
+  el.className=cls;
+  el.innerHTML='Reconciliation · '+bits.join(' · ')+
+    `<br>Reading date from <code>${rmEsc(d.dateCol)}</code> and value from <code>${rmEsc(d.valueCol)}</code>. Months are ordered oldest first, not alphabetically.`;
 }
 /* ---- Table 2: line chart of the same series ----
    Values are printed permanently next to every dot (month on top, value below)
@@ -4334,10 +4388,18 @@ function gsParseCSV(text){
   }
   row.push(field);grid.push(row);
   if(!grid.length)return [];
-  const hdr=grid[0].map(h=>String(h==null?'':h).trim());
+  /* A blank header cell used to make the whole column vanish, which silently
+     zeroed any figure sitting under it. Name it instead so nothing is lost. */
+  const seen={};
+  const hdr=grid[0].map((h,i)=>{
+    let k=String(h==null?'':h).trim();
+    if(!k)k='Column_'+(i+1);
+    if(seen[k]!==undefined){seen[k]++;k=k+'_'+seen[k];}else{seen[k]=0;}
+    return k;
+  });
   return grid.slice(1)
     .filter(r=>r.some(v=>String(v==null?'':v).trim()!==''))   // drop blank rows
-    .map(r=>{const o={};hdr.forEach((h,i)=>{if(h)o[h]=(r[i]===undefined?'':r[i]);});return o;});
+    .map(r=>{const o={};hdr.forEach((h,i)=>{o[h]=(r[i]===undefined?'':r[i]);});return o;});
 }
 
 function gsStatus(state,label,err){
