@@ -1341,6 +1341,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvClientMcsel">
+            <button class="mv-mcsel-btn" id="mvClientBtn">Client ▾</button>
+            <div class="mv-mcsel-panel" id="mvClientPanel">
+              <div class="mc-actions">
+                <button id="mvClientAll">All</button>
+                <button id="mvClientNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <button class="mv-fb-clear" id="mvClearAllFilters">✕ Clear all</button>
         </div>
       </div>
@@ -1434,7 +1443,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
     <section class="page" id="page-investigate">
       <div class="card table-card" style="margin-top:12px">
         <div class="table-head">
-          <input id="tblSearch" placeholder="🔍 Search AWB / lane / vendor / vehicle / manifest / origin / destination…">
+          <input id="tblSearch" placeholder="🔍 Search AWB / lane / vendor / vehicle / manifest / MM code / origin / destination…">
           <button class="tool" title="Download visible result as CSV" id="tblCsv">CSV</button>
           <span class="pill" id="tblCount">0 rows</span>
         </div>
@@ -1443,7 +1452,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <thead><tr>
               <th>AWB</th><th>Flow</th><th>Zone</th><th>Origin → Destination</th><th>Lane</th>
               <th>Movement</th><th>Vendor</th><th>Ageing</th><th>Bucket</th><th>Value ₹</th>
-              <th>HOV</th><th>Vehicle</th><th>Manifest</th><th>Trip</th><th>POD</th>
+              <th>HOV</th><th>Vehicle</th><th>Manifest</th><th>MM Code</th><th>Trip</th><th>POD</th>
             </tr></thead>
             <tbody id="tblBody"></tbody>
           </table>
@@ -2378,7 +2387,8 @@ function tableData(){
   if(!q)return FILTERED;
   return FILTERED.filter(r=>r.Awb_number.toLowerCase().includes(q)||r['Lane Code'].toLowerCase().includes(q)
     ||r.vendor_name.toLowerCase().includes(q)||r.vehicle_number.toLowerCase().includes(q)
-    ||r.Manifest_code.toLowerCase().includes(q)||r.MM_origin.toLowerCase().includes(q)||r.MM_destination.toLowerCase().includes(q));
+    ||r.Manifest_code.toLowerCase().includes(q)||r.MM_code.toLowerCase().includes(q)
+    ||r.MM_origin.toLowerCase().includes(q)||r.MM_destination.toLowerCase().includes(q));
 }
 function renderTable(reset){
   if(reset)tblPage=1;
@@ -2393,8 +2403,8 @@ function renderTable(reset){
     <td>${r.movement_type}</td><td>${r.vendor_name}</td>
     <td>${r.intransit_ageing>30?'<span class="badge b-crit">'+r.intransit_ageing+'d</span>':r.intransit_ageing+'d'}</td>
     <td>${r.bucket}</td><td>${fmtN(r.Product_value)}</td><td>${r.HOV_flag}</td>
-    <td>${r.vehicle_number}</td><td>${r.Manifest_code}</td><td>${r.trip_code||'—'}</td><td>${r['POD Name']}</td></tr>`).join('')
-    ||'<tr><td colspan="15" style="text-align:center;padding:26px;color:var(--mut)">No shipments match — widen filters or change the search.</td></tr>';
+    <td>${r.vehicle_number}</td><td>${r.Manifest_code}</td><td>${r.MM_code||'—'}</td><td>${r.trip_code||'—'}</td><td>${r['POD Name']}</td></tr>`).join('')
+    ||'<tr><td colspan="16" style="text-align:center;padding:26px;color:var(--mut)">No shipments match — widen filters or change the search.</td></tr>';
   $('#tblCount').textContent=fmtN(tblRows.length)+' rows';
   $('#pgLbl').textContent='Page '+tblPage+' / '+pages;
   $('#pgPrev').disabled=tblPage<=1;$('#pgNext').disabled=tblPage>=pages;
@@ -2403,7 +2413,8 @@ function exportTable(fmt){
   const cap=60000;
   const rows=tblRows.slice(0,cap).map(r=>({AWB:r.Awb_number,Flow:r.flag,Zone:r.Zone,Origin:r.MM_origin,Destination:r.MM_destination,
     Lane:r['Lane Code'],Movement:r.movement_type,Vendor:r.vendor_name,Ageing_days:r.intransit_ageing,Bucket:r.bucket,
-    Product_value:r.Product_value,HOV:r.HOV_flag,Vehicle:r.vehicle_number,Manifest:r.Manifest_code,Trip:r.trip_code,POD:r['POD Name']}));
+    Product_value:r.Product_value,HOV:r.HOV_flag,Vehicle:r.vehicle_number,Manifest:r.Manifest_code,
+    MM_code:r.MM_code,Trip:r.trip_code,POD:r['POD Name']}));
   if(!rows.length)return;
   if(tblRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows. Apply filters to narrow the set.');
   if(fmt==='csv'){const cols=Object.keys(rows[0]);
@@ -2707,7 +2718,7 @@ function itBktRank(v){
 let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'total',dir:-1}, mvTypeSort={k:'value',dir:-1};
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
-let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvExpandedLane=null;
+let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -2827,12 +2838,20 @@ function mvBuildHeaders(){
     all:'mvItBktAll',none:'mvItBktNone',label:'Bag Intransit Ageing',opts:itOpts,
     set:s=>{mvItBktSel=s;}});
 
+  /* 4. Client */
+  const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
+    .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
+  const mcCL=buildMcsel({panel:'mvClientPanel',btn:'mvClientBtn',mcsel:'mvClientMcsel',
+    all:'mvClientAll',none:'mvClientNone',label:'Client',opts:clOpts,
+    set:s=>{mvClientSel=s;}});
+
   $('#mvClearAllFilters').onclick=()=>{
-    [mcLT,mcAB,mcIT].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
-    mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
+    [mcLT,mcAB,mcIT,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();mvClientSel=new Set();
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
     mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
     mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
+    mcCL.btn.classList.remove('active');mcCL.btn.textContent='Client ▾';
     mvRerender();
   };
 
@@ -2853,6 +2872,7 @@ function mvScopeRows(){
   if(mvLaneTypeSel.size) d=d.filter(r=>mvLaneTypeSel.has(r['Lane Type']));
   if(mvAgeingSel.size)   d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
   if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
+  if(mvClientSel.size)   d=d.filter(r=>mvClientSel.has(r.Client));
   return d;
 }
 
@@ -3923,9 +3943,9 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'Bag wise View', items:[
- {t:'panel', n:'Page filters', what:'Three page-level filters that apply on top of the global filter bar.',
-  fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>',
-  logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nmulti-select, OR within a filter, AND across the three'},
+ {t:'panel', n:'Page filters', what:'Four page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Client</code>',
+  logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the four'},
  {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
   fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
   logic:'per movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
@@ -3950,8 +3970,8 @@ const DOC_SECTIONS=[
 
 {sec:'Base Data', items:[
  {t:'table', n:'AWB-level base table', what:'The raw shipment rows, searchable and paginated.',
-  fields:'<code>Awb_number</code>, <code>flag</code>, <code>Zone</code>, <code>MM_origin</code>, <code>MM_destination</code>, <code>Lane Code</code>, <code>movement_type</code>, <code>vendor_name</code>, <code>intransit_ageing</code>, <code>Product_value</code>, <code>HOV_flag</code>, <code>vehicle_number</code>, <code>Manifest_code</code>, <code>trip_code</code>, <code>POD Name</code>',
-  logic:'FILTERED rows, then the search box matches on AWB number, lane code, vendor, origin or destination\n20 rows per page',
+  fields:'<code>Awb_number</code>, <code>flag</code>, <code>Zone</code>, <code>MM_origin</code>, <code>MM_destination</code>, <code>Lane Code</code>, <code>movement_type</code>, <code>vendor_name</code>, <code>intransit_ageing</code>, <code>Product_value</code>, <code>HOV_flag</code>, <code>vehicle_number</code>, <code>Manifest_code</code>, <code>MM_code</code>, <code>trip_code</code>, <code>POD Name</code>',
+  logic:'FILTERED rows, then the search box matches on AWB number, lane code, vendor, vehicle, manifest, MM code, origin or destination\n20 rows per page',
   note:'Ageing over 30 days is badged red. No aggregation happens here, these are source rows.'}
 ]},
 
