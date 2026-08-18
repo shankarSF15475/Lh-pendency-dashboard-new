@@ -275,6 +275,11 @@ h1,h2,h3{font-weight:700;letter-spacing:-.01em}
 .mv-mcsel-panel .mc-actions{display:flex;gap:8px;padding:6px 12px;border-top:1px solid var(--line);margin-top:4px}
 .mv-mcsel-panel .mc-actions button{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:3px 8px;background:#F7FAF6;cursor:pointer;color:var(--text)}
 .mv-mcsel-panel .mc-actions button:hover{background:var(--pine);color:var(--lime)}
+.mv-mcsel-search{padding:8px 10px 4px}
+.mv-mcsel-search input{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;
+  font-size:12px;font-family:inherit;color:var(--text);background:#fff;outline:none}
+.mv-mcsel-search input:focus{border-color:var(--pine)}
+.mv-mcsel-none{padding:10px 12px}
 /* MM destination expand row */
 /* ---- Documentation page ---- */
 .doc-intro{padding:18px 20px;margin-bottom:14px}
@@ -1487,8 +1492,6 @@ thead th{background:#F1F3FB;color:var(--pine);}
         <span class="pill" id="lhrSyncLbl">not synced yet</span>
         <label class="lhr-auto"><input type="checkbox" id="lhrAuto" checked> auto-refresh</label>
         <button class="tool" id="lhrSync">REFRESH NOW</button>
-        <a class="lhr-src-link" id="lhrSrcLink" target="_blank" rel="noopener"
-           href="https://docs.google.com/spreadsheets/d/1FogKKrNVCmNAEStJmXIi9iv-WBRk0aO1HKN0f8zxH2E/edit#gid=818597049">Open sheet ↗</a>
       </div>
       <div class="lhr-src-err" id="lhrSrcErr"></div>
 
@@ -2255,9 +2258,12 @@ function renderChart(def,built,force){
   });
 
   const dual=built.series.some(sr=>sr.yAxis==='y1');
+  const showVals=VALUE_LABEL_CHARTS.includes(def.id);
   const cfg={type:isD?'doughnut':(def.kind==='line'?'line':'bar'),
     data:{labels:built.labels,datasets},
+    plugins:showVals?[chartValueLabels]:[],
     options:{responsive:true,maintainAspectRatio:false,indexAxis:horiz?'y':'x',
+      layout:{padding:{top:(showVals&&!isD)?22:0}},
       animation:{duration:500,easing:'easeOutQuart'},
       interaction:{mode:'index',intersect:false},
       plugins:{
@@ -2294,6 +2300,56 @@ function renderChart(def,built,force){
   else{if(def.chart)def.chart.destroy();def.chart=new Chart(def.canvas,cfg);}
   if(def.tableMode)renderChartTable(def);
 }
+/* ---------- always-on value labels ----------
+   Two charts are read at a glance in the morning review, so their numbers are
+   printed on the marks instead of hiding behind a hover: Pending Value by Zone
+   and Forward vs Reverse Pendency. Drawn locally so the page keeps working
+   offline — no datalabels plugin from a CDN. */
+const VALUE_LABEL_CHARTS=['c_zone','c_flag'];
+const chartValueLabels={
+  id:'chartValueLabels',
+  afterDatasetsDraw(chart){
+    const ctx=chart.ctx, area=chart.chartArea;
+    const isDough=chart.config.type==='doughnut';
+    const horiz=chart.options&&chart.options.indexAxis==='y';
+    ctx.save();
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='800 11.5px "Segoe UI",system-ui,sans-serif';
+    ctx.lineJoin='round';
+    chart.data.datasets.forEach((ds,di)=>{
+      const meta=chart.getDatasetMeta(di);
+      if(!meta||meta.hidden||!meta.data)return;
+      const money=/₹|Value/i.test(ds.label||'');
+      const total=isDough?ds.data.reduce((a,v)=>a+(+v||0),0):0;
+      meta.data.forEach((el,i)=>{
+        const raw=+ds.data[i];
+        if(!raw)return;
+        const txt=money?fmtINR(raw):fmtN(raw);
+        if(isDough){
+          /* a sliver has no room for text — leave it to the tooltip */
+          if((el.endAngle-el.startAngle)<0.30)return;
+          const p=el.getCenterPoint();
+          const pct=total?Math.round(raw/total*100):0;
+          ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.38)';
+          ctx.strokeText(txt,p.x,p.y-7); ctx.fillStyle='#FFFFFF'; ctx.fillText(txt,p.x,p.y-7);
+          ctx.font='700 10px "Segoe UI",system-ui,sans-serif';
+          ctx.strokeText(pct+'%',p.x,p.y+8); ctx.fillText(pct+'%',p.x,p.y+8);
+          ctx.font='800 11.5px "Segoe UI",system-ui,sans-serif';
+          return;
+        }
+        let x=el.x,y=el.y;
+        if(horiz){ x=el.x+30; if(area&&x>area.right-6)x=el.x-30; }
+        else { y=el.y-11; if(area&&y<area.top+8)y=el.y+15; }
+        /* white halo so the figure stays legible over a bar or a gridline */
+        ctx.lineWidth=3.5; ctx.strokeStyle='rgba(255,255,255,.95)';
+        ctx.strokeText(txt,x,y);
+        ctx.fillStyle='#1E293B'; ctx.fillText(txt,x,y);
+      });
+    });
+    ctx.restore();
+  }
+};
+
 function fmtShort(v){if(typeof v!=='number')return v;const a=Math.abs(v);
   if(a>=1e7)return (v/1e7).toFixed(1)+'Cr';if(a>=1e5)return (v/1e5).toFixed(1)+'L';
   if(a>=1e3)return (v/1e3).toFixed(0)+'k';return v;}
@@ -2797,10 +2853,35 @@ function mvBuildHeaders(){
   /* generic builder: panelId, btnId, mcselId, options[], selSet, baseLabel, setter */
   function buildMcsel(cfg){
     const panel=$('#'+cfg.panel), btn=$('#'+cfg.btn), mcsel=$('#'+cfg.mcsel);
+    /* long lists (Client runs to hundreds of names) get a search box —
+       scrolling a few hundred checkboxes is not a way to find "1MG Express" */
+    const needsSearch=cfg.opts.length>12;
     panel.insertAdjacentHTML('afterbegin',
-      cfg.opts.length
+      (needsSearch?`<div class="mv-mcsel-search"><input type="text" placeholder="Search ${String(cfg.label).toLowerCase()}…"></div>`:'')+
+      (cfg.opts.length
         ? cfg.opts.map(o=>`<label><input type="checkbox" value="${String(o).replace(/"/g,'&quot;')}"><span>${o}</span></label>`).join('')
-        : `<div class="msel-more">No values found</div>`);
+        : `<div class="msel-more">No values found</div>`));
+    /* put Select all / Clear directly under the search box, above the list */
+    const actions=panel.querySelector('.mc-actions'), firstOpt=panel.querySelector('label');
+    if(actions&&firstOpt)panel.insertBefore(actions,firstOpt);
+    const sBox=panel.querySelector('.mv-mcsel-search input');
+    if(sBox){
+      sBox.onclick=e=>e.stopPropagation();
+      sBox.oninput=()=>{
+        const q=sBox.value.trim().toLowerCase();
+        let shown=0;
+        panel.querySelectorAll('label').forEach(l=>{
+          const hit=!q||l.textContent.toLowerCase().includes(q);
+          l.style.display=hit?'':'none';
+          if(hit)shown++;
+        });
+        let none=panel.querySelector('.mv-mcsel-none');
+        if(!shown){
+          if(!none){none=document.createElement('div');none.className='msel-more mv-mcsel-none';
+            none.textContent='No match';panel.appendChild(none);}
+        }else if(none)none.remove();
+      };
+    }
     const sync=()=>{
       const sel=new Set([...panel.querySelectorAll('input:checked')].map(x=>x.value));
       cfg.set(sel);
@@ -2814,8 +2895,13 @@ function mvBuildHeaders(){
       $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));
       if(!wasOpen)mcsel.classList.add('open');};
     panel.onclick=e=>e.stopPropagation();
-    $('#'+cfg.all).onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=true);sync();};
-    $('#'+cfg.none).onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
+    /* "All" ticks what is currently visible, so it doubles as "select these
+       search results"; "Clear" always clears everything */
+    $('#'+cfg.all).onclick=()=>{
+      panel.querySelectorAll('label').forEach(l=>{
+        if(l.style.display!=='none'){const c=l.querySelector('input');if(c)c.checked=true;}
+      });sync();};
+    $('#'+cfg.none).onclick=()=>{panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);sync();};
     return {panel,btn,sync};
   }
 
