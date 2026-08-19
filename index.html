@@ -1527,7 +1527,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
             <h3 style="margin:0">Pending for Recovery</h3>
-            <span class="sub">escalations where <b>CN Received Date</b> is still blank — nothing recovered yet</span>
+            <span class="sub">escalations where <b>CN Received Date</b> is still blank — nothing recovered yet · grouped by escalation month</span>
           </div>
           <div class="card-tools">
             <span class="lhr-rowcount" id="lhrPendCount"></span>
@@ -1538,6 +1538,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <table class="lhr-tbl" style="min-width:520px">
             <thead><tr class="hdr">
               <th data-pk="escKey">Escalation date<span class="si"></span></th>
+              <th class="num" data-pk="count">Escalations<span class="si"></span></th>
               <th class="num" data-pk="awb">Impacted awb<span class="si"></span></th>
               <th class="num" data-pk="value">Impacted Product value<span class="si"></span></th>
             </tr></thead>
@@ -3760,16 +3761,25 @@ function lhrRenderChart(rows){
 }
 
 /* ---- Table 3: Pending for Recovery — rows whose CN Received Date is blank ---- */
+/* Grouped by escalation month: one row per month carrying how many
+   escalations were raised that month and the AWBs and value behind them.
+   Rows whose escalation date is missing or unreadable collapse into a single
+   "no date" row rather than being dropped, so the totals still tie out. */
 function lhrPendingRows(){
   const esc=lhrColEsc(), awb=lhrColAwb(), ipv=lhrColImpValue();
-  return LHR_RAW
-    .filter(r=>!lhrHasCN(r))                        // nothing recovered yet
-    .map(r=>({
-      esc:   esc?lhrMonLabel(r[esc]):'',
-      escKey:esc?lhrMonKey(r[esc]):999999,
-      awb:   awb?lhrNum(r[awb]):0,
-      value: ipv?lhrNum(r[ipv]):0
-    }));
+  const m=new Map();
+  for(const r of LHR_RAW){
+    if(lhrHasCN(r))continue;                        // already recovered
+    const label=esc?lhrMonLabel(r[esc]):'';
+    const key=(esc&&label)?lhrMonKey(r[esc]):999999;
+    const k=label||'\u2014';
+    let o=m.get(k);
+    if(!o){o={esc:label,escKey:key,count:0,awb:0,value:0};m.set(k,o);}
+    o.count++;
+    o.awb  += awb?lhrNum(r[awb]):0;
+    o.value+= ipv?lhrNum(r[ipv]):0;
+  }
+  return [...m.values()];
 }
 function lhrRenderPending(){
   const rows=lhrPendingRows();
@@ -3777,14 +3787,17 @@ function lhrRenderPending(){
   rows.sort((a,b)=>((a[k]||0)-(b[k]||0))*d);
   $('#lhrPendBody').innerHTML=rows.map(o=>
     `<tr><td><b>${o.esc||'—'}</b></td>`+
+    `<td class="num">${fmtN(o.count)}</td>`+
     `<td class="num">${fmtN(o.awb)}</td>`+
     `<td class="num">${fmtINR(o.value)}</td></tr>`).join('')
-    || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">Nothing pending — every escalation has a CN Received Date.</td></tr>`;
+    || `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">Nothing pending — every escalation has a CN Received Date.</td></tr>`;
   $('#lhrPendFoot').innerHTML=rows.length
-    ? `<tr><td>Total</td><td class="num">${fmtN(rows.reduce((a,o)=>a+o.awb,0))}</td>`+
+    ? `<tr><td>Total</td><td class="num">${fmtN(rows.reduce((a,o)=>a+o.count,0))}</td>`+
+      `<td class="num">${fmtN(rows.reduce((a,o)=>a+o.awb,0))}</td>`+
       `<td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
     : '';
-  $('#lhrPendCount').textContent=fmtN(rows.length)+' pending';
+  const escN=rows.reduce((a,o)=>a+o.count,0);
+  $('#lhrPendCount').textContent=fmtN(escN)+' pending · '+fmtN(rows.length)+' month'+(rows.length===1?'':'s');
   /* sortable headers */
   $$('.lhr-tbl th[data-pk]').forEach(th=>{
     th.classList.remove('asc','desc');
@@ -3815,7 +3828,8 @@ function lhrSummaryExport(){
 function lhrPendingExport(){
   const k=lhrPendSort.k,d=lhrPendSort.dir;
   return lhrPendingRows().sort((a,b)=>((a[k]||0)-(b[k]||0))*d)
-    .map(o=>({Escalation_date:o.esc,Impacted_awb:o.awb,Impacted_Product_value:Math.round(o.value)}));
+    .map(o=>({Escalation_month:o.esc||'(no date)',Escalations:o.count,
+              Impacted_awb:o.awb,Impacted_Product_value:Math.round(o.value)}));
 }
 function lhrDetailExport(){ return lhrFilterRows(); }
 </script>
@@ -4085,7 +4099,7 @@ const DOC_SECTIONS=[
   logic:'identical data to the Recovery Amount table, plotted in month order'},
  {t:'table', n:'Pending for Recovery', what:'Escalations where nothing has been recovered yet.',
   fields:'<code>Email Escalation</code>, <code>Impacted awb</code>, <code>Impacted Product value</code>, <code>CN Received Date</code>',
-  logic:'keep only rows where CN Received Date is BLANK\nescalation date shown as Mon\u0027YY\nAWB and value summed into a Total row',
+  logic:'keep only rows where CN Received Date is BLANK\ngroup those rows by the month of Email Escalation, shown as Mon\u0027YY\n  Escalations            = COUNT of escalation rows that month\n  Impacted awb           = SUM of Impacted awb\n  Impacted Product value = SUM of Impacted Product value\nrows with no readable escalation date collapse into a single "-" row',
   note:'A row with a CN Received Value but no CN Received Date still counts as pending, because the date is what marks recovery as complete.'},
  {t:'table', n:'CN Working Detail', what:'Every column of the CN Working sheet with per-column filter and sort.',
   logic:'all sheet columns, blank columns removed\nmoney columns parse Indian comma format (2,27,000 -> 227000)\ndate columns sort chronologically, not alphabetically'}
