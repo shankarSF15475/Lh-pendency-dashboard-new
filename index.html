@@ -789,6 +789,10 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .rm-foot .tool{margin-left:auto;width:auto;padding:0 12px;font-size:10px;font-weight:800;}
 @media(max-width:640px){.rm-form{grid-template-columns:1fr;}}
 
+.mv-kpi{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:12px;}
+.mv-kpi .val{font-size:19px;}
+.mv-kpi .sub{line-height:1.45;}
+
 /* ---- Movement Type Matrix · green→red value heat ---- */
 .mv-heat-legend{display:flex;align-items:center;gap:6px;margin:12px 0 2px;
   font-size:10.5px;font-weight:800;color:var(--mut);letter-spacing:.03em;flex-wrap:wrap;}
@@ -878,6 +882,9 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #rmPgTbl td.rmpg-date{white-space:nowrap;font-weight:700;color:var(--pine);}
 #rmPgTbl td.rmpg-text{min-width:280px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
 #rmPgTbl td.rmpg-meta{white-space:nowrap;color:var(--mut);font-size:11px;}
+#rmPgTbl td.rmpg-total{text-align:right;white-space:nowrap;font-weight:800;color:var(--ink);
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+#rmPgTbl td.rmpg-total.none{color:#B6BCCB;font-weight:600;}
 #rmPgTbl td.rmpg-act{white-space:nowrap;}
 #rmPgTbl input,#rmPgTbl textarea{border:1px solid var(--line);border-radius:8px;padding:6px 8px;
   font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
@@ -1346,6 +1353,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvLaneCodeMcsel">
+            <button class="mv-mcsel-btn" id="mvLaneCodeBtn">Lane Code ▾</button>
+            <div class="mv-mcsel-panel" id="mvLaneCodePanel">
+              <div class="mc-actions">
+                <button id="mvLaneCodeAll">All</button>
+                <button id="mvLaneCodeNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="mvClientMcsel">
             <button class="mv-mcsel-btn" id="mvClientBtn">Client ▾</button>
             <div class="mv-mcsel-panel" id="mvClientPanel">
@@ -1358,6 +1374,9 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <button class="mv-fb-clear" id="mvClearAllFilters">✕ Clear all</button>
         </div>
       </div>
+
+      <!-- ===== KPI strip: what to act on, before the pivots ===== -->
+      <div class="kpi-grid mv-kpi" id="mvKpis"></div>
 
       <!-- ===== Movement type matrix — full width, directly below the filters ===== -->
       <div class="card lv-sec mv-stack">
@@ -1711,6 +1730,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <thead><tr>
               <th style="text-align:left">Lane Code</th>
               <th style="text-align:left">Date</th>
+              <th style="text-align:right">Lane Total</th>
               <th style="text-align:left">Remark</th>
               <th style="text-align:left">Added by</th>
               <th style="text-align:left">Recorded</th>
@@ -1720,7 +1740,9 @@ thead th{background:#F1F3FB;color:var(--pine);}
           </table>
         </div>
         <div class="hint" style="margin-top:10px">Remarks live in Supabase alongside the data file, so this trail is the
-          same for everyone. Editing a remark keeps its original author and recorded time.</div>
+          same for everyone. Editing a remark keeps its original author and recorded time.
+          <b>Lane Total</b> is that lane's pending value from the Top 20 Lanes pivot in Bag wise View, so it moves
+          with today's data and with any Bag wise View filters — a lane outside that scope shows a dash.</div>
       </div>
     </section>
   </main>
@@ -2775,7 +2797,8 @@ function itBktRank(v){
 let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'total',dir:-1}, mvTypeSort={k:'value',dir:-1};
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
-let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(), mvExpandedLane=null;
+let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
+    mvLaneCodeSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -2849,7 +2872,7 @@ function mvBuildHeaders(){
   $('#mvReset').onclick=mvClearCols;
 
   /* ===== three page-level multi-check filters ===== */
-  const mvRerender=()=>{mvRenderLaneTbl();mvRenderTypeTbl();mvRenderDetail(true);};
+  const mvRerender=()=>{mvRenderKpis();mvRenderLaneTbl();mvRenderTypeTbl();mvRenderDetail(true);};
 
   /* generic builder: panelId, btnId, mcselId, options[], selSet, baseLabel, setter */
   function buildMcsel(cfg){
@@ -2925,7 +2948,14 @@ function mvBuildHeaders(){
     all:'mvItBktAll',none:'mvItBktNone',label:'Bag Intransit Ageing',opts:itOpts,
     set:s=>{mvItBktSel=s;}});
 
-  /* 4. Client */
+  /* 4. Lane Code — thousands of codes, so the search box does the work */
+  const lcOpts=[...new Set(RAW.map(r=>r['Lane Code']))].filter(x=>x&&x!=='Unknown')
+    .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
+  const mcLC=buildMcsel({panel:'mvLaneCodePanel',btn:'mvLaneCodeBtn',mcsel:'mvLaneCodeMcsel',
+    all:'mvLaneCodeAll',none:'mvLaneCodeNone',label:'Lane Code',opts:lcOpts,
+    set:s=>{mvLaneCodeSel=s;}});
+
+  /* 5. Client */
   const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcCL=buildMcsel({panel:'mvClientPanel',btn:'mvClientBtn',mcsel:'mvClientMcsel',
@@ -2933,11 +2963,13 @@ function mvBuildHeaders(){
     set:s=>{mvClientSel=s;}});
 
   $('#mvClearAllFilters').onclick=()=>{
-    [mcLT,mcAB,mcIT,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
-    mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();mvClientSel=new Set();
+    [mcLT,mcAB,mcIT,mcLC,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
+    mvClientSel=new Set();mvLaneCodeSel=new Set();
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
     mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
     mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
+    mcLC.btn.classList.remove('active');mcLC.btn.textContent='Lane Code ▾';
     mcCL.btn.classList.remove('active');mcCL.btn.textContent='Client ▾';
     mvRerender();
   };
@@ -2960,6 +2992,7 @@ function mvScopeRows(){
   if(mvAgeingSel.size)   d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
   if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
   if(mvClientSel.size)   d=d.filter(r=>mvClientSel.has(r.Client));
+  if(mvLaneCodeSel.size) d=d.filter(r=>mvLaneCodeSel.has(r['Lane Code']));
   return d;
 }
 
@@ -3199,6 +3232,84 @@ function mvRenderLaneTbl(){
   });
 }
 
+/* =============================================================
+   BAG WISE VIEW · KPI STRIP
+   -------------------------------------------------------------
+   Reads exactly what the pivots below read (mvScopeRows), so every
+   figure moves with the five page filters and the global bar. The
+   cards answer the questions this page exists for: how much money is
+   in these bags, how much of it has gone old, which lanes carry it,
+   and where the volume is piling up.
+   ============================================================= */
+function mvRenderKpis(){
+  const host=$('#mvKpis'); if(!host)return;
+  const rows=mvScopeRows();
+  if(!rows.length){
+    host.innerHTML='<div class="kpi"><div class="lab">NO DATA</div>'+
+      '<div class="val">—</div><div class="sub">No rows match the current filters.</div></div>';
+    return;
+  }
+  const bandIdx=b=>ABKT.indexOf(b);
+  const AGED_FROM=2;                 // C. 14 to 20 days onwards
+  const CRIT=ABKT.length-1;          // F. 35+ Days
+
+  let val=0,agedVal=0,critVal=0,ageSum=0;
+  const bags=new Set(), agedBags=new Set(), critBags=new Set();
+  const laneMap=new Map();
+  for(const r of rows){
+    const v=r.Product_value||0, i=bandIdx(r['Ageing bucket']), code=r.Manifest_code;
+    val+=v; ageSum+=r.intransit_ageing||0;
+    if(code)bags.add(code);
+    if(i>=AGED_FROM){agedVal+=v; if(code)agedBags.add(code);}
+    if(i===CRIT){critVal+=v; if(code)critBags.add(code);}
+    const k=r['Lane Code']||'Unknown';
+    let o=laneMap.get(k);
+    if(!o){o={lane:k,val:0,awbs:0,bags:new Set(),aged:0};laneMap.set(k,o);}
+    o.val+=v; o.awbs++; if(code)o.bags.add(code);
+    if(i>=AGED_FROM)o.aged+=v;
+  }
+  const lanes=[...laneMap.values()];
+  const byVal=[...lanes].sort((a,b)=>b.val-a.val);
+  const byAwb=[...lanes].sort((a,b)=>b.awbs-a.awbs);
+  const byAged=[...lanes].sort((a,b)=>b.aged-a.aged);
+  const top3=byVal.slice(0,3);
+  const top3Val=top3.reduce((a,o)=>a+o.val,0);
+  const avgAge=rows.length?ageSum/rows.length:0;
+  const agedShare=val?agedVal/val:0, critShare=val?critVal/val:0;
+  const short=s=>{s=String(s||'—');return s.length>22?s.slice(0,21)+'…':s;};
+
+  const cards=[
+    {l:'VALUE IN THESE BAGS',dot:'g',v:fmtINR(val),
+     s:fmtN(bags.size)+' bags · '+fmtN(rows.length)+' AWBs'},
+
+    {l:'AGED VALUE (14+ DAYS)',dot:agedShare<.2?'g':agedShare<.4?'a':'r',v:fmtINR(agedVal),
+     s:pct(agedVal,val)+' of value · '+fmtN(agedBags.size)+' bags to clear'},
+
+    {l:'CRITICAL (35+ DAYS)',dot:critShare<.05?'g':critShare<.15?'a':'r',v:fmtINR(critVal),
+     s:fmtN(critBags.size)+' bags · '+pct(critVal,val)+' of value'},
+
+    {l:'AVG IN-TRANSIT AGEING',dot:avgAge<=5?'g':avgAge<=10?'a':'r',v:avgAge.toFixed(1)+' d',
+     s:'across '+fmtN(rows.length)+' AWBs · target ≤ 5 d'},
+
+    {l:'TOP LANE BY VALUE',dot:'a',v:byVal[0]?fmtINR(byVal[0].val):'—',
+     s:byVal[0]?short(byVal[0].lane)+' · '+pct(byVal[0].val,val)+' of value':'—'},
+
+    {l:'TOP 3 LANES SHARE',dot:(val&&top3Val/val>.5)?'r':'a',v:pct(top3Val,val),
+     s:top3.length?fmtINR(top3Val)+' · '+short(top3.map(o=>o.lane).join(', ')):'—'},
+
+    {l:'BUSIEST LANE BY AWBs',dot:'a',v:byAwb[0]?fmtN(byAwb[0].awbs):'—',
+     s:byAwb[0]?short(byAwb[0].lane)+' · '+fmtINR(byAwb[0].val):'—'},
+
+    {l:'MOST AGED VALUE · LANE',dot:'r',v:byAged[0]?fmtINR(byAged[0].aged):'—',
+     s:byAged[0]?short(byAged[0].lane)+' · 14+ day money on one lane':'—'},
+  ];
+
+  host.innerHTML=cards.map(c=>`<div class="kpi" title="${rmEsc(c.s)}">
+    <div class="lab"><span class="dot" style="background:${LIGHT[c.dot]}"></span>${c.l}</div>
+    <div class="val">${c.v}</div>
+    <div class="sub">${rmEsc(c.s)}</div></div>`).join('');
+}
+
 /* ---- Movement type matrix: movement · Σ Product_value · count Awb_number · count Manifest_code ----
    Adds the Movement column (sheet column H) beside movement_type.
    Only rows where Movement is populated are counted (matching the source pivot),
@@ -3289,7 +3400,7 @@ function mvRenderTypeTbl(){
 function renderManifestView(){
   if(!RAW.length)return;
   if(!mvBuilt)mvBuildHeaders();
-  mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderDetail(true);
+  mvRenderKpis(); mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderDetail(true);
 }
 function mvDetailExport(){
   const cap=80000;
@@ -4043,9 +4154,13 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'Bag wise View', items:[
- {t:'panel', n:'Page filters', what:'Four page-level filters that apply on top of the global filter bar.',
-  fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Client</code>',
-  logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the four'},
+ {t:'panel', n:'Page filters', what:'Five page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
+  logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the five\nlists over 12 options get a search box'},
+ {t:'kpi', n:'Bag wise View KPI strip', what:'Eight cards above the pivots, all reading the same filtered scope.',
+  fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>, <code>Lane Code</code>, <code>intransit_ageing</code>',
+  logic:'VALUE IN THESE BAGS   = SUM(Product_value), sub DISTINCT Manifest_code + row count\nAGED VALUE (14+ DAYS) = SUM where Ageing bucket is C, D, E or F\nCRITICAL (35+ DAYS)   = SUM where Ageing bucket is F\nAVG IN-TRANSIT AGEING = AVG(intransit_ageing) over AWBs\nTOP LANE BY VALUE     = highest lane by SUM(Product_value)\nTOP 3 LANES SHARE     = those three lanes / total value\nBUSIEST LANE BY AWBs  = highest lane by row count\nMOST AGED VALUE LANE  = highest lane by 14+ day value',
+  note:'Ageing here is the Bag Creation band, except AVG IN-TRANSIT AGEING which uses intransit_ageing in days — the two ageing systems do not tie to each other. Bag counts are distinct Manifest_code, so a bag spanning two bands is counted once per band it appears in.'},
  {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
   fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
   logic:'per movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
@@ -4062,7 +4177,7 @@ const DOC_SECTIONS=[
   src:'Supabase Storage · remarks.json',
   fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
   logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
-  note:'Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
+  note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
   fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
@@ -4326,8 +4441,11 @@ async function rmDelete(id){
   }catch(e){$('#rmStatus').textContent='Could not delete: '+e.message;}
 }
 function rmExportAll(){
+  const totals=rmLaneTotals();
   const rows=rmPageRows(true).map(r=>({
-    Lane_Code:r.lane,Date:r.date||'',Remark:String(r.text||'').replace(/\r?\n/g,' '),
+    Lane_Code:r.lane,Date:r.date||'',
+    Lane_pending_value:totals.has(r.lane)?Math.round(totals.get(r.lane)):'',
+    Remark:String(r.text||'').replace(/\r?\n/g,' '),
     Added_by:r.byName||r.by||'',Recorded_at:r.at||''}));
   if(!rows.length){alert('No remarks have been recorded yet.');return;}
   lvExport(rows,'csv','lane_remarks','remarks');
@@ -4350,6 +4468,21 @@ function rmPageRows(all){
   if(!q)return out;
   return out.filter(r=>(r.lane+' '+(r.text||'')+' '+(r.byName||r.by||'')).toLowerCase().includes(q));
 }
+/* Lane -> pending value, taken from exactly what the Top 20 Lanes pivot in
+   Bag wise View totals (mvScopeRows), so the figure here and the Total column
+   there are the same number. Lanes outside the current Bag wise View scope
+   have no total to show. */
+function rmLaneTotals(){
+  const m=new Map();
+  try{
+    if(typeof mvScopeRows!=='function'||!RAW.length)return m;
+    for(const r of mvScopeRows()){
+      const k=r['Lane Code']||'Unknown';
+      m.set(k,(m.get(k)||0)+(r.Product_value||0));
+    }
+  }catch(e){console.warn('[remarks] lane totals unavailable:',e.message);}
+  return m;
+}
 function rmPgStatus(msg){const el=$('#rmPgStatus');if(el)el.textContent=msg||'';}
 function rmPgFmtAt(at){
   const d=at?new Date(at):null;
@@ -4364,6 +4497,13 @@ function rmPageRender(){
   if(nw)nw.style.display=allowed?'':'none';
   if(ro)ro.style.display=allowed?'none':'';
   const rows=rmPageRows(false);
+  const totals=rmLaneTotals();
+  const totalCell=lane=>{
+    const v=totals.get(lane);
+    return v===undefined
+      ? `<td class="rmpg-total none" title="This lane is not in the current Bag wise View scope">—</td>`
+      : `<td class="rmpg-total">${fmtINR(v)}</td>`;
+  };
   const own=r=>CURRENT_USER&&(CURRENT_USER.isAdmin||r.by===CURRENT_USER.id);
 
   body.innerHTML=rows.map(r=>{
@@ -4372,6 +4512,7 @@ function rmPageRender(){
       return `<tr class="rmpg-editing">
         <td class="rmpg-lane">${rmEsc(r.lane)}</td>
         <td class="rmpg-date"><input type="date" id="rmEditDate" value="${rmEsc(r.date||'')}"></td>
+        ${totalCell(r.lane)}
         <td class="rmpg-text"><textarea id="rmEditText">${rmEsc(r.text||'')}</textarea></td>
         <td class="rmpg-meta">${rmEsc(r.byName||r.by||'—')}</td>
         <td class="rmpg-meta">${rmPgFmtAt(r.at)}</td>
@@ -4383,6 +4524,7 @@ function rmPageRender(){
     return `<tr>
       <td class="rmpg-lane">${rmEsc(r.lane)}</td>
       <td class="rmpg-date">${rmFmtDate(r.date)}</td>
+      ${totalCell(r.lane)}
       <td class="rmpg-text">${rmEsc(r.text)}</td>
       <td class="rmpg-meta">${rmEsc(r.byName||r.by||'—')}</td>
       <td class="rmpg-meta">${rmPgFmtAt(r.at)}</td>
@@ -4391,7 +4533,7 @@ function rmPageRender(){
           `<button class="rmpg-btn danger" data-del="${key}" data-lane="${lane}">Delete</button>`
         : '<span style="font-size:11px;color:var(--mut)">—</span>'}</td></tr>`;
   }).join('')
-    || `<tr><td colspan="6" style="text-align:center;padding:26px;color:var(--mut)">
+    || `<tr><td colspan="7" style="text-align:center;padding:26px;color:var(--mut)">
          ${Object.keys(REMARKS).length?'No remarks match that filter.'
            :'No remarks yet. Add one here, or from the Remarks column on the Top 20 Lanes pivot in Bag wise View.'}</td></tr>`;
 
@@ -4663,7 +4805,7 @@ const AUTH_USERS={
   'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:false, remarks:true},
   'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:false, remarks:true},
-   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true, remarks:true},
   'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
   'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
@@ -4779,10 +4921,31 @@ var PAGE_RESTORE_PENDING=false;
    (local cache first, Supabase only if the cache is empty). */
 async function reloadInPlace(){
   appVeilShow();
-  setParse('Reloading data …',0,'');
+  setParse('Checking for a newer file …',0,'');
   try{
+    /* The cache holds whatever was loaded when this session started. If the
+       admin has published since — e.g. yesterday's session refreshed today —
+       the cache is yesterday's file and must be thrown away, otherwise a
+       refresh silently re-parses stale data and only a sign-out fixes it. */
+    const meta=await supaMeta();
+    const hit=await idbGet(IDB_KEY);
+    const cachedAt=(hit&&hit.uploadedAt)?Date.parse(hit.uploadedAt):0;
+    const liveAt=(meta&&meta.uploaded)?Date.parse(meta.uploaded):0;
+    const noCache=!hit||!hit.buf;
+    const stale=!!liveAt&&(!cachedAt||liveAt>cachedAt);
+
+    if(noCache||stale){
+      if(stale){
+        const when=new Date(liveAt).toLocaleString('en-IN',
+          {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+        setParse('New data published '+when+' — downloading …',2,'');
+        try{await idbDel(IDB_KEY);}catch(e){}   // never fall back to the stale copy
+      }
+      await loadFromSupabase(meta);
+      return;
+    }
     const ok=await restoreFromCache();
-    if(!ok) await loadFromSupabase();
+    if(!ok) await loadFromSupabase(meta);
   }catch(e){
     console.error('reloadInPlace:',e);
     appVeilError('Could not reload the data: '+e.message,CURRENT_USER&&CURRENT_USER.isAdmin);
@@ -5325,6 +5488,15 @@ function restoreLastPage(){
     return false;
   }
 }
+/* Just the publish stamp — a few hundred bytes, so it is cheap enough to
+   check on every refresh before deciding whether the local cache is still
+   good. Returns null when Supabase is unreachable, in which case the cache
+   is all we have and gets used as-is. */
+async function supaMeta(){
+  try{ return await (await supaFetch('meta.json?t='+Date.now())).json(); }
+  catch(e){ console.warn('[refresh] could not read meta.json:',e.message); return null; }
+}
+
 /* try the local cache first; returns true if the dashboard was restored */
 async function restoreFromCache(){
   const hit=await idbGet(IDB_KEY);
@@ -5519,10 +5691,12 @@ async function pushToSupabase(arrayBuffer, fileName){
   }
 }
 
-async function loadFromSupabase(){
+async function loadFromSupabase(preMeta){
   try{
     setParse('Connecting to Supabase…',2,'');
-    const meta=await (await supaFetch('meta.json')).json();
+    /* reloadInPlace() has usually just read this — reuse it rather than
+       fetching the same object twice */
+    const meta=preMeta||await (await supaFetch('meta.json?t='+Date.now())).json();
     /* the authoritative publish time — identical for every user */
     DATA_UPLOADED_AT=meta.uploaded||null;
     const n=meta.chunks||1;
