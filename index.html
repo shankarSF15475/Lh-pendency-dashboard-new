@@ -799,15 +799,44 @@ thead th{background:#F1F3FB;color:var(--pine);}
 @media(max-width:1150px){.mv-kpi{grid-template-columns:repeat(4,minmax(0,1fr));}}
 @media(max-width:820px){.mv-kpi{grid-template-columns:repeat(2,minmax(0,1fr));}}
 
-/* Movement Type Matrix · table left, bar chart right */
-.mv-matrix-row{display:grid;grid-template-columns:1.45fr .95fr;gap:12px;align-items:start;}
-.mv-matrix-row .lv-mini-wrap{margin-top:10px;}
+/* Movement Type Matrix · table left, ring + colour index right, equal height */
+.mv-matrix-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:14px;align-items:stretch;}
+.mv-matrix-row .lv-mini-wrap{margin-top:10px;height:auto;max-height:none;align-self:stretch;}
+/* the table is the reference index for the chart, so give it room to breathe */
+#page-manifest .mv-stack #mvTypeTbl tbody td{padding:11px 12px;font-size:12.5px;}
+#page-manifest .mv-stack #mvTypeTbl thead th{padding:13px 12px;font-size:11px;}
+#page-manifest .mv-stack #mvTypeTbl tfoot td{padding:13px 12px;}
+#mvTypeTbl .mv-heat{min-width:96px;padding:6px 13px;font-size:12.5px;}
 .mv-matrix-chart{margin-top:10px;border:1px solid var(--line);border-radius:11px;
-  background:#fff;padding:10px 12px 12px;}
-.mv-chart-ttl{display:block;font-size:10.5px;font-weight:800;letter-spacing:.04em;
-  text-transform:uppercase;color:var(--mut);margin-bottom:6px;}
-.mv-chart-wrap{position:relative;height:330px;}
-@media(max-width:1150px){.mv-matrix-row{grid-template-columns:1fr;}}
+  background:#fff;padding:12px 14px 14px;align-self:stretch;min-height:560px;
+  display:flex;flex-direction:column;}
+/* ring on the left, index on the right — the index is the chart's legend */
+.mv-chart-body{flex:1;min-height:420px;display:grid;grid-template-columns:minmax(0,1fr) 232px;
+  gap:10px;align-items:center;}
+.mv-chart-ttl{display:block;font-size:11px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--pine);margin-bottom:8px;}
+.mv-chart-wrap{position:relative;height:100%;min-height:0;}
+/* colour index — swatch · movement type · value · share */
+.mv-legend{max-height:100%;overflow:auto;border:1px solid var(--line);border-radius:9px;
+  padding:6px 9px;background:#FBFBFE;}
+.mv-lg-row{display:grid;grid-template-columns:12px minmax(0,1fr) auto 46px;
+  gap:7px;align-items:center;padding:5px 2px;font-size:11px;}
+.mv-lg-row+.mv-lg-row{border-top:1px solid #F2F4FA;}
+.mv-lg-sw{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.10);}
+.mv-lg-nm{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mv-lg-v,.mv-lg-p{text-align:right;font-weight:700;color:var(--ink);
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+.mv-lg-p{color:var(--mut);}
+.mv-lg-tot{border-top:2px solid var(--ink)!important;margin-top:4px;padding-top:7px;font-weight:800;}
+@media(max-width:1350px){.mv-chart-body{grid-template-columns:minmax(0,1fr) 200px;}}
+@media(max-width:1150px){
+  .mv-matrix-row{grid-template-columns:1fr;}
+  .mv-matrix-chart{min-height:0;}
+  .mv-chart-body{grid-template-columns:1fr;}
+  .mv-chart-wrap{height:360px;}
+  .mv-legend{max-height:none;}
+}
 
 /* the lane picker only needs to be as wide as a lane code */
 .rmpg-lanesel .mv-mcsel-btn{width:100%;justify-content:space-between;padding:9px 12px;
@@ -1354,6 +1383,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card mv-filterbar">
         <span class="mv-fb-ttl">FILTERS</span>
         <div class="mv-filters">
+          <div class="mv-mcsel" id="mvZoneMcsel">
+            <button class="mv-mcsel-btn" id="mvZoneBtn">Zone ▾</button>
+            <div class="mv-mcsel-panel" id="mvZonePanel">
+              <div class="mc-actions">
+                <button id="mvZoneAll">All</button>
+                <button id="mvZoneNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="mvLaneTypeMcsel">
             <button class="mv-mcsel-btn" id="mvLaneTypeBtn">Lane Type ▾</button>
             <div class="mv-mcsel-panel" id="mvLaneTypePanel">
@@ -1436,8 +1474,11 @@ thead th{background:#F1F3FB;color:var(--pine);}
             </table>
           </div>
           <div class="mv-matrix-chart">
-            <span class="mv-chart-ttl">Product value by movement type</span>
-            <div class="mv-chart-wrap"><canvas id="mvTypeChart"></canvas></div>
+            <span class="mv-chart-ttl">Product Value by Movement Type</span>
+            <div class="mv-chart-body">
+              <div class="mv-chart-wrap"><canvas id="mvTypeChart"></canvas></div>
+              <div class="mv-legend" id="mvTypeLegend"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2834,7 +2875,7 @@ let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'total',dir:-1}, mvTypeS
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
-    mvLaneCodeSel=new Set(), mvExpandedLane=null;
+    mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -2965,33 +3006,40 @@ function mvBuildHeaders(){
     return {panel,btn,sync};
   }
 
-  /* 1. Lane Type */
+  /* 1. Zone */
+  const zOpts=[...new Set(RAW.map(r=>r.Zone))].filter(x=>x&&x!=='Unknown')
+    .sort((a,b)=>String(a).localeCompare(String(b)));
+  const mcZN=buildMcsel({panel:'mvZonePanel',btn:'mvZoneBtn',mcsel:'mvZoneMcsel',
+    all:'mvZoneAll',none:'mvZoneNone',label:'Zone',opts:zOpts,
+    set:s=>{mvZoneSel=s;}});
+
+  /* 2. Lane Type */
   const ltOpts=[...new Set(RAW.map(r=>r['Lane Type']))].filter(x=>x&&x!=='Unknown').sort((a,b)=>String(a).localeCompare(String(b)));
   const mcLT=buildMcsel({panel:'mvLaneTypePanel',btn:'mvLaneTypeBtn',mcsel:'mvLaneTypeMcsel',
     all:'mvLaneTypeAll',none:'mvLaneTypeNone',label:'Lane Type',opts:ltOpts,
     set:s=>{mvLaneTypeSel=s;}});
 
-  /* 2. Bag Creation Ageing  ← 'Ageing bucket' column */
+  /* 3. Bag Creation Ageing  ← 'Ageing bucket' column */
   const abOpts=ABKT.filter(b=>RAW.some(r=>r['Ageing bucket']===b));
   const mcAB=buildMcsel({panel:'mvAgeingPanel',btn:'mvAgeingBtn',mcsel:'mvAgeingMcsel',
     all:'mvAgeingAll',none:'mvAgeingNone',label:'Bag Creation Ageing',opts:abOpts.length?abOpts:ABKT,
     set:s=>{mvAgeingSel=s;}});
 
-  /* 3. Bag Intransit Ageing ← 'intransit_ageing_bucket' column */
+  /* 4. Bag Intransit Ageing ← 'intransit_ageing_bucket' column */
   const itOpts=[...new Set(RAW.map(r=>r.intransit_ageing_bucket))].filter(x=>x!=='')
     .sort((a,b)=>itBktRank(a)-itBktRank(b));
   const mcIT=buildMcsel({panel:'mvItBktPanel',btn:'mvItBktBtn',mcsel:'mvItBktMcsel',
     all:'mvItBktAll',none:'mvItBktNone',label:'Bag Intransit Ageing',opts:itOpts,
     set:s=>{mvItBktSel=s;}});
 
-  /* 4. Lane Code — thousands of codes, so the search box does the work */
+  /* 5. Lane Code — thousands of codes, so the search box does the work */
   const lcOpts=[...new Set(RAW.map(r=>r['Lane Code']))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcLC=buildMcsel({panel:'mvLaneCodePanel',btn:'mvLaneCodeBtn',mcsel:'mvLaneCodeMcsel',
     all:'mvLaneCodeAll',none:'mvLaneCodeNone',label:'Lane Code',opts:lcOpts,
     set:s=>{mvLaneCodeSel=s;}});
 
-  /* 5. Client */
+  /* 6. Client */
   const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcCL=buildMcsel({panel:'mvClientPanel',btn:'mvClientBtn',mcsel:'mvClientMcsel',
@@ -2999,9 +3047,10 @@ function mvBuildHeaders(){
     set:s=>{mvClientSel=s;}});
 
   $('#mvClearAllFilters').onclick=()=>{
-    [mcLT,mcAB,mcIT,mcLC,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    [mcZN,mcLT,mcAB,mcIT,mcLC,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
     mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
-    mvClientSel=new Set();mvLaneCodeSel=new Set();
+    mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();
+    mcZN.btn.classList.remove('active');mcZN.btn.textContent='Zone ▾';
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
     mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
     mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
@@ -3024,6 +3073,7 @@ function mvClearCols(){
    This is the source for both pivots (values = Sum of Product_value). */
 function mvScopeRows(){
   let d=FILTERED;
+  if(mvZoneSel.size)     d=d.filter(r=>mvZoneSel.has(r.Zone));
   if(mvLaneTypeSel.size) d=d.filter(r=>mvLaneTypeSel.has(r['Lane Type']));
   if(mvAgeingSel.size)   d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
   if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
@@ -3356,10 +3406,13 @@ function mvRenderTypeTbl(){
     });
   }
   const mark=k=>mvTypeSort.k===k?(mvTypeSort.dir<0?' ▼':' ▲'):'';
+  const grand=arr.reduce((a,o)=>a+o.value,0)||1;
+  arr.forEach(o=>o.share=o.value/grand*100);
   const cols=[
     {k:'type',     label:'MOVEMENT_TYPE'},
     {k:'move',     label:'MOVEMENT'},
     {k:'value',    label:'PRODUCT_VALUE', num:true},
+    {k:'share',    label:'SHARE',         num:true},
     {k:'awbs',     label:'AWB_NUMBER',    num:true},
     {k:'manifests',label:'MANIFEST_CODE', num:true}
   ];
@@ -3389,15 +3442,17 @@ function mvRenderTypeTbl(){
     `<td>${o.type}</td>`+
     `<td>${o.move}</td>`+
     `<td class="num">${heatPill(o)}</td>`+
+    `<td class="num">${o.share.toFixed(1)}%</td>`+
     `<td class="num drill">${fmtN(o.awbs)}</td>`+
     `<td class="num drill">${fmtN(o.manifests)}</td></tr>`).join('')
-    ||`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
+    ||`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--mut)">No data in scope.</td></tr>`;
   $$('#mvTypeBody tr[data-type]').forEach(tr=>tr.onclick=()=>mvFilterByType(tr.dataset.type));
 
   /* Grand total — Count of Manifest_code is the overall distinct count, not the sum of parts */
   $('#mvTypeFoot').innerHTML=arr.length
     ? `<tr><td>Grand Total</td><td></td>`+
       `<td class="num">${fmtINR(arr.reduce((a,o)=>a+o.value,0))}</td>`+
+      `<td class="num">100.0%</td>`+
       `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.awbs,0))}</td>`+
       `<td class="num">${fmtN(allManifests.size)}</td></tr>`
     : '';
@@ -3405,14 +3460,132 @@ function mvRenderTypeTbl(){
   mvRenderTypeChart(arr,rank);
 
   mvTypeExport=arr.map(o=>({movement_type:o.type,movement:o.move,
-    Sum_of_Product_value:Math.round(o.value),
+    Sum_of_Product_value:Math.round(o.value),Share_pct:+o.share.toFixed(1),
     Count_of_Awb_number:o.awbs,Count_of_Manifest_code:o.manifests}));
 }
 
-/* The chart is the same numbers as the PRODUCT_VALUE column, drawn as
-   horizontal bars so long movement-type names stay readable. Bars take their
-   colour from the same rank the pill uses, so a row and its bar always match. */
+/* Doughnut of the same PRODUCT_VALUE column. Slices big enough to hold text
+   get their figure printed inside; anything thinner gets a leader line and an
+   arrow out to the margin, so the small movement types are still readable.
+   The table beside it carries the share %, so the chart needs no legend. */
 let mvTypeChart=null;
+const MV_PIE_INSIDE=0.055;          // slices under ~5.5% are called out instead
+const mvPieLabels={
+  id:'mvPieLabels',
+  afterDatasetsDraw(chart){
+    const meta=chart.getDatasetMeta(0);
+    if(!meta||!meta.data||!meta.data.length)return;
+    const ctx=chart.ctx, ds=chart.data.datasets[0];
+    const labels=chart.data.labels||[], data=ds.data||[];
+    const total=data.reduce((a,v)=>a+(+v||0),0);
+    if(!total)return;
+    const area=chart.chartArea;
+    const first=meta.data[0];
+    const cx=first.x, cy=first.y;                 // the arc's own centre, not the canvas
+    const colours=ds.backgroundColor||[];
+
+    ctx.save();
+    ctx.lineJoin='round';
+
+    /* ---- pass 1: figures inside the fat slices, thin ones set aside ---- */
+    const thin=[];
+    meta.data.forEach((a,i)=>{
+      const v=+data[i]||0; if(!v)return;
+      const share=v/total;
+      const mid=(a.startAngle+a.endAngle)/2;
+      const cos=Math.cos(mid), sin=Math.sin(mid);
+      if(share>=MV_PIE_INSIDE){
+        const r=(a.innerRadius+a.outerRadius)/2;
+        ctx.font='800 11.5px "Segoe UI",system-ui,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.30)';
+        ctx.strokeText(fmtINR(v),cx+cos*r,cy+sin*r);
+        ctx.fillStyle='#FFFFFF'; ctx.fillText(fmtINR(v),cx+cos*r,cy+sin*r);
+        return;
+      }
+      /* every callout goes left: that is where the padding is, and a single
+         column reads far better than labels split either side of the ring */
+      thin.push({side:'l',v,cos,sin,col:colours[i]||'#94A3B8',
+        name:String(labels[i]||''), rOut:a.outerRadius,
+        x1:cx+cos*(a.outerRadius+3), y1:cy+sin*(a.outerRadius+3),
+        yIdeal:cy+sin*(a.outerRadius+22)});
+    });
+
+    /* ---- pass 2: lay the callouts out per side so none collide or clip ----
+       Sort by where each label wants to be, walk down assigning at least GAP
+       between them, then shift the whole column up if it ran past the bottom.
+       This is why the old version overprinted at the top-left. */
+    const GAP=16, PAD=6;
+    ['r','l'].forEach(side=>{
+      const list=thin.filter(t=>t.side===side).sort((a,b)=>a.yIdeal-b.yIdeal);
+      if(!list.length)return;
+      let y=area.top+PAD;
+      list.forEach(t=>{ t.y=Math.max(t.yIdeal,y); y=t.y+GAP; });
+      const over=(y-GAP)-(area.bottom-PAD);
+      if(over>0){
+        let prev=Infinity;
+        for(let k=list.length-1;k>=0;k--){         // push back up from the bottom
+          list[k].y=Math.min(list[k].y-over,prev-GAP);
+          prev=list[k].y;
+        }
+        if(list[0].y<area.top+PAD){                // still tight — space evenly
+          const room=Math.max(GAP,(area.bottom-area.top-2*PAD)/list.length);
+          list.forEach((t,k)=>t.y=area.top+PAD+k*room);
+        }
+      }
+      const right=side==='r';
+      list.forEach(t=>{
+        const elbow=cx+(right?1:-1)*(t.rOut+20);
+        const lx=elbow+(right?26:-26);
+        ctx.strokeStyle=t.col; ctx.lineWidth=1.4;
+        ctx.beginPath(); ctx.moveTo(t.x1,t.y1); ctx.lineTo(elbow,t.y); ctx.lineTo(lx,t.y); ctx.stroke();
+        /* arrowhead back at the slice */
+        const ah=5;
+        ctx.beginPath();
+        ctx.moveTo(t.x1,t.y1);
+        ctx.lineTo(t.x1-t.cos*ah-t.sin*ah*.8, t.y1-t.sin*ah+t.cos*ah*.8);
+        ctx.lineTo(t.x1-t.cos*ah+t.sin*ah*.8, t.y1-t.sin*ah-t.cos*ah*.8);
+        ctx.closePath(); ctx.fillStyle=t.col; ctx.fill();
+
+        const nm=t.name.length>15?t.name.slice(0,14)+'…':t.name;
+        const txt=nm+'  '+fmtINR(t.v)+'  ·  '+(t.v/total*100).toFixed(1)+'%';
+        ctx.font='700 10.5px "Segoe UI",system-ui,sans-serif';
+        ctx.textAlign=right?'left':'right'; ctx.textBaseline='middle';
+        ctx.lineWidth=3.5; ctx.strokeStyle='rgba(255,255,255,.95)';
+        ctx.strokeText(txt,lx+(right?4:-4),t.y);
+        ctx.fillStyle='#334155'; ctx.fillText(txt,lx+(right?4:-4),t.y);
+      });
+    });
+
+    /* ---- total in the hole ---- */
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='600 10px "Segoe UI",system-ui,sans-serif'; ctx.fillStyle='#64748B';
+    ctx.fillText('Total Product Value',cx,cy-11);
+    ctx.font='800 18px "Segoe UI",system-ui,sans-serif'; ctx.fillStyle='#1E293B';
+    ctx.fillText(fmtINR(total),cx,cy+9);
+    ctx.restore();
+  }
+};
+
+/* Colour index under the ring: swatch, movement type, value and share, in the
+   same order and colours as the slices. */
+function mvRenderPieLegend(byVal,colours,total){
+  const host=$('#mvTypeLegend'); if(!host)return;
+  host.innerHTML=byVal.map((o,i)=>
+    `<div class="mv-lg-row">
+       <span class="mv-lg-sw" style="background:${colours[i]}"></span>
+       <span class="mv-lg-nm" title="${rmEsc(o.type)}">${rmEsc(o.type)}</span>
+       <span class="mv-lg-v">${fmtINR(o.value)}</span>
+       <span class="mv-lg-p">${total?(o.value/total*100).toFixed(1):'0.0'}%</span>
+     </div>`).join('')+
+    `<div class="mv-lg-row mv-lg-tot">
+       <span class="mv-lg-sw" style="background:transparent"></span>
+       <span class="mv-lg-nm">Total</span>
+       <span class="mv-lg-v">${fmtINR(total)}</span>
+       <span class="mv-lg-p">100.0%</span>
+     </div>`;
+}
+
 function mvRenderTypeChart(arr,rank){
   const cv=$('#mvTypeChart'); if(!cv)return;
   const byVal=[...arr].sort((a,b)=>b.value-a.value);
@@ -3420,22 +3593,26 @@ function mvRenderTypeChart(arr,rank){
     const t=rank?(rank.get(o.type+'\u0000'+o.move)||0):0;
     return chartRamp(t);
   });
-  const cfg={type:'bar',
+  const total=byVal.reduce((a,o)=>a+o.value,0);
+  const cfg={type:'doughnut',
     data:{labels:byVal.map(o=>o.type),
-      datasets:[{label:'Value (₹)',data:byVal.map(o=>o.value),
-        backgroundColor:colours,borderColor:colours,borderWidth:1,
-        borderRadius:6,maxBarThickness:22}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      datasets:[{data:byVal.map(o=>o.value),backgroundColor:colours,
+        borderColor:'#fff',borderWidth:2,hoverBorderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'56%',
       animation:{duration:400},
+      /* generous side padding is what keeps the callouts on the canvas */
+      /* the callouts all elbow out to the left, so the ring can sit close to
+         the index on the right and use the space that frees up */
+      layout:{padding:{left:104,right:16,top:14,bottom:14}},
       plugins:{legend:{display:false},
         tooltip:{backgroundColor:'rgba(30,41,59,.94)',padding:10,cornerRadius:8,
-          callbacks:{label:c=>' '+fmtINR(c.parsed.x)}}},
-      scales:{
-        x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',font:{size:10},callback:v=>fmtShort(v)}},
-        y:{grid:{display:false},ticks:{color:'#6B667D',font:{size:10},
-          callback(v){const l=this.getLabelForValue(v);return String(l).length>18?String(l).slice(0,17)+'…':l;}}}}}};
-  if(mvTypeChart){mvTypeChart.data=cfg.data;mvTypeChart.options=cfg.options;mvTypeChart.update();}
-  else mvTypeChart=new Chart(cv,cfg);
+          callbacks:{label:c=>{
+            const d=c.dataset.data,t=d.reduce((a,v)=>a+(+v||0),0)||1;
+            return ' '+fmtINR(c.parsed)+' · '+(c.parsed/t*100).toFixed(1)+'%';}}}}},
+    plugins:[mvPieLabels]};
+  if(mvTypeChart){mvTypeChart.destroy();mvTypeChart=null;}
+  mvTypeChart=new Chart(cv,cfg);
+  mvRenderPieLegend(byVal,colours,total);
 }
 
 function renderManifestView(){
@@ -4195,16 +4372,16 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'Bag wise View', items:[
- {t:'panel', n:'Page filters', what:'Five page-level filters that apply on top of the global filter bar.',
-  fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
-  logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the five\nlists over 12 options get a search box'},
+ {t:'panel', n:'Page filters', what:'Six page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Zone</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
+  logic:'Zone                 -> Zone column\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the six\nlists over 12 options get a search box'},
  {t:'kpi', n:'Bag wise View KPI strip', what:'Total value in scope, then one card per Bag Creation ageing band.',
   fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>',
   logic:'VALUE IN THESE BAGS = SUM(Product_value), sub DISTINCT Manifest_code + row count\nthen for each of the six Ageing bucket bands:\n  value = SUM(Product_value) in that band\n  sub   = that value / total value, and DISTINCT Manifest_code in the band\nband dots use the same colours as the lane status dots',
   note:'These are the same six bands as the lane pivot columns, totalled across every lane in scope, so they now tie to that table\u0027s Total row. Bags are counted distinctly within each band, so the six bag counts can exceed the overall bag count if a bag appears in more than one band.'},
  {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
   fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
-  logic:'the bar chart beside the table plots the same PRODUCT_VALUE column\nper movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
+  logic:'SHARE = that row\u0027s value / the Grand Total value\nthe doughnut beside the table plots the same PRODUCT_VALUE column:\n  slices at or above 5.5% print their figure inside the ring\n  thinner slices get a leader line and arrow out to the margin\n  the hole carries the total\nper movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
   note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
  {t:'table', n:'Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
@@ -4872,7 +5049,7 @@ function gsOnLHRPage(){
 
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
- 'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
+  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true},
