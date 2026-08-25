@@ -789,9 +789,14 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .rm-foot .tool{margin-left:auto;width:auto;padding:0 12px;font-size:10px;font-weight:800;}
 @media(max-width:640px){.rm-form{grid-template-columns:1fr;}}
 
-.mv-kpi{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:12px;}
-.mv-kpi .val{font-size:19px;}
-.mv-kpi .sub{line-height:1.45;}
+.mv-kpi{grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;margin-top:12px;}
+.mv-kpi .kpi{padding:11px 12px;}
+.mv-kpi .lab{font-size:9.5px;letter-spacing:.02em;gap:5px;}
+.mv-kpi .lab .dot{width:7px;height:7px;}
+.mv-kpi .val{font-size:17px;margin-top:5px;}
+.mv-kpi .sub{font-size:10px;line-height:1.4;margin-top:4px;}
+@media(max-width:1500px){.mv-kpi{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:900px){.mv-kpi{grid-template-columns:repeat(2,minmax(0,1fr));}}
 
 /* ---- Movement Type Matrix · green→red value heat ---- */
 .mv-heat-legend{display:flex;align-items:center;gap:6px;margin:12px 0 2px;
@@ -868,7 +873,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11px;}
 
 /* ---- Remarks page ---- */
-.rmpg-new{display:grid;grid-template-columns:210px 150px 1fr auto;gap:8px;align-items:start;
+.rmpg-new{display:grid;grid-template-columns:minmax(200px,1.4fr) 160px 160px auto;gap:8px;align-items:center;
   background:#FBFBFE;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
 .rmpg-new input,.rmpg-new textarea{border:1px solid var(--line);border-radius:9px;padding:8px 10px;
   font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
@@ -896,6 +901,12 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .rmpg-btn:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
 .rmpg-btn.danger{color:var(--red);}
 .rmpg-btn.danger:hover{background:var(--red);color:#fff;border-color:var(--red);}
+#rmPgClear{border:1px solid var(--line);background:#fff;color:var(--pine);border-radius:9px;
+  font-weight:700;font-size:12.5px;padding:9px 14px;white-space:nowrap;}
+#rmPgClear:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+/* Refresh / CSV sit in a 30px square by default, which clipped the words */
+#page-remarks .card-tools .tool{width:auto;min-width:0;padding:0 13px;height:30px;
+  font-size:10.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap;}
 @media(max-width:900px){.rmpg-new{grid-template-columns:1fr;}}
 
 /* ---- HOV PIVOT ---- */
@@ -1411,8 +1422,8 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <!-- ===== Top 20 Lanes by Pending Manifest Code — full width, below the matrix ===== -->
       <div class="card lv-sec mv-stack">
         <div class="card-head">
-          <div><h3>Top 20 Lanes by Pending Manifest Code</h3>
-            <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · click a lane to expand MM_destination · sorted large → small</span>
+          <div><h3>Lanes by Pending Manifest Code</h3>
+            <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · every lane in scope, largest value first · click a lane to expand MM_destination</span>
             <div class="lane-dot-legend">
               <span><i class="lane-status-dot lane-dot-green"></i>0–6 days</span>
               <span><i class="lane-status-dot lane-dot-yellow"></i>7–13 days</span>
@@ -1701,7 +1712,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card" style="margin-top:12px;padding:18px">
         <div class="card-head">
           <div><h3>Feedback Manifest Lanes</h3>
-            <span class="sub">every follow-up remark added on the Top 20 Lanes pivot in Bag wise View · newest date first · edit or delete here</span></div>
+            <span class="sub">every follow-up remark added from the lane pivot in Bag wise View · newest date first · filter by lane and date, edit or delete here</span></div>
           <div class="card-tools">
             <button class="tool" id="rmPgRefresh">Refresh</button>
             <button class="tool" id="rmPgCsv">CSV</button>
@@ -1709,14 +1720,14 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
 
         <div class="rmpg-new" id="rmPgNew">
-          <input id="rmPgLane" list="rmPgLaneList" placeholder="Lane code…" autocomplete="off">
+          <input id="rmPgLane" list="rmPgLaneList" placeholder="Filter by lane code…" autocomplete="off">
           <datalist id="rmPgLaneList"></datalist>
-          <input type="date" id="rmPgDate">
-          <textarea id="rmPgText" rows="1" placeholder="New remark — what was done, what is pending…"></textarea>
-          <button id="rmPgAdd">Add remark</button>
+          <input type="date" id="rmPgFrom" title="Remarks dated on or after this day">
+          <input type="date" id="rmPgTo" title="Remarks dated on or before this day">
+          <button id="rmPgClear">Clear filters</button>
         </div>
         <div class="rm-note" id="rmPgReadonly" style="display:none;margin-top:12px;border-radius:9px">
-          View only — your account can read the follow-up trail but not add or edit remarks.</div>
+          View only — your account can read the follow-up trail but not edit or delete remarks.</div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px">
           <input id="rmPgFilter" placeholder="filter by lane, remark text or person…"
@@ -3135,10 +3146,9 @@ function laneDotHTML(o){
 
 function mvRenderLaneTbl(){
   let arr=mvLaneAgg();
-  /* MUST: sort large → small on total, then take top 20 */
+  /* every lane in scope, largest value first — no top-N cut */
   arr.sort((a,b)=>b.total-a.total);
-  arr=arr.slice(0,20);
-  /* optional user re-sort on a clicked column (still within the top 20) */
+  /* optional user re-sort on a clicked column */
   if(mvLaneSort.k!=='total'||mvLaneSort.dir!==-1){
     arr.sort((a,b)=>{
       const k=mvLaneSort.k, d=mvLaneSort.dir;
@@ -3217,7 +3227,7 @@ function mvRenderLaneTbl(){
     rmOpen(td.dataset.rmlane);
   });
 
-  /* --- grand total row for the shown top 20 --- */
+  /* --- grand total row across every lane shown --- */
   const gt={},gtot=arr.reduce((a,o)=>a+o.total,0);
   ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
   $('#mvLaneFoot').innerHTML=arr.length
@@ -3249,63 +3259,38 @@ function mvRenderKpis(){
       '<div class="val">—</div><div class="sub">No rows match the current filters.</div></div>';
     return;
   }
-  const bandIdx=b=>ABKT.indexOf(b);
-  const AGED_FROM=2;                 // C. 14 to 20 days onwards
-  const CRIT=ABKT.length-1;          // F. 35+ Days
 
-  let val=0,agedVal=0,critVal=0,ageSum=0;
-  const bags=new Set(), agedBags=new Set(), critBags=new Set();
-  const laneMap=new Map();
+  /* One tally per Bag Creation band — the same six columns the Top 20 Lanes
+     pivot shows, but totalled across every lane in scope rather than the top
+     20, so these cards are the whole picture, not the pivot's footer. */
+  let val=0;
+  const bagsAll=new Set();
+  const bandVal=ABKT.map(()=>0);
+  const bandBags=ABKT.map(()=>new Set());
   for(const r of rows){
-    const v=r.Product_value||0, i=bandIdx(r['Ageing bucket']), code=r.Manifest_code;
-    val+=v; ageSum+=r.intransit_ageing||0;
-    if(code)bags.add(code);
-    if(i>=AGED_FROM){agedVal+=v; if(code)agedBags.add(code);}
-    if(i===CRIT){critVal+=v; if(code)critBags.add(code);}
-    const k=r['Lane Code']||'Unknown';
-    let o=laneMap.get(k);
-    if(!o){o={lane:k,val:0,awbs:0,bags:new Set(),aged:0};laneMap.set(k,o);}
-    o.val+=v; o.awbs++; if(code)o.bags.add(code);
-    if(i>=AGED_FROM)o.aged+=v;
+    const v=r.Product_value||0, code=r.Manifest_code;
+    val+=v; if(code)bagsAll.add(code);
+    const i=ABKT.indexOf(r['Ageing bucket']);
+    if(i>=0){ bandVal[i]+=v; if(code)bandBags[i].add(code); }
   }
-  const lanes=[...laneMap.values()];
-  const byVal=[...lanes].sort((a,b)=>b.val-a.val);
-  const byAwb=[...lanes].sort((a,b)=>b.awbs-a.awbs);
-  const byAged=[...lanes].sort((a,b)=>b.aged-a.aged);
-  const top3=byVal.slice(0,3);
-  const top3Val=top3.reduce((a,o)=>a+o.val,0);
-  const avgAge=rows.length?ageSum/rows.length:0;
-  const agedShare=val?agedVal/val:0, critShare=val?critVal/val:0;
-  const short=s=>{s=String(s||'—');return s.length>22?s.slice(0,21)+'…':s;};
 
-  const cards=[
-    {l:'VALUE IN THESE BAGS',dot:'g',v:fmtINR(val),
-     s:fmtN(bags.size)+' bags · '+fmtN(rows.length)+' AWBs'},
+  /* dots reuse the lane-status palette so a band means the same colour here
+     as it does beside a lane code */
+  const BAND_DOT=['#2DBE74','#EAB308','#F97316','#EA580C','#EF4444','#B91C1C'];
+  /* "A. 0 to 6 days" -> "0–6 DAYS" */
+  const bandLabel=b=>String(b).replace(/^[A-F]\.\s*/,'')
+    .replace(/\s*to\s*/,'–').replace(/\s*days?$/i,' DAYS').toUpperCase();
 
-    {l:'AGED VALUE (14+ DAYS)',dot:agedShare<.2?'g':agedShare<.4?'a':'r',v:fmtINR(agedVal),
-     s:pct(agedVal,val)+' of value · '+fmtN(agedBags.size)+' bags to clear'},
+  const cards=[{
+    lab:'VALUE IN THESE BAGS', colour:'var(--pine)', v:fmtINR(val),
+    s:fmtN(bagsAll.size)+' bags · '+fmtN(rows.length)+' AWBs'
+  }].concat(ABKT.map((b,i)=>({
+    lab:bandLabel(b), colour:BAND_DOT[i], v:fmtINR(bandVal[i]),
+    s:pct(bandVal[i],val)+' of value · '+fmtN(bandBags[i].size)+' bags'
+  })));
 
-    {l:'CRITICAL (35+ DAYS)',dot:critShare<.05?'g':critShare<.15?'a':'r',v:fmtINR(critVal),
-     s:fmtN(critBags.size)+' bags · '+pct(critVal,val)+' of value'},
-
-    {l:'AVG IN-TRANSIT AGEING',dot:avgAge<=5?'g':avgAge<=10?'a':'r',v:avgAge.toFixed(1)+' d',
-     s:'across '+fmtN(rows.length)+' AWBs · target ≤ 5 d'},
-
-    {l:'TOP LANE BY VALUE',dot:'a',v:byVal[0]?fmtINR(byVal[0].val):'—',
-     s:byVal[0]?short(byVal[0].lane)+' · '+pct(byVal[0].val,val)+' of value':'—'},
-
-    {l:'TOP 3 LANES SHARE',dot:(val&&top3Val/val>.5)?'r':'a',v:pct(top3Val,val),
-     s:top3.length?fmtINR(top3Val)+' · '+short(top3.map(o=>o.lane).join(', ')):'—'},
-
-    {l:'BUSIEST LANE BY AWBs',dot:'a',v:byAwb[0]?fmtN(byAwb[0].awbs):'—',
-     s:byAwb[0]?short(byAwb[0].lane)+' · '+fmtINR(byAwb[0].val):'—'},
-
-    {l:'MOST AGED VALUE · LANE',dot:'r',v:byAged[0]?fmtINR(byAged[0].aged):'—',
-     s:byAged[0]?short(byAged[0].lane)+' · 14+ day money on one lane':'—'},
-  ];
-
-  host.innerHTML=cards.map(c=>`<div class="kpi" title="${rmEsc(c.s)}">
-    <div class="lab"><span class="dot" style="background:${LIGHT[c.dot]}"></span>${c.l}</div>
+  host.innerHTML=cards.map(c=>`<div class="kpi" title="${rmEsc(c.lab+' — '+c.s)}">
+    <div class="lab"><span class="dot" style="background:${c.colour}"></span>${c.lab}</div>
     <div class="val">${c.v}</div>
     <div class="sub">${rmEsc(c.s)}</div></div>`).join('');
 }
@@ -4157,18 +4142,18 @@ const DOC_SECTIONS=[
  {t:'panel', n:'Page filters', what:'Five page-level filters that apply on top of the global filter bar.',
   fields:'<code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
   logic:'Lane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the five\nlists over 12 options get a search box'},
- {t:'kpi', n:'Bag wise View KPI strip', what:'Eight cards above the pivots, all reading the same filtered scope.',
-  fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>, <code>Lane Code</code>, <code>intransit_ageing</code>',
-  logic:'VALUE IN THESE BAGS   = SUM(Product_value), sub DISTINCT Manifest_code + row count\nAGED VALUE (14+ DAYS) = SUM where Ageing bucket is C, D, E or F\nCRITICAL (35+ DAYS)   = SUM where Ageing bucket is F\nAVG IN-TRANSIT AGEING = AVG(intransit_ageing) over AWBs\nTOP LANE BY VALUE     = highest lane by SUM(Product_value)\nTOP 3 LANES SHARE     = those three lanes / total value\nBUSIEST LANE BY AWBs  = highest lane by row count\nMOST AGED VALUE LANE  = highest lane by 14+ day value',
-  note:'Ageing here is the Bag Creation band, except AVG IN-TRANSIT AGEING which uses intransit_ageing in days — the two ageing systems do not tie to each other. Bag counts are distinct Manifest_code, so a bag spanning two bands is counted once per band it appears in.'},
+ {t:'kpi', n:'Bag wise View KPI strip', what:'Total value in scope, then one card per Bag Creation ageing band.',
+  fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>',
+  logic:'VALUE IN THESE BAGS = SUM(Product_value), sub DISTINCT Manifest_code + row count\nthen for each of the six Ageing bucket bands:\n  value = SUM(Product_value) in that band\n  sub   = that value / total value, and DISTINCT Manifest_code in the band\nband dots use the same colours as the lane status dots',
+  note:'These are the same six bands as the lane pivot columns, totalled across every lane in scope, so they now tie to that table\u0027s Total row. Bags are counted distinctly within each band, so the six bag counts can exceed the overall bag count if a bag appears in more than one band.'},
  {t:'table', n:'Movement Type Matrix', what:'Volume and value by movement type and its movement label.',
   fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
   logic:'per movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
   note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
- {t:'table', n:'Top 20 Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
+ {t:'table', n:'Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
-  logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nsorted by row total descending, top 20\nclicking a lane expands SUM(Product_value) by MM_destination',
-  note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row covers only the 20 lanes shown, not all lanes.'},
+  logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nevery lane in scope, sorted by row total descending\nclicking a lane expands SUM(Product_value) by MM_destination',
+  note:'Destination rows use MM_destination (the shipment destination), not Manifest_Destination. The Total row now covers every lane in scope, so it ties to the KPI cards above. Use the Lane Code and Client filters to narrow a long list.'},
  {t:'panel', n:'Lane status dot', what:'The coloured dot beside each lane code — how far the oldest money on that lane has aged.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>',
   logic:'walk the six Bag Creation bands from oldest to newest\ntake the first band that still carries any Product_value\n  F. 35+      -> dark red\n  E. 28 to 34 -> red\n  D. 21 to 27 -> dark orange\n  C. 14 to 20 -> orange\n  B. 7 to 13  -> yellow\n  otherwise   -> green (nothing older than 6 days)',
@@ -4176,7 +4161,7 @@ const DOC_SECTIONS=[
  {t:'panel', n:'Feedback Manifest Lanes (follow-up log)', what:'A dated follow-up trail attached to each lane in the Top 20 pivot, so a lane can be tracked across days.',
   src:'Supabase Storage · remarks.json',
   fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
-  logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
+  logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code and date range\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
   note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
   fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
@@ -4315,6 +4300,13 @@ function rmFmtDate(s){
 }
 /* who may write: the admin, plus any account flagged remarks:true */
 function canRemark(){return !!(CURRENT_USER&&(CURRENT_USER.isAdmin||CURRENT_USER.remarks));}
+/* who may edit or delete a given remark: its own author, the admin, or an
+   account flagged remarksManage (a lane owner who curates the whole trail) */
+function rmCanManage(r){
+  if(!CURRENT_USER)return false;
+  if(CURRENT_USER.isAdmin||CURRENT_USER.remarksManage)return true;
+  return !!r&&r.by===CURRENT_USER.id;
+}
 /* newest date first; same-date remarks fall back to when they were recorded */
 function rmSort(list){
   return (list||[]).slice().sort((a,b)=>
@@ -4386,7 +4378,7 @@ function rmClose(){
 }
 function rmRenderList(){
   const list=rmSort(REMARKS[RM_LANE]||[]);
-  const own=r=>CURRENT_USER&&(CURRENT_USER.isAdmin||r.by===CURRENT_USER.id);
+  const own=r=>rmCanManage(r);
   $('#rmList').innerHTML=list.map(r=>
     `<div class="rm-item">
        <div class="rm-item-head">
@@ -4463,10 +4455,18 @@ function rmPageRows(all){
   out.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))
                 ||String(b.at||'').localeCompare(String(a.at||'')));
   if(all)return out;
-  const f=$('#rmPgFilter');
-  const q=((f&&f.value)||'').trim().toLowerCase();
-  if(!q)return out;
-  return out.filter(r=>(r.lane+' '+(r.text||'')+' '+(r.byName||r.by||'')).toLowerCase().includes(q));
+  const val=id=>{const el=$(id);return el?String(el.value||'').trim():'';};
+  const lane=val('#rmPgLane').toLowerCase();
+  const from=val('#rmPgFrom'), to=val('#rmPgTo');
+  const q=val('#rmPgFilter').toLowerCase();
+  return out.filter(r=>{
+    if(lane&&!String(r.lane||'').toLowerCase().includes(lane))return false;
+    /* dates are stored as YYYY-MM-DD, so a plain string compare is a date compare */
+    if(from&&String(r.date||'')<from)return false;
+    if(to&&String(r.date||'')>to)return false;
+    if(q&&!(r.lane+' '+(r.text||'')+' '+(r.byName||r.by||'')).toLowerCase().includes(q))return false;
+    return true;
+  });
 }
 /* Lane -> pending value, taken from exactly what the Top 20 Lanes pivot in
    Bag wise View totals (mvScopeRows), so the figure here and the Total column
@@ -4493,8 +4493,7 @@ function rmPgFmtAt(at){
 function rmPageRender(){
   const body=$('#rmPgBody'); if(!body)return;
   const allowed=canRemark();
-  const nw=$('#rmPgNew'), ro=$('#rmPgReadonly');
-  if(nw)nw.style.display=allowed?'':'none';
+  const ro=$('#rmPgReadonly');
   if(ro)ro.style.display=allowed?'none':'';
   const rows=rmPageRows(false);
   const totals=rmLaneTotals();
@@ -4504,7 +4503,7 @@ function rmPageRender(){
       ? `<td class="rmpg-total none" title="This lane is not in the current Bag wise View scope">—</td>`
       : `<td class="rmpg-total">${fmtINR(v)}</td>`;
   };
-  const own=r=>CURRENT_USER&&(CURRENT_USER.isAdmin||r.by===CURRENT_USER.id);
+  const own=r=>rmCanManage(r);
 
   body.innerHTML=rows.map(r=>{
     const key=rmEsc(r.id), lane=rmEsc(r.lane);
@@ -4535,7 +4534,7 @@ function rmPageRender(){
   }).join('')
     || `<tr><td colspan="7" style="text-align:center;padding:26px;color:var(--mut)">
          ${Object.keys(REMARKS).length?'No remarks match that filter.'
-           :'No remarks yet. Add one here, or from the Remarks column on the Top 20 Lanes pivot in Bag wise View.'}</td></tr>`;
+           :'No remarks yet. Add one from the Remarks column on the lane pivot in Bag wise View.'}</td></tr>`;
 
   $('#rmPgCount').textContent=fmtN(rows.length)+' remark'+(rows.length===1?'':'s');
   body.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{RM_EDIT=b.dataset.edit;rmPageRender();
@@ -4557,7 +4556,6 @@ function rmPageLaneList(){
 async function rmPageOpen(){
   RM_EDIT=null;
   rmPageLaneList();
-  const d=$('#rmPgDate'); if(d&&!d.value)d.value=rmToday();
   rmPageRender();
   rmPgStatus('Syncing…');
   await rmFetch();
@@ -4565,34 +4563,15 @@ async function rmPageOpen(){
   rmPageRender();
 }
 
-async function rmPageAdd(){
-  if(!canRemark())return;
-  const lane=($('#rmPgLane').value||'').trim();
-  const date=$('#rmPgDate').value||rmToday();
-  const text=($('#rmPgText').value||'').trim();
-  if(!lane){rmPgStatus('Pick or type a lane code first.');return;}
-  if(!text){rmPgStatus('Type a remark first.');return;}
-  const btn=$('#rmPgAdd'); btn.disabled=true; rmPgStatus('Saving…');
-  try{
-    await rmFetch();
-    if(!REMARKS[lane])REMARKS[lane]=[];
-    REMARKS[lane].push({
-      id:'r'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
-      date,text,by:CURRENT_USER.id,byName:CURRENT_USER.name||CURRENT_USER.id,
-      at:new Date().toISOString()});
-    await rmSave();
-    $('#rmPgText').value='';
-    rmPgStatus('Saved.');
-    setTimeout(()=>{if($('#rmPgStatus')&&$('#rmPgStatus').textContent==='Saved.')rmPgStatus('');},2500);
-    rmPageRender();
-    if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
-    try{logEvent('remark',lane+' · '+date);}catch(e){}
-  }catch(e){rmPgStatus('Could not save: '+e.message);}
-  btn.disabled=false;
+/* Adding happens on the lane pivot in Bag wise View, where a remark has a lane
+   to attach to. This page filters, edits and deletes the resulting trail. */
+function rmPageClearFilters(){
+  ['#rmPgLane','#rmPgFrom','#rmPgTo','#rmPgFilter'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  rmPageRender();
 }
 
 async function rmPageSave(lane,id){
-  if(!canRemark())return;
+  if(!canRemark()&&!(CURRENT_USER&&CURRENT_USER.remarksManage))return;
   const date=($('#rmEditDate')&&$('#rmEditDate').value)||'';
   const text=(($('#rmEditText')&&$('#rmEditText').value)||'').trim();
   if(!text){rmPgStatus('A remark cannot be empty — delete it instead.');return;}
@@ -4616,7 +4595,7 @@ async function rmPageSave(lane,id){
 }
 
 async function rmPageDelete(lane,id){
-  if(!canRemark())return;
+  if(!canRemark()&&!(CURRENT_USER&&CURRENT_USER.remarksManage))return;
   if(!confirm('Delete this remark on '+lane+'? This cannot be undone.'))return;
   rmPgStatus('Deleting…');
   try{
@@ -4792,7 +4771,7 @@ function gsOnLHRPage(){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true},
@@ -5855,7 +5834,10 @@ function wireControls(){
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
 
   /* lane remarks */
-  $('#rmPgAdd').onclick=rmPageAdd;
+  $('#rmPgLane').oninput=rmPageRender;
+  $('#rmPgFrom').onchange=rmPageRender;
+  $('#rmPgTo').onchange=rmPageRender;
+  $('#rmPgClear').onclick=rmPageClearFilters;
   $('#rmPgFilter').oninput=rmPageRender;
   $('#rmPgRefresh').onclick=rmPageOpen;
   $('#rmPgCsv').onclick=rmExportAll;
