@@ -742,6 +742,9 @@ thead th{background:#F1F3FB;color:var(--pine);}
    pivot below it. */
 #page-manifest .mv-stack{margin-top:12px;}
 #page-manifest .mv-stack .lv-mini-wrap{max-height:520px;}
+/* …but not the matrix, which must run the full height of the chart card
+   beside it. Same specificity as the rule above, declared later, so it wins. */
+#page-manifest .mv-matrix-row .lv-mini-wrap{max-height:none;height:100%;}
 #page-manifest .mv-stack #mvTypeTbl{width:100%;}
 
 /* ---- LANE REMARKS · Bag wise View follow-up log ---- */
@@ -800,16 +803,16 @@ thead th{background:#F1F3FB;color:var(--pine);}
 @media(max-width:820px){.mv-kpi{grid-template-columns:repeat(2,minmax(0,1fr));}}
 
 /* Movement Type Matrix · table left, ring + colour index right, equal height */
-.mv-matrix-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+.mv-matrix-row{--mv-h:560px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
   gap:14px;align-items:stretch;}
-.mv-matrix-row .lv-mini-wrap{margin-top:10px;height:auto;max-height:none;align-self:stretch;}
+.mv-matrix-row .lv-mini-wrap{margin-top:10px;height:var(--mv-h);max-height:none;align-self:stretch;}
 /* the table is the reference index for the chart, so give it room to breathe */
 #page-manifest .mv-stack #mvTypeTbl tbody td{padding:11px 12px;font-size:12.5px;}
 #page-manifest .mv-stack #mvTypeTbl thead th{padding:13px 12px;font-size:11px;}
 #page-manifest .mv-stack #mvTypeTbl tfoot td{padding:13px 12px;}
 #mvTypeTbl .mv-heat{min-width:96px;padding:6px 13px;font-size:12.5px;}
 .mv-matrix-chart{margin-top:10px;border:1px solid var(--line);border-radius:11px;
-  background:#fff;padding:12px 14px 14px;align-self:stretch;min-height:560px;
+  background:#fff;padding:12px 14px 14px;align-self:stretch;height:var(--mv-h);min-height:0;
   display:flex;flex-direction:column;}
 /* ring on the left, index on the right — the index is the chart's legend */
 .mv-chart-body{flex:1;min-height:420px;display:grid;grid-template-columns:minmax(0,1fr) 232px;
@@ -831,7 +834,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .mv-lg-tot{border-top:2px solid var(--ink)!important;margin-top:4px;padding-top:7px;font-weight:800;}
 @media(max-width:1350px){.mv-chart-body{grid-template-columns:minmax(0,1fr) 200px;}}
 @media(max-width:1150px){
-  .mv-matrix-row{grid-template-columns:1fr;}
+  .mv-matrix-row{grid-template-columns:1fr;--mv-h:auto;}
   .mv-matrix-chart{min-height:0;}
   .mv-chart-body{grid-template-columns:1fr;}
   .mv-chart-wrap{height:360px;}
@@ -867,14 +870,19 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #mvTypeTbl tbody tr:hover td{background:#F8F9FE;}
 #mvTypeTbl tbody td:first-child{color:var(--ink);font-weight:600;}
 #mvTypeTbl tbody td:nth-child(2){color:var(--text);font-weight:600;}
+/* body figures stay at 600; the Grand Total row is re-weighted below */
 #mvTypeTbl tbody td.num,#mvTypeTbl tfoot td.num{color:var(--ink);font-weight:600;
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
 #mvTypeTbl .mv-heat{font-family:'Consolas','SF Mono',ui-monospace,monospace;
   font-variant-numeric:tabular-nums;}
 /* grand total sits under a solid rule, plain and unhighlighted */
 #mvTypeTbl tfoot td{border-top:2px solid var(--ink)!important;box-shadow:none!important;
-  color:var(--ink)!important;background:#FFFFFF!important;padding:12px 10px;font-weight:800;
-  font-variant-numeric:tabular-nums;}
+  color:var(--ink)!important;background:#FFFFFF!important;padding:13px 12px;
+  font-weight:800!important;font-variant-numeric:tabular-nums;}
+#mvTypeTbl tfoot td:first-child{font-size:12.5px;letter-spacing:.01em;}
+/* the totals themselves were still inheriting the 600 body weight — match the
+   "Grand Total" label so the whole row reads as one figure */
+#mvTypeTbl tfoot td,#mvTypeTbl tfoot td.num{font-weight:800!important;font-size:12.5px;}
 
 /* ===== Lane ageing status dot (Top 20 Lanes pivot) ===== */
 .lane-status-dot{display:inline-block;width:9px;height:9px;min-width:9px;border-radius:50%;
@@ -3547,9 +3555,10 @@ const mvPieLabels={
         ctx.lineTo(t.x1-t.cos*ah+t.sin*ah*.8, t.y1-t.sin*ah-t.cos*ah*.8);
         ctx.closePath(); ctx.fillStyle=t.col; ctx.fill();
 
-        const nm=t.name.length>15?t.name.slice(0,14)+'…':t.name;
-        const txt=nm+'  '+fmtINR(t.v)+'  ·  '+(t.v/total*100).toFixed(1)+'%';
-        ctx.font='700 10.5px "Segoe UI",system-ui,sans-serif';
+        /* value only — the index beside the ring already names each slice and
+           gives its share, and the longer strings were running off the canvas */
+        const txt=fmtINR(t.v);
+        ctx.font='800 11px "Segoe UI",system-ui,sans-serif';
         ctx.textAlign=right?'left':'right'; ctx.textBaseline='middle';
         ctx.lineWidth=3.5; ctx.strokeStyle='rgba(255,255,255,.95)';
         ctx.strokeText(txt,lx+(right?4:-4),t.y);
@@ -3603,7 +3612,7 @@ function mvRenderTypeChart(arr,rank){
       /* generous side padding is what keeps the callouts on the canvas */
       /* the callouts all elbow out to the left, so the ring can sit close to
          the index on the right and use the space that frees up */
-      layout:{padding:{left:104,right:16,top:14,bottom:14}},
+      layout:{padding:{left:74,right:16,top:14,bottom:14}},
       plugins:{legend:{display:false},
         tooltip:{backgroundColor:'rgba(30,41,59,.94)',padding:10,cornerRadius:8,
           callbacks:{label:c=>{
