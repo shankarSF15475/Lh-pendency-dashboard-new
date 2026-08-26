@@ -3543,8 +3543,18 @@ const mvPieLabels={
       }
       const right=side==='r';
       list.forEach(t=>{
+        /* Measure first: "₹27.85 L" is wider than the old fixed margin, and the
+           label was being clipped by the canvas edge. Work out where the text
+           actually starts and pull the elbow in if there is not room. */
+        const txt=fmtINR(t.v);
+        ctx.font='800 11px "Segoe UI",system-ui,sans-serif';
+        const w=ctx.measureText(txt).width;
+        const EDGE=4;
         const elbow=cx+(right?1:-1)*(t.rOut+20);
-        const lx=elbow+(right?26:-26);
+        let lx=elbow+(right?26:-26);
+        let tx=lx+(right?4:-4);
+        if(right){ if(tx+w>chart.width-EDGE){ tx=chart.width-EDGE-w; lx=tx-4; } }
+        else     { if(tx-w<EDGE){ tx=EDGE+w; lx=tx+4; } }
         ctx.strokeStyle=t.col; ctx.lineWidth=1.4;
         ctx.beginPath(); ctx.moveTo(t.x1,t.y1); ctx.lineTo(elbow,t.y); ctx.lineTo(lx,t.y); ctx.stroke();
         /* arrowhead back at the slice */
@@ -3555,14 +3565,12 @@ const mvPieLabels={
         ctx.lineTo(t.x1-t.cos*ah+t.sin*ah*.8, t.y1-t.sin*ah-t.cos*ah*.8);
         ctx.closePath(); ctx.fillStyle=t.col; ctx.fill();
 
-        /* value only — the index beside the ring already names each slice and
-           gives its share, and the longer strings were running off the canvas */
-        const txt=fmtINR(t.v);
-        ctx.font='800 11px "Segoe UI",system-ui,sans-serif';
+        /* value only — the index beside the ring names each slice and gives
+           its share */
         ctx.textAlign=right?'left':'right'; ctx.textBaseline='middle';
         ctx.lineWidth=3.5; ctx.strokeStyle='rgba(255,255,255,.95)';
-        ctx.strokeText(txt,lx+(right?4:-4),t.y);
-        ctx.fillStyle='#334155'; ctx.fillText(txt,lx+(right?4:-4),t.y);
+        ctx.strokeText(txt,tx,t.y);
+        ctx.fillStyle='#334155'; ctx.fillText(txt,tx,t.y);
       });
     });
 
@@ -3612,7 +3620,7 @@ function mvRenderTypeChart(arr,rank){
       /* generous side padding is what keeps the callouts on the canvas */
       /* the callouts all elbow out to the left, so the ring can sit close to
          the index on the right and use the space that frees up */
-      layout:{padding:{left:74,right:16,top:14,bottom:14}},
+      layout:{padding:{left:96,right:16,top:14,bottom:14}},
       plugins:{legend:{display:false},
         tooltip:{backgroundColor:'rgba(30,41,59,.94)',padding:10,cornerRadius:8,
           callbacks:{label:c=>{
