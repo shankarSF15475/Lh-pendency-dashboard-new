@@ -515,10 +515,13 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar{display:none}
-.lhr-summary-row{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start}
+.lhr-summary-row{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:stretch}
+.lhr-summary-row>div:first-child{display:flex;flex-direction:column;min-width:0}
+.lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:340px}
 .lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
-.lhr-chart-pane{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(10,42,30,.09);height:100%;box-sizing:border-box}
-.lhr-chart-pane canvas{max-height:340px}
+.lhr-chart-pane{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(10,42,30,.09);
+  height:100%;min-height:340px;display:flex;flex-direction:column;box-sizing:border-box}
+.lhr-chart-pane canvas{flex:1;min-height:0;max-height:none}
 @media(max-width:900px){.lhr-summary-row{grid-template-columns:1fr}}
 .hov-dashboard-head{margin-top:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .hov-dashboard-head h3{font-size:16px;color:var(--ink)}
@@ -1588,8 +1591,8 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lhr-src" id="lhrSrcBar">
         <span class="lhr-src-dot" id="lhrSrcDot"></span>
         <div class="lhr-src-txt">
-          <b>Live source ·</b>
-          <span id="lhrSrcSub">AuditShield – CN &amp; Loss Reporting </span>
+          <b>Live source · Google Sheet</b>
+          <span id="lhrSrcSub">AuditShield – CN &amp; Loss Reporting (Responses_Final) · sheet “CN Working”</span>
         </div>
         <span class="pill" id="lhrSyncLbl">not synced yet</span>
         <label class="lhr-auto"><input type="checkbox" id="lhrAuto" checked> auto-refresh</label>
@@ -1615,7 +1618,6 @@ thead th{background:#F1F3FB;color:var(--pine);}
               <tfoot id="lhrSummaryFoot"></tfoot>
             </table>
           </div>
-          <div class="lhr-diag" id="lhrDiag"></div>
           </div>
           <div class="lhr-chart-pane">
             <span class="sub" style="display:block;margin-bottom:8px">Month vs CN Received Value</span>
@@ -3995,6 +3997,9 @@ function lhrRenderTable(){
 /* Counters filled on every rebuild. If the table ever disagrees with the
    sheet's own pivot, these numbers say why: a row is only counted when its
    CN Received Date can actually be read, so "skipped" is the gap. */
+/* Still tallied on every rebuild — the on-screen strip was removed, but these
+   counts remain the quickest way to explain a gap against the sheet's own
+   pivot: log LHR_DIAG in the console if the totals ever disagree. */
 let LHR_DIAG={rows:0,dated:0,blank:0,skipped:0,dateCol:'',valueCol:'',total:0};
 function lhrSummaryRows(){
   const cd=lhrColCnDate(), cv=lhrColCnValue();
@@ -4028,29 +4033,7 @@ function lhrRenderSummary(){
   $('#lhrSummaryFoot').innerHTML=rows.length
     ? `<tr><td>Total</td><td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
     : '';
-  lhrRenderDiag();
   lhrRenderChart(rows);
-}
-/* A short reconciliation line so this table can be checked against the
-   sheet's own pivot without opening the console. */
-function lhrRenderDiag(){
-  const el=document.getElementById('lhrDiag'); if(!el)return;
-  const d=LHR_DIAG;
-  if(!d.rows){el.innerHTML='';el.className='lhr-diag';return;}
-  const bits=[
-    `<b>${fmtN(d.rows)}</b> rows read from CN Working`,
-    `<b>${fmtN(d.dated)}</b> counted here (CN Received Date present)`,
-    `<b>${fmtN(d.blank)}</b> still pending (no CN date)`,
-    `total <b>${(+d.total||0).toLocaleString('en-IN')}</b>`
-  ];
-  let cls='lhr-diag show';
-  if(d.skipped){
-    cls+=' warn';
-    bits.splice(3,0,`<b>${fmtN(d.skipped)}</b> skipped — the date in <code>${rmEsc(d.dateCol)}</code> could not be read`);
-  }
-  el.className=cls;
-  el.innerHTML='Reconciliation · '+bits.join(' · ')+
-    `<br>Reading date from <code>${rmEsc(d.dateCol)}</code> and value from <code>${rmEsc(d.valueCol)}</code>. Months are ordered oldest first, not alphabetically.`;
 }
 /* ---- Table 2: line chart of the same series ----
    Values are printed permanently next to every dot (month on top, value below)
@@ -4444,7 +4427,8 @@ const DOC_SECTIONS=[
   note:'Some cells are true Excel dates carrying a US format while others are plain text. Reading the displayed text is what makes the two agree.'},
  {t:'table', n:'Recovery Amount', what:'Money actually recovered, by month.',
   fields:'<code>CN Received Date</code>, <code>CN Received Value</code>',
-  logic:'keep only rows where CN Received Date is present\nmonth  = month of CN Received Date, shown as Mon\u0027YY\nvalue  = SUM(CN Received Value)\nsorted oldest month first, with a Total row'},
+  logic:'keep only rows where CN Received Date is present\nmonth  = month of CN Received Date, shown as Mon\u0027YY\nvalue  = SUM(CN Received Value)\nsorted oldest month first, with a Total row',
+  note:'Rows whose CN Received Date cannot be read are skipped rather than counted. The counts behind that are kept in LHR_DIAG, so if this table ever disagrees with the sheet\u0027s own pivot, log LHR_DIAG in the browser console to see how many rows were skipped and why.'},
  {t:'chart', n:'Month vs CN Received Value', what:'The same series as a line chart.',
   logic:'identical data to the Recovery Amount table, plotted in month order'},
  {t:'table', n:'Pending for Recovery', what:'Escalations where nothing has been recovered yet.',
