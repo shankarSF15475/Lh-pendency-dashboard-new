@@ -525,13 +525,15 @@ body.remarks-page .filterbar{display:none}
 #lhrSummaryBody tr:last-child td{border-bottom:none}
 #lhrSummaryFoot td{padding:14px 16px;font-size:13.5px;font-weight:800}
 .lhr-summary-row>div:first-child{display:flex;flex-direction:column;min-width:0}
-.lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:360px;border:1px solid var(--line);
+.lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:470px;border:1px solid var(--line);
   border-radius:12px;box-shadow:0 2px 10px rgba(10,42,30,.06);background:#fff}
 .lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
-.lhr-chart-pane{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+.lhr-chart-pane{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px;
   box-shadow:0 2px 10px rgba(10,42,30,.06);
-  height:100%;min-height:360px;display:flex;flex-direction:column;box-sizing:border-box}
-.lhr-chart-pane canvas{flex:1;min-height:0;max-height:none}
+  height:100%;min-height:470px;display:flex;flex-direction:column;box-sizing:border-box}
+.lhr-chart-body{flex:1;min-height:0;border:1px solid var(--line);border-radius:8px;
+  padding:10px 12px 6px;background:#fff}
+.lhr-chart-pane canvas{width:100%!important;height:100%!important;max-height:none}
 @media(max-width:900px){.lhr-summary-row{grid-template-columns:1fr}}
 .hov-dashboard-head{margin-top:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .hov-dashboard-head h3{font-size:16px;color:var(--ink)}
@@ -1631,7 +1633,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
           </div>
           <div class="lhr-chart-pane">
             <span class="lhr-chart-ttl">Month vs CN Received Value</span>
-            <canvas id="lhrSummaryChart"></canvas>
+            <div class="lhr-chart-body"><canvas id="lhrSummaryChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -4090,7 +4092,7 @@ function lhrRenderChart(rows){
         pointBorderColor:'#fff',pointBorderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
       /* headroom so the labels above the highest dot are never clipped */
-      layout:{padding:{top:34,left:8,right:8}},
+      layout:{padding:{top:30,left:4,right:14,bottom:2}},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
       scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},
               y:{beginAtZero:true,grace:'12%',grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}},
