@@ -515,12 +515,22 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar{display:none}
-.lhr-summary-row{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:stretch}
+.lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
+.lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
+/* Recovery Amount · roomier rows, month in ink, total in indigo */
+#lhrSummaryBody td{padding:13px 16px;font-size:13px}
+#lhrSummaryBody td:first-child{font-weight:700;color:var(--ink)}
+#lhrSummaryBody td.num{font-family:'Consolas','SF Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+#lhrSummaryBody tr:last-child td{border-bottom:none}
+#lhrSummaryFoot td{padding:14px 16px;font-size:13.5px;font-weight:800}
 .lhr-summary-row>div:first-child{display:flex;flex-direction:column;min-width:0}
-.lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:340px}
+.lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:360px;border:1px solid var(--line);
+  border-radius:12px;box-shadow:0 2px 10px rgba(10,42,30,.06);background:#fff}
 .lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
-.lhr-chart-pane{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(10,42,30,.09);
-  height:100%;min-height:340px;display:flex;flex-direction:column;box-sizing:border-box}
+.lhr-chart-pane{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  box-shadow:0 2px 10px rgba(10,42,30,.06);
+  height:100%;min-height:360px;display:flex;flex-direction:column;box-sizing:border-box}
 .lhr-chart-pane canvas{flex:1;min-height:0;max-height:none}
 @media(max-width:900px){.lhr-summary-row{grid-template-columns:1fr}}
 .hov-dashboard-head{margin-top:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
@@ -1620,7 +1630,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
           </div>
           </div>
           <div class="lhr-chart-pane">
-            <span class="sub" style="display:block;margin-bottom:8px">Month vs CN Received Value</span>
+            <span class="lhr-chart-ttl">Month vs CN Received Value</span>
             <canvas id="lhrSummaryChart"></canvas>
           </div>
         </div>
