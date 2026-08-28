@@ -516,7 +516,7 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 .hov-chart canvas,.lk-chart canvas{max-height:300px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
-body.remarks-page .filterbar{display:none}
+body.remarks-page .filterbar,body.projection-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
 .lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
 /* Recovery Amount · roomier rows, month in ink, total in indigo */
@@ -914,6 +914,40 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .lane-dot-legend span{display:inline-flex;align-items:center;gap:4px;}
 .lane-dot-legend .lane-status-dot{width:8px;height:8px;min-width:8px;margin:0;}
 
+/* ---- Projection / Target ---- */
+.pj-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;
+  margin-top:14px;align-items:stretch;}
+.pj-tbl-card,.pj-gauge-card{padding:14px 16px 16px;}
+.pj-wrap{margin-top:10px;max-height:none;}
+#pjTbl thead th{background:#FFFFFF;color:var(--mut);font-size:10.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;padding:12px 10px;
+  border-bottom:1px solid var(--line);white-space:nowrap;}
+#pjTbl tbody td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--line);
+  background:#FFFFFF;white-space:nowrap;}
+#pjTbl tbody tr:hover td{background:#F8F9FE;}
+#pjTbl tbody td:first-child,#pjTbl tbody td:nth-child(2){color:var(--ink);font-weight:600;}
+#pjTbl tbody tr.pj-total td{border-top:2px solid var(--ink);font-weight:800;}
+#pjTbl .mv-heat{min-width:92px;padding:5px 11px;font-size:11.5px;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+.pj-gauge-card{display:flex;flex-direction:column;align-items:center;}
+.pj-gauge-ttl{width:100%;background:var(--pine);color:#fff;font-size:14px;font-weight:800;
+  text-align:center;padding:10px;border-radius:10px;letter-spacing:.01em;}
+.pj-gauge-box{width:100%;max-width:430px;margin:6px 0 2px;}
+.pj-gauge-box svg{width:100%;height:auto;display:block;}
+.pj-gauge-foot{display:flex;align-items:center;gap:14px;border:1px solid var(--line);
+  border-radius:10px;padding:9px 16px;font-size:13px;background:#FBFBFE;}
+.pj-proj{color:var(--pine);font-weight:600;}
+.pj-tgt{color:#15803D;font-weight:600;}
+.pj-sep{color:#C3C8DA;}
+.pj-target-set{display:flex;align-items:center;gap:8px;margin-top:12px;}
+.pj-target-set label{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--mut);}
+.pj-target-set input{width:140px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;
+  font-size:12.5px;font-family:inherit;color:var(--text);outline:none;}
+.pj-target-set input:focus{border-color:var(--pine);}
+#pjTargetSave{width:auto;padding:0 12px;font-size:10px;font-weight:800;}
+#pjGaugeNote{text-align:center;max-width:400px;}
+@media(max-width:1100px){.pj-row{grid-template-columns:1fr;}}
+
 /* ---- LH Recovery live source strip ---- */
 .lhr-src{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;}
 .lhr-src-dot{width:9px;height:9px;border-radius:50%;background:#CBD2E0;flex:none;
@@ -925,7 +959,8 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .lhr-src-txt span{font-size:11px;color:var(--mut);}
 .lhr-auto{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--mut);cursor:pointer;}
 .lhr-auto input{accent-color:var(--pine);width:14px;height:14px;}
-#lhrSync{width:auto;padding:0 12px;font-size:10px;font-weight:800;letter-spacing:.02em;}
+#lhrSync,#pjSync{width:auto;min-width:0;height:30px;padding:0 14px;font-size:10px;
+  font-weight:800;letter-spacing:.02em;white-space:nowrap;}
 .lhr-src-link{font-size:11.5px;font-weight:700;color:var(--pine);text-decoration:none;white-space:nowrap;}
 .lhr-src-link:hover{text-decoration:underline;}
 .lhr-src-err{display:none;margin-top:10px;padding:12px 15px;border-radius:12px;background:#FEF1F1;
@@ -1235,6 +1270,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="rootcause"><span class="ic">🧭</span>Root Cause & What-If</button>
       <button data-page="laneview"><span class="ic">🛣️</span>Lane View</button>
       <button data-page="manifest"><span class="ic">📋</span>Bag wise View</button>
+      <button data-page="projection"><span class="ic">🎯</span>Projection / Target</button>
       <button data-page="investigate"><span class="ic">🔍</span>Raw Data</Data></button>
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
@@ -1559,6 +1595,63 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <span id="mvPgLbl">Page 1</span>
           <button id="mvNext">Next →</button>
           <span style="margin-left:auto">Showing <b id="mvShown">0</b> manifests in current scope.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: PROJECTION / TARGET ============ -->
+    <section class="page" id="page-projection">
+      <div class="card lhr-src" id="pjSrcBar">
+        <span class="lhr-src-dot" id="pjSrcDot"></span>
+        <div class="lhr-src-txt">
+          <b>Live source</b>
+          <span>Dashboard workbook · sheet “LH_Losses loss view”</span>
+        </div>
+        <span class="pill" id="pjSyncLbl">not synced yet</span>
+        <button class="tool" id="pjSync">REFRESH NOW</button>
+      </div>
+      <div class="lhr-src-err" id="pjSrcErr"></div>
+
+      <div class="pj-row">
+        <div class="card pj-tbl-card">
+          <div class="card-head">
+            <div><h3 id="pjTblTitle">LH Losses — loss view</h3>
+              <span class="sub">month-wise loss by bucket, straight from the sheet · heat shaded like the Movement Type Matrix</span></div>
+            <div class="card-tools"><button class="tool" id="pjCsv">CSV</button></div>
+          </div>
+          <div class="mv-heat-legend">
+            <span>Low</span>
+            <span class="sw" style="background:#E7F6EC"></span>
+            <span class="sw" style="background:#CDECD5"></span>
+            <span class="sw" style="background:#FAF0BE"></span>
+            <span class="sw" style="background:#F9CE7A"></span>
+            <span class="sw" style="background:#F0A44E"></span>
+            <span class="sw" style="background:#EE6B4D"></span>
+            <span class="sw" style="background:#D42B34"></span>
+            <span>High</span>
+          </div>
+          <div class="lv-mini-wrap pj-wrap">
+            <table class="lv-mini mv-pivot" id="pjTbl">
+              <thead><tr id="pjHead"></tr></thead>
+              <tbody id="pjBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card pj-gauge-card">
+          <div class="pj-gauge-ttl">Achievement vs Target</div>
+          <div class="pj-gauge-box" id="pjGauge"></div>
+          <div class="pj-gauge-foot">
+            <span class="pj-proj">Projection: <b id="pjProjVal">—</b></span>
+            <span class="pj-sep">|</span>
+            <span class="pj-tgt">Target: <b id="pjTgtVal">—</b></span>
+          </div>
+          <div class="pj-target-set">
+            <label for="pjTargetIn">TARGET (₹)</label>
+            <input type="number" id="pjTargetIn" min="0" step="100000">
+            <button class="tool" id="pjTargetSave">SET</button>
+          </div>
+          <div class="hint" id="pjGaugeNote"></div>
         </div>
       </div>
     </section>
@@ -2618,6 +2711,7 @@ function updateAll(){
   renderHOV();
   renderLHRecovery();
   renderLock();
+  if(RAW.length)pjRenderGauge();
 }
 </script>
 <script>
@@ -4415,6 +4509,17 @@ const DOC_SECTIONS=[
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
 ]},
 
+{sec:'Projection / Target', items:[
+ {t:'table', n:'LH Losses loss view', what:'The month-wise loss table, read live from its own Google Sheet.',
+  src:'Google Sheet · Dashboard workbook · gid 1822832288',
+  logic:'read via the sheet\u0027s CSV endpoint, columns taken as they come\na column is treated as money when at least 60% of its cells parse as numbers\neach money column is heat shaded against its own min and max, so one large\n  month cannot wash out the rest\na row whose first cells read "Grand Total" is ruled off and bolded',
+  note:'That workbook must be shared "Anyone with the link · Viewer" or Google returns a sign-in page and the strip turns red. The table is whatever the sheet holds — add or rename a month column there and it appears here on the next refresh.'},
+ {t:'chart', n:'Achievement vs Target gauge', what:'How close the target sits to the projected exposure.',
+  fields:'<code>movement_type</code>, <code>intransit_ageing_bucket</code>, <code>Product_value</code>',
+  logic:'projection = SUM(Product_value) WHERE\n  movement_type in Intracity, Intracity DC FMRTS, Intracity-FM/RTS,\n                   Large, Tertiary (LM - LM), Zonal\n  AND ageing bucket in 6, 7, 8-10, 11-15, 16-30\nachievement % = target / projection, capped at 100\nneedle sweeps 0% left to 100% right; red to 50, amber to 75, green beyond',
+  note:'Projection reads the whole uploaded file, not the global filter bar, so the gauge is a fixed measure rather than a filtered one. The target is set on the page and kept in this browser, so each person can hold their own until it is moved to Supabase.'}
+]},
+
 {sec:'Base Data', items:[
  {t:'table', n:'AWB-level base table', what:'The raw shipment rows, searchable and paginated.',
   fields:'<code>Awb_number</code>, <code>flag</code>, <code>Zone</code>, <code>MM_origin</code>, <code>MM_destination</code>, <code>Lane Code</code>, <code>movement_type</code>, <code>vendor_name</code>, <code>intransit_ageing</code>, <code>Product_value</code>, <code>HOV_flag</code>, <code>vehicle_number</code>, <code>Manifest_code</code>, <code>MM_code</code>, <code>trip_code</code>, <code>POD Name</code>',
@@ -5050,6 +5155,201 @@ function gsStartAuto(){
     gsSyncCN(true);
   },GS_AUTO_MS);
 }
+/* =============================================================
+   PROJECTION / TARGET
+   -------------------------------------------------------------
+   Two independent sources on one page:
+     · the LH loss view, read live from its own Google Sheet
+     · the gauge, computed from the uploaded shipment file
+   The sheet must be shared "Anyone with the link · Viewer", same
+   as the CN Working workbook.
+============================================================= */
+const PJ_ID  = '10mKrEGsk9uBNaqZJOfLE5Ot5EjePR2lvY5tWKRvoxxo';
+const PJ_GID = '1822832288';
+const PJ_TARGET_KEY = 'sfx_pj_target';
+const PJ_TARGET_DEFAULT = 8000000;                 // ₹80 L
+let PJ_ROWS=[], PJ_COLS=[], PJ_BUSY=false, PJ_SYNCED_AT=null;
+
+/* the movement types and ageing bands this projection is measured on */
+const PJ_MOVES=new Set(['Intracity','Intracity DC FMRTS','Intracity-FM/RTS',
+                        'Large','Tertiary (LM - LM)','Zonal']);
+const PJ_BUCKETS=new Set(['6','7','8-10','11-15','16-30']);
+
+function pjTarget(){
+  let v=null;
+  try{v=localStorage.getItem(PJ_TARGET_KEY);}catch(e){}
+  const n=v==null?NaN:+v;
+  return (isFinite(n)&&n>0)?n:PJ_TARGET_DEFAULT;
+}
+function pjSetTarget(n){ try{localStorage.setItem(PJ_TARGET_KEY,String(n));}catch(e){} }
+function pjNum(v){
+  if(v==null)return NaN;
+  const s=String(v).replace(/[₹,\s]/g,'').trim();
+  if(!s||s==='-')return NaN;
+  const n=+s;
+  return isFinite(n)?n:NaN;
+}
+
+/* ---------- the loss table ---------- */
+function pjUrls(){
+  const base='https://docs.google.com/spreadsheets/d/'+PJ_ID;
+  const cb='&_cb='+Date.now();
+  return [base+'/gviz/tq?tqx=out:csv&headers=1&gid='+encodeURIComponent(PJ_GID)+cb,
+          base+'/export?format=csv&gid='+encodeURIComponent(PJ_GID)+cb];
+}
+function pjStatus(state,label,err){
+  const dot=$('#pjSrcDot'), lbl=$('#pjSyncLbl'), box=$('#pjSrcErr');
+  if(dot)dot.className='lhr-src-dot '+(state||'');
+  if(lbl&&label!=null)lbl.textContent=label;
+  if(box){ if(err){box.innerHTML=err;box.classList.add('show');} else box.classList.remove('show'); }
+}
+async function pjSync(quiet){
+  if(PJ_BUSY)return false;
+  PJ_BUSY=true;
+  if(!quiet)pjStatus('busy','reading sheet…',null);
+  let lastErr=null;
+  for(const url of pjUrls()){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
+      const rows=gsParseCSV(text);
+      if(!rows.length)throw new Error('the sheet returned no rows');
+      PJ_ROWS=rows; PJ_COLS=Object.keys(rows[0]);
+      PJ_SYNCED_AT=new Date().toISOString();
+      const t=new Date(PJ_SYNCED_AT).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      pjStatus('ok','synced '+t+' · '+fmtN(rows.length)+' rows',null);
+      pjRenderTable();
+      PJ_BUSY=false;
+      return true;
+    }catch(e){ lastErr=e; }
+  }
+  PJ_BUSY=false;
+  pjStatus('err',PJ_ROWS.length?'sync failed':'not synced yet',
+    'Could not read the loss sheet ('+(lastErr?lastErr.message:'unknown error')+').<br>'+
+    'Open that workbook, choose <b>Share</b> and set <b>General access</b> to '+
+    '<b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.');
+  return false;
+}
+
+function pjRenderTable(){
+  const head=$('#pjHead'), body=$('#pjBody');
+  if(!head||!body)return;
+  if(!PJ_ROWS.length){
+    head.innerHTML=''; 
+    body.innerHTML='<tr><td style="text-align:center;padding:26px;color:var(--mut)">'+
+      'No rows yet — press REFRESH NOW.</td></tr>';
+    return;
+  }
+  /* a column counts as money when most of its cells parse as numbers */
+  const numeric={};
+  PJ_COLS.forEach(c=>{
+    let n=0,t=0;
+    PJ_ROWS.forEach(r=>{const v=r[c];if(v!==''&&v!=null){t++;if(!isNaN(pjNum(v)))n++;}});
+    numeric[c]= t>0 && n/t>=0.6;
+  });
+  /* heat is scaled per column, so a small month is not washed out by a big one */
+  const range={};
+  PJ_COLS.forEach(c=>{
+    if(!numeric[c])return;
+    const vs=PJ_ROWS.map(r=>pjNum(r[c])).filter(v=>!isNaN(v));
+    range[c]=[Math.min(...vs),Math.max(...vs)];
+  });
+
+  head.innerHTML=PJ_COLS.map(c=>
+    `<th class="${numeric[c]?'num':''}">${rmEsc(c)}</th>`).join('');
+
+  body.innerHTML=PJ_ROWS.map(r=>{
+    const label=String(r[PJ_COLS[0]]||'')+' '+String(r[PJ_COLS[1]]||'');
+    const isTotal=/grand\s*total/i.test(label);
+    return `<tr class="${isTotal?'pj-total':''}">`+PJ_COLS.map(c=>{
+      const raw=r[c], v=pjNum(raw);
+      if(!numeric[c]||isNaN(v))return `<td>${rmEsc(raw||'')}</td>`;
+      const [mn,mx]=range[c]||[0,1];
+      const t=heatT(v,mn,mx);
+      return `<td class="num"><span class="mv-heat" style="background:${heatColor(t)};color:${heatText(t)}">${fmtINR(v)}</span></td>`;
+    }).join('')+`</tr>`;
+  }).join('');
+
+  const ttl=$('#pjTblTitle');
+  if(ttl&&PJ_COLS.length)ttl.textContent='LH Losses — loss view';
+}
+function pjExport(){
+  if(!PJ_ROWS.length){alert('Nothing to export yet — press REFRESH NOW.');return;}
+  lvExport(PJ_ROWS,'csv','lh_losses_loss_view','losses');
+}
+
+/* ---------- the gauge ---------- */
+/* Projection = product value still sitting in the six movement types that this
+   target covers, in ageing bands 6 through 30 days. Achievement is the target
+   as a share of that projection: the smaller the exposure, the closer to 100%. */
+function pjProjection(){
+  let v=0,n=0;
+  for(const r of RAW){
+    if(!PJ_MOVES.has(r.movement_type))continue;
+    if(!PJ_BUCKETS.has(r.bucket))continue;
+    v+=r.Product_value||0; n++;
+  }
+  return {value:v,awbs:n};
+}
+function pjArc(cx,cy,r,a0,a1){
+  const p=(a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  const [x0,y0]=p(a0),[x1,y1]=p(a1);
+  return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 ${(a1-a0)>Math.PI?1:0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+function pjRenderGauge(){
+  const host=$('#pjGauge'); if(!host)return;
+  const {value:proj,awbs}=pjProjection();
+  const tgt=pjTarget();
+  const pctRaw=proj>0?(tgt/proj*100):0;
+  const pct=Math.max(0,Math.min(100,pctRaw));
+
+  const W=440,H=250,cx=220,cy=205,R=150,SW=38;
+  const A0=Math.PI, A1=2*Math.PI;                     // left → right, half circle
+  const ang=p=>A0+(A1-A0)*(p/100);
+  const seg=[[0,50,'#E03A3A'],[50,75,'#F5A623'],[75,100,'#3FA76B']];
+  const tick=p=>{
+    const a=ang(p), r=R+SW/2+16;
+    return `<text x="${(cx+r*Math.cos(a)).toFixed(1)}" y="${(cy+r*Math.sin(a)).toFixed(1)}"
+      class="pj-tick" text-anchor="${p<40?'end':(p>60?'start':'middle')}">${p}%</text>`;
+  };
+  const na=ang(pct), nr=R-6;
+  const nx=cx+nr*Math.cos(na), ny=cy+nr*Math.sin(na);
+
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Achievement ${pct.toFixed(1)} percent of target">
+    <style>
+      .pj-tick{font:600 13px 'Segoe UI',system-ui,sans-serif;fill:#334155}
+      .pj-big{font:800 34px 'Segoe UI',system-ui,sans-serif;fill:#1E293B}
+      .pj-cap{font:600 14px 'Segoe UI',system-ui,sans-serif;fill:#475569}
+    </style>
+    ${seg.map(([a,b,c])=>`<path d="${pjArc(cx,cy,R,ang(a),ang(b))}" stroke="${c}"
+        stroke-width="${SW}" fill="none" stroke-linecap="butt"/>`).join('')}
+    ${[0,25,50,75,100].map(tick).join('')}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}"
+      stroke="#111827" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="7" fill="#111827"/>
+    <text x="${cx}" y="${cy-34}" class="pj-big" text-anchor="middle">${pct.toFixed(1)}%</text>
+    <text x="${cx}" y="${cy-12}" class="pj-cap" text-anchor="middle">of Target Achieved</text>
+  </svg>`;
+
+  $('#pjProjVal').textContent=fmtINR(proj);
+  $('#pjTgtVal').textContent=fmtINR(tgt);
+  const inp=$('#pjTargetIn'); if(inp&&document.activeElement!==inp)inp.value=tgt;
+  const note=$('#pjGaugeNote');
+  if(note)note.innerHTML='Projection = '+fmtINR(proj)+' across '+fmtN(awbs)+
+    ' AWBs in Intracity, Intracity DC FMRTS, Intracity-FM/RTS, Large, Tertiary (LM - LM) and Zonal, '+
+    'ageing buckets 6 to 30 days.'+(pctRaw>100?' Target exceeds the projection, so the needle is capped at 100%.':'');
+}
+
+function pjRender(){ pjRenderGauge(); pjRenderTable(); }
+/* called by navTo() — pull the sheet if the last read has gone stale */
+function pjOnPage(){
+  pjRender();
+  const age=PJ_SYNCED_AT?(Date.now()-new Date(PJ_SYNCED_AT).getTime()):Infinity;
+  if(age>GS_STALE_MS)pjSync(true);
+}
+
 /* called by navTo() — refresh on entry when the last pull has gone stale */
 function gsOnLHRPage(){
   gsStatus(LHR_SOURCE==='sheet'?'ok':'',gsSyncLabel(),null);
@@ -6038,6 +6338,7 @@ const PAGE_META={
   rootcause:{t:'Root Cause & What-If',c:'Diagnose slow lanes and simulate recovery'},
   laneview:{t:'Lane View',c:'Top lanes, lane-type rollups and AWB-level detail'},
   manifest:{t:'Bag wise View',c:'Lane→manifest pivots and shipment-level detail'},
+  projection:{t:'Projection / Target',c:'LH loss view against the recovery target'},
   investigate:{t:'Base Data',c:'Searchable AWB-level base table'},
   hov:{t:'HOV Analytics',c:'HOV, HHOV and error-scan cuts from the Dashboard sheet'},
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
@@ -6078,6 +6379,7 @@ function navTo(page){
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
   if(page==='lhrecovery')gsOnLHRPage();
+  if(page==='projection')pjOnPage();
   closeSidebar();
 }
 function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
@@ -6117,6 +6419,16 @@ function wireControls(){
   $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','manifest_detail');
   $('#mvPrev').onclick=()=>{mvPage--;mvRenderDetail();};
   $('#mvNext').onclick=()=>{mvPage++;mvRenderDetail();};
+
+  /* projection / target */
+  $('#pjSync').onclick=()=>pjSync(false);
+  $('#pjCsv').onclick=pjExport;
+  $('#pjTargetSave').onclick=()=>{
+    const n=+($('#pjTargetIn').value||0);
+    if(!(n>0)){alert('Enter a target above zero.');return;}
+    pjSetTarget(n); pjRenderGauge();
+  };
+  $('#pjTargetIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pjTargetSave').click();});
 
   /* lh recovery — live Google Sheet source */
   $('#lhrSync').onclick=()=>gsSyncCN(false);
