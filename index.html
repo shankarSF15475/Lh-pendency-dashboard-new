@@ -4512,7 +4512,7 @@ const DOC_SECTIONS=[
 {sec:'Projection / Target', items:[
  {t:'table', n:'LH Losses loss view', what:'The month-wise loss table, read live from its own Google Sheet.',
   src:'Google Sheet · Dashboard workbook · gid 1822832288',
-  logic:'read via the sheet\u0027s CSV endpoint, columns taken as they come\na column is treated as money when at least 60% of its cells parse as numbers\neach money column is heat shaded against its own min and max, so one large\n  month cannot wash out the rest\na row whose first cells read "Grand Total" is ruled off and bolded',
+  logic:'read via the sheet\u0027s CSV endpoint\nrow 1 of that sheet is a merged title, so the real header row is promoted\n  out of the data and the unnamed leading column is labelled Date\na column is treated as money when at least 60% of its cells parse as numbers\neach money column is heat shaded against its own min and max, so one large\n  month cannot wash out the rest\na row whose first cells read "Grand Total" is ruled off and bolded',
   note:'That workbook must be shared "Anyone with the link · Viewer" or Google returns a sign-in page and the strip turns red. The table is whatever the sheet holds — add or rename a month column there and it appears here on the next refresh.'},
  {t:'chart', n:'Achievement vs Target gauge', what:'How close the target sits to the projected exposure.',
   fields:'<code>movement_type</code>, <code>intransit_ageing_bucket</code>, <code>Product_value</code>',
@@ -5216,7 +5216,8 @@ async function pjSync(quiet){
       if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
       const rows=gsParseCSV(text);
       if(!rows.length)throw new Error('the sheet returned no rows');
-      PJ_ROWS=rows; PJ_COLS=Object.keys(rows[0]);
+      const norm=pjNormalise(rows);
+      PJ_ROWS=norm.rows; PJ_COLS=norm.cols;
       PJ_SYNCED_AT=new Date().toISOString();
       const t=new Date(PJ_SYNCED_AT).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
       pjStatus('ok','synced '+t+' · '+fmtN(rows.length)+' rows',null);
@@ -5231,6 +5232,39 @@ async function pjSync(quiet){
     'Open that workbook, choose <b>Share</b> and set <b>General access</b> to '+
     '<b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.');
   return false;
+}
+
+/* The sheet carries a merged title across row 1 ("LH_Losses_Aug'26 loss view"),
+   so the CSV feed hands back that title plus Column_2…Column_7 as headers and
+   pushes the real header row down into the data. When that shape is detected,
+   promote the first data row to headers and drop it. The leading column has no
+   title of its own in the sheet, so it is named Date. */
+function pjNormalise(rows){
+  let cols=Object.keys(rows[0]||{});
+  const placeholder=cols.filter(c=>/^Column_\d+$/.test(c)).length;
+  if(rows.length>1 && placeholder>=2){
+    const headerRow=rows[0];
+    const used={};
+    const newCols=cols.map((c,i)=>{
+      let name=String(headerRow[c]||'').trim();
+      if(!name)name=(i===0?'Date':'Column_'+(i+1));
+      if(used[name]!==undefined){used[name]++;name=name+' '+used[name];}else{used[name]=0;}
+      return name;
+    });
+    const out=rows.slice(1).map(r=>{
+      const o={};
+      cols.forEach((c,i)=>{o[newCols[i]]=r[c];});
+      return o;
+    });
+    return {cols:newCols,rows:out};
+  }
+  /* already sane — just make sure the first column is labelled */
+  if(cols.length&&!String(cols[0]).trim()){
+    const first=cols[0];
+    cols=cols.slice();cols[0]='Date';
+    rows=rows.map(r=>{const o={...r};o.Date=r[first];delete o[first];return o;});
+  }
+  return {cols,rows};
 }
 
 function pjRenderTable(){
@@ -5260,7 +5294,7 @@ function pjRenderTable(){
   head.innerHTML=PJ_COLS.map(c=>
     `<th class="${numeric[c]?'num':''}">${rmEsc(c)}</th>`).join('');
 
-  body.innerHTML=PJ_ROWS.map(r=>{
+  body.innerHTML=PJ_ROWS.filter(r=>PJ_COLS.some(c=>String(r[c]||'').trim()!=='')).map(r=>{
     const label=String(r[PJ_COLS[0]]||'')+' '+String(r[PJ_COLS[1]]||'');
     const isTotal=/grand\s*total/i.test(label);
     return `<tr class="${isTotal?'pj-total':''}">`+PJ_COLS.map(c=>{
