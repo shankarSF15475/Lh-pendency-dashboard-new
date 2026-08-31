@@ -945,6 +945,13 @@ thead th{background:#F1F3FB;color:var(--pine);}
   font-size:12.5px;font-family:inherit;color:var(--text);outline:none;}
 .pj-target-set input:focus{border-color:var(--pine);}
 #pjTargetSave{width:auto;padding:0 12px;font-size:10px;font-weight:800;}
+.pj-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:10px;}
+.pj-kpi{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;}
+.pj-kpi .l{font-size:9.5px;font-weight:800;letter-spacing:.05em;color:var(--mut);}
+.pj-kpi .v{font-size:17px;font-weight:800;color:var(--ink);margin-top:4px;}
+.pj-kpi .s{font-size:10.5px;color:var(--mut);margin-top:3px;font-weight:700;}
+.pj-kpi.over .v{color:#B42318;}
+.pj-kpi.good .v{color:#15803D;}
 #pjGaugeNote{text-align:left;max-width:none;width:100%;margin-top:12px;}
 .pj-note{border:1px solid var(--line);border-radius:10px;background:#FBFBFE;padding:10px 12px;}
 .pj-note-l{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
@@ -1292,7 +1299,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <button data-page="rootcause"><span class="ic">🧭</span>Root Cause & What-If</button>
       <button data-page="laneview"><span class="ic">🛣️</span>Lane View</button>
       <button data-page="manifest"><span class="ic">📋</span>Bag wise View</button>
-      <button data-page="projection"><span class="ic">🎯</span>Projection / Target</button>
+      <button data-page="projection"><span class="ic">🎯</span>Current Loss vs Target</button>
       <button data-page="investigate"><span class="ic">🔍</span>Raw Data</Data></button>
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
@@ -1661,12 +1668,18 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
 
         <div class="card pj-gauge-card">
-          <div class="pj-gauge-ttl">Achievement vs Target</div>
+          <div class="pj-gauge-ttl">Current Loss vs Target</div>
           <div class="pj-gauge-box" id="pjGauge"></div>
           <div class="pj-gauge-foot">
-            <span class="pj-proj">Projection: <b id="pjProjVal">—</b></span>
+            <span class="pj-proj">Current Loss: <b id="pjProjVal">—</b></span>
             <span class="pj-sep">|</span>
             <span class="pj-tgt">Target: <b id="pjTgtVal">—</b></span>
+          </div>
+          <div class="pj-kpis">
+            <div class="pj-kpi"><div class="l">ACHIEVED VALUE</div>
+              <div class="v" id="pjAchVal">—</div><div class="s" id="pjAchPct">—</div></div>
+            <div class="pj-kpi"><div class="l">REMAINING VALUE</div>
+              <div class="v" id="pjRemVal">—</div><div class="s" id="pjRemPct">—</div></div>
           </div>
           <div class="pj-target-set">
             <label for="pjTargetIn">TARGET (₹)</label>
@@ -4576,14 +4589,14 @@ const DOC_SECTIONS=[
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
 ]},
 
-{sec:'Projection / Target', items:[
+{sec:'Current Loss vs Target', items:[
  {t:'table', n:'LH Losses loss view', what:'The month-wise loss table, read live from its own Google Sheet.',
   src:'Google Sheet · Dashboard workbook · gid 1822832288',
   logic:'read via the sheet\u0027s CSV endpoint\nrow 1 of that sheet is a merged title, so the real header row is promoted\n  out of the data and the unnamed leading column is labelled Date\na column is treated as money when at least 60% of its cells parse as numbers\neach money column is heat shaded against its own min and max, so one large\n  month cannot wash out the rest\na row whose first cells read "Grand Total" is ruled off and bolded',
   note:'That workbook must be shared "Anyone with the link · Viewer" or Google returns a sign-in page and the strip turns red. The table is whatever the sheet holds — add or rename a month column there and it appears here on the next refresh.'},
- {t:'chart', n:'Achievement vs Target gauge', what:'How close the target sits to the projected exposure.',
+ {t:'chart', n:'Current Loss vs Target gauge', what:'Current loss measured against the loss target.',
   fields:'<code>movement_type</code>, <code>intransit_ageing_bucket</code>, <code>Product_value</code>',
-  logic:'projection = SUM(Product_value) WHERE\n  movement_type in Intracity, Intracity DC FMRTS, Intracity-FM/RTS,\n                   Large, Tertiary (LM - LM), Zonal\n  AND ageing bucket in 6, 7, 8-10, 11-15, 16-30\nachievement % = target / projection, capped at 100\nneedle sweeps 0% left to 100% right; red to 50, amber to 75, green beyond',
+  logic:'achieved  = min(current loss, target)        target completion % = achieved / target\nremaining = max(target - current loss, 0)    remaining target % = remaining / target\nachieved + remaining always equals the target, so the two percentages add to 100\n\ncurrent loss = SUM(Product_value) WHERE\n  movement_type in Intracity, Intracity DC FMRTS, Intracity-FM/RTS,\n                   Large, Tertiary (LM - LM), Zonal\n  AND ageing bucket in 6, 7, 8-10, 11-15, 16-30\nneedle % = target / current loss, capped at 100 — it reaches 100% when loss falls to the target\nneedle sweeps 0% left to 100% right; red to 50, amber to 75, green beyond',
   note:'The Movement Type filter on this page narrows the gauge and the lane table together, so Projection always matches the lanes listed below it. Projection reads the whole uploaded file, not the global filter bar, so the gauge is a fixed measure rather than a filtered one. The target is set on the page and kept in this browser, so each person can hold their own until it is moved to Supabase.'}
 ]},
 
@@ -5524,6 +5537,29 @@ function pjRenderGauge(){
     <text x="${cx}" y="${cy-12}" class="pj-cap" text-anchor="middle">of Target Achieved</text>
   </svg>`;
 
+  /* Achieved / Remaining against the loss target.
+     The target is a ceiling on loss, so progress is measured as how much of
+     that allowance the current loss has used:
+       achieved  = the loss booked inside the target      = min(loss, target)
+       remaining = allowance still unused                 = max(target - loss, 0)
+     The two always add up to the target, so the two percentages add to 100%.
+     Once the loss passes the target the allowance is spent — achieved is the
+     full target, remaining is nil, and the overshoot is called out instead. */
+  const achieved=Math.min(proj,tgt);
+  const remaining=Math.max(tgt-proj,0);
+  const over=Math.max(proj-tgt,0);
+  const achPct=tgt>0?achieved/tgt*100:0;
+  const remPct=tgt>0?remaining/tgt*100:0;
+  const achCard=$('#pjAchVal')&&$('#pjAchVal').parentElement;
+  const remCard=$('#pjRemVal')&&$('#pjRemVal').parentElement;
+  if(achCard)achCard.className='pj-kpi'+(over>0?' over':'');
+  if(remCard)remCard.className='pj-kpi'+(remaining>0?' good':'');
+  $('#pjAchVal').textContent=fmtINR(achieved);
+  $('#pjAchPct').textContent='Target completion '+achPct.toFixed(1)+'%';
+  $('#pjRemVal').textContent=fmtINR(remaining);
+  $('#pjRemPct').textContent='Remaining target '+remPct.toFixed(1)+'%'+
+    (over>0?' · over by '+fmtINR(over):'');
+
   $('#pjProjVal').textContent=fmtINR(proj);
   $('#pjTgtVal').textContent=fmtINR(tgt);
   const inp=$('#pjTargetIn'); if(inp&&document.activeElement!==inp)inp.value=tgt;
@@ -5534,15 +5570,22 @@ function pjRenderGauge(){
     '<div class="pj-note">'+
       '<div class="pj-note-l"><b>How this is calculated</b></div>'+
       '<div class="pj-note-r">'+
-        '<div><span class="k">Projection</span> <b>'+fmtINR(proj)+'</b> '+
+        '<div><span class="k">Current loss</span> <b>'+fmtINR(proj)+'</b> '+
           '— sum of <b>Product_value</b> across <b>'+fmtN(awbs)+' AWBs</b></div>'+
         '<div><span class="k">Movement types</span> <b>'+rmEsc(moves.join(', '))+'</b>'+
           (allSix?' <i>(all six covered)</i>':' <i>('+moves.length+' of 6 selected)</i>')+'</div>'+
         '<div><span class="k">Ageing buckets</span> <b>6, 7, 8–10, 11–15, 16–30 days</b> '+
           '<i>(in-transit ageing; under 6 and over 30 days are excluded)</i></div>'+
-        '<div><span class="k">Target</span> <b>'+fmtINR(tgt)+'</b> · '+
-          '<span class="k">Achievement</span> <b>'+pct.toFixed(1)+'%</b> = target ÷ projection</div>'+
-        (pctRaw>100?'<div class="pj-note-warn"><b>Target exceeds the projection</b>, so the needle is capped at 100%.</div>':'')+
+        '<div><span class="k">Target</span> <b>'+fmtINR(tgt)+'</b> '+
+          '<i>(the most loss allowed)</i></div>'+
+        '<div><span class="k">Achieved</span> <b>'+fmtINR(achieved)+'</b> = min(current loss, target) · '+
+          '<b>'+achPct.toFixed(1)+'%</b> target completion = achieved ÷ target</div>'+
+        '<div><span class="k">Remaining</span> <b>'+fmtINR(remaining)+'</b> = target − current loss, floored at zero · '+
+          '<b>'+remPct.toFixed(1)+'%</b> remaining target = remaining ÷ target</div>'+
+        '<div><span class="k">Needle</span> <b>'+pct.toFixed(1)+'%</b> = target ÷ current loss — '+
+          'it reaches 100% when loss falls to the target</div>'+
+        (over>0?'<div class="pj-note-warn">Loss is <b>'+fmtINR(over)+'</b> over target, so the allowance is fully used: achieved sits at 100% and remaining at 0%.</div>':'')+
+        (pctRaw>100?'<div class="pj-note-warn"><b>Target exceeds the current loss</b>, so the needle is capped at 100%.</div>':'')+
       '</div>'+
     '</div>';
   const sn=$('#pjScopeNote');
@@ -6548,7 +6591,7 @@ const PAGE_META={
   rootcause:{t:'Root Cause & What-If',c:'Diagnose slow lanes and simulate recovery'},
   laneview:{t:'Lane View',c:'Top lanes, lane-type rollups and AWB-level detail'},
   manifest:{t:'Bag wise View',c:'Lane→manifest pivots and shipment-level detail'},
-  projection:{t:'Projection / Target',c:'LH loss view against the recovery target'},
+  projection:{t:'Current Loss vs Target',c:'LH loss view against the loss target'},
   investigate:{t:'Base Data',c:'Searchable AWB-level base table'},
   hov:{t:'HOV Analytics',c:'HOV, HHOV and error-scan cuts from the Dashboard sheet'},
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
