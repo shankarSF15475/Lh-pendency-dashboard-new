@@ -945,8 +945,30 @@ thead th{background:#F1F3FB;color:var(--pine);}
   font-size:12.5px;font-family:inherit;color:var(--text);outline:none;}
 .pj-target-set input:focus{border-color:var(--pine);}
 #pjTargetSave{width:auto;padding:0 12px;font-size:10px;font-weight:800;}
-#pjGaugeNote{text-align:center;max-width:400px;}
+#pjGaugeNote{text-align:left;max-width:none;width:100%;margin-top:12px;}
+.pj-note{border:1px solid var(--line);border-radius:10px;background:#FBFBFE;padding:10px 12px;}
+.pj-note-l{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--pine);margin-bottom:6px;}
+.pj-note-r div{font-size:11.5px;line-height:1.65;color:var(--mut);}
+.pj-note-r b{color:var(--ink);font-weight:800;}
+.pj-note-r i{color:#8A93A6;font-style:normal;}
+.pj-note-r .k{display:inline-block;min-width:112px;font-weight:700;color:#8A93A6;}
+.pj-note-warn{margin-top:6px;color:#B45309!important;}
 @media(max-width:1100px){.pj-row{grid-template-columns:1fr;}}
+.pj-lane-card{margin-top:12px;padding:14px 16px;}
+.pj-lane-wrap{max-height:520px;}
+#pjLaneTbl thead th{background:#FFFFFF;color:var(--mut);font-size:10.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;padding:12px 10px;
+  border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
+#pjLaneTbl thead th:hover{background:#F7F8FC;color:var(--pine);}
+#pjLaneTbl tbody td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--line);}
+#pjLaneTbl tbody tr:hover td{background:#F8F9FE;}
+#pjLaneTbl tbody td:first-child{font-weight:700;color:var(--ink);}
+#pjLaneTbl td.num,#pjLaneTbl th.num{text-align:right;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+#pjLaneTbl tfoot td{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--ink);
+  padding:12px 10px;font-weight:800;color:var(--ink);}
+#pjFilterBar{margin-top:14px;}
 
 /* ---- LH Recovery live source strip ---- */
 .lhr-src{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;}
@@ -1652,6 +1674,51 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <button class="tool" id="pjTargetSave">SET</button>
           </div>
           <div class="hint" id="pjGaugeNote"></div>
+        </div>
+      </div>
+
+      <!-- ===== every lane inside the projection scope ===== -->
+      <div class="card mv-filterbar" id="pjFilterBar">
+        <span class="mv-fb-ttl">FILTERS</span>
+        <div class="mv-filters">
+          <div class="mv-mcsel" id="pjMoveMcsel">
+            <button class="mv-mcsel-btn" id="pjMoveBtn">Movement Type ▾</button>
+            <div class="mv-mcsel-panel" id="pjMovePanel">
+              <div class="mc-actions">
+                <button id="pjMoveAll">All</button>
+                <button id="pjMoveNone">Clear</button>
+              </div>
+            </div>
+          </div>
+          <button class="mv-fb-clear" id="pjMoveClear">✕ Clear all</button>
+          <span class="hint" style="margin:0" id="pjScopeNote"></span>
+        </div>
+      </div>
+
+      <div class="card lv-sec pj-lane-card">
+        <div class="card-head">
+          <div><h3>Lanes by Pending Product Value</h3>
+            <span class="sub">every lane inside the projection scope · largest value first · click a header to sort</span></div>
+          <div class="card-tools"><button class="tool" id="pjLaneCsv">CSV</button></div>
+        </div>
+        <div class="mv-heat-legend">
+          <span>Low</span>
+          <span class="sw" style="background:#E7F6EC"></span>
+          <span class="sw" style="background:#CDECD5"></span>
+          <span class="sw" style="background:#FAF0BE"></span>
+          <span class="sw" style="background:#F9CE7A"></span>
+          <span class="sw" style="background:#F0A44E"></span>
+          <span class="sw" style="background:#EE6B4D"></span>
+          <span class="sw" style="background:#D42B34"></span>
+          <span>High</span>
+          <span class="hint">shading runs across the lanes on show</span>
+        </div>
+        <div class="lv-mini-wrap pj-lane-wrap">
+          <table class="lv-mini" id="pjLaneTbl">
+            <thead><tr id="pjLaneHead"></tr></thead>
+            <tbody id="pjLaneBody"></tbody>
+            <tfoot id="pjLaneFoot"></tfoot>
+          </table>
         </div>
       </div>
     </section>
@@ -2711,7 +2778,7 @@ function updateAll(){
   renderHOV();
   renderLHRecovery();
   renderLock();
-  if(RAW.length)pjRenderGauge();
+  if(RAW.length){pjBuildFilter();pjRenderGauge();pjRenderLanes();}
 }
 </script>
 <script>
@@ -4517,7 +4584,7 @@ const DOC_SECTIONS=[
  {t:'chart', n:'Achievement vs Target gauge', what:'How close the target sits to the projected exposure.',
   fields:'<code>movement_type</code>, <code>intransit_ageing_bucket</code>, <code>Product_value</code>',
   logic:'projection = SUM(Product_value) WHERE\n  movement_type in Intracity, Intracity DC FMRTS, Intracity-FM/RTS,\n                   Large, Tertiary (LM - LM), Zonal\n  AND ageing bucket in 6, 7, 8-10, 11-15, 16-30\nachievement % = target / projection, capped at 100\nneedle sweeps 0% left to 100% right; red to 50, amber to 75, green beyond',
-  note:'Projection reads the whole uploaded file, not the global filter bar, so the gauge is a fixed measure rather than a filtered one. The target is set on the page and kept in this browser, so each person can hold their own until it is moved to Supabase.'}
+  note:'The Movement Type filter on this page narrows the gauge and the lane table together, so Projection always matches the lanes listed below it. Projection reads the whole uploaded file, not the global filter bar, so the gauge is a fixed measure rather than a filtered one. The target is set on the page and kept in this browser, so each person can hold their own until it is moved to Supabase.'}
 ]},
 
 {sec:'Base Data', items:[
@@ -5314,18 +5381,108 @@ function pjExport(){
   lvExport(PJ_ROWS,'csv','lh_losses_loss_view','losses');
 }
 
-/* ---------- the gauge ---------- */
-/* Projection = product value still sitting in the six movement types that this
-   target covers, in ageing bands 6 through 30 days. Achievement is the target
-   as a share of that projection: the smaller the exposure, the closer to 100%. */
-function pjProjection(){
-  let v=0,n=0;
+/* ---------- shared scope ----------
+   One definition drives the gauge and the lane table below it, so the two can
+   never disagree: the six movement types the target covers, ageing 6 to 30
+   days, narrowed further by the page's Movement Type filter. */
+let PJ_MOVE_SEL=new Set(), PJ_BUILT=false;
+let pjLaneSort={k:'value',dir:-1}, PJ_LANE_EXPORT=[];
+
+function pjScopeRows(){
+  const sel=PJ_MOVE_SEL.size?PJ_MOVE_SEL:PJ_MOVES;
+  const out=[];
   for(const r of RAW){
-    if(!PJ_MOVES.has(r.movement_type))continue;
+    if(!sel.has(r.movement_type))continue;
     if(!PJ_BUCKETS.has(r.bucket))continue;
-    v+=r.Product_value||0; n++;
+    out.push(r);
   }
-  return {value:v,awbs:n};
+  return out;
+}
+function pjProjection(){
+  const rows=pjScopeRows();
+  let v=0;
+  for(const r of rows)v+=r.Product_value||0;
+  return {value:v,awbs:rows.length};
+}
+
+/* ---------- lanes inside that scope ---------- */
+function pjRenderLanes(){
+  const head=$('#pjLaneHead'), body=$('#pjLaneBody'), foot=$('#pjLaneFoot');
+  if(!head||!body)return;
+  const m=new Map();
+  for(const r of pjScopeRows()){
+    const k=r['Lane Code']||'Unknown';
+    let o=m.get(k);
+    if(!o){o={lane:k,awbs:0,value:0,types:{}};m.set(k,o);}
+    o.awbs++; o.value+=r.Product_value||0;
+    o.types[r['Lane Type']]=(o.types[r['Lane Type']]||0)+1;
+  }
+  let arr=[...m.values()];
+  /* a lane can carry more than one lane type — show the dominant one, as the
+     Lane View table does */
+  arr.forEach(o=>{o.type=Object.entries(o.types).sort((a,b)=>b[1]-a[1])[0][0];});
+  arr.sort((a,b)=>b.value-a.value);                  // every lane, no top-N cut
+  if(pjLaneSort.k!=='value'||pjLaneSort.dir!==-1){
+    arr.sort((a,b)=>{
+      const k=pjLaneSort.k,d=pjLaneSort.dir,av=a[k],bv=b[k];
+      return (typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*d;
+    });
+  }
+  const cols=[{k:'lane',label:'Lane Code'},{k:'type',label:'Lane Type'},
+              {k:'awbs',label:'AWBs',num:true},{k:'value',label:'Value ₹',num:true}];
+  const mark=k=>pjLaneSort.k===k?(pjLaneSort.dir<0?' ▼':' ▲'):'';
+  head.innerHTML=cols.map(c=>
+    `<th data-k="${c.k}" class="${c.num?'num':''}">${c.label}${mark(c.k)}</th>`).join('');
+  $$('#pjLaneHead th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    pjLaneSort.dir=pjLaneSort.k===k?-pjLaneSort.dir:(k==='lane'||k==='type'?1:-1);
+    pjLaneSort.k=k; pjRenderLanes();
+  });
+  /* shade Value against the range on show, exactly as the Lane View top-20
+     table does, so the same lane reads the same colour on both pages */
+  const vMin=arr.length?Math.min(...arr.map(o=>o.value)):0;
+  const vMax=arr.length?Math.max(...arr.map(o=>o.value)):1;
+  body.innerHTML=arr.map(o=>
+    `<tr><td>${rmEsc(o.lane)}</td><td>${rmEsc(o.type)}</td>`+
+    `<td class="num">${fmtN(o.awbs)}</td>`+
+    `<td class="num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td></tr>`).join('')
+    || `<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--mut)">No lanes in the current scope.</td></tr>`;
+  foot.innerHTML=arr.length
+    ? `<tr><td>Total · ${fmtN(arr.length)} lanes</td><td></td>`+
+      `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.awbs,0))}</td>`+
+      `<td class="num">${fmtINR(arr.reduce((a,o)=>a+o.value,0))}</td></tr>`
+    : '';
+  PJ_LANE_EXPORT=arr.map(o=>({Lane_Code:o.lane,Lane_Type:o.type,
+    AWB_count:o.awbs,Product_value:Math.round(o.value)}));
+}
+
+/* ---------- the movement-type filter ---------- */
+function pjBuildFilter(){
+  const panel=$('#pjMovePanel'), btn=$('#pjMoveBtn'), sel=$('#pjMoveMcsel');
+  if(!panel||!btn||PJ_BUILT)return;
+  /* only the movement types the projection actually covers */
+  const opts=[...PJ_MOVES].filter(mt=>RAW.some(r=>r.movement_type===mt)).sort();
+  panel.insertAdjacentHTML('afterbegin', opts.length
+    ? opts.map(o=>`<label><input type="checkbox" value="${rmEsc(o)}"><span>${rmEsc(o)}</span></label>`).join('')
+    : `<div class="msel-more">None of the six movement types are in this file</div>`);
+  const actions=panel.querySelector('.mc-actions'), firstOpt=panel.querySelector('label');
+  if(actions&&firstOpt)panel.insertBefore(actions,firstOpt);
+  const sync=()=>{
+    PJ_MOVE_SEL=new Set([...panel.querySelectorAll('input:checked')].map(x=>x.value));
+    btn.classList.toggle('active',PJ_MOVE_SEL.size>0);
+    btn.textContent=(PJ_MOVE_SEL.size?PJ_MOVE_SEL.size+' selected':'Movement Type')+' ▾';
+    pjRenderGauge(); pjRenderLanes();       // gauge and table move together
+  };
+  panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=sync);
+  panel.onclick=e=>e.stopPropagation();
+  btn.onclick=e=>{e.stopPropagation();
+    const open=sel.classList.contains('open');
+    $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));
+    if(!open)sel.classList.add('open');};
+  $('#pjMoveAll').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=true);sync();};
+  $('#pjMoveNone').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
+  $('#pjMoveClear').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
+  PJ_BUILT=true;
 }
 function pjArc(cx,cy,r,a0,a1){
   const p=(a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
@@ -5371,12 +5528,31 @@ function pjRenderGauge(){
   $('#pjTgtVal').textContent=fmtINR(tgt);
   const inp=$('#pjTargetIn'); if(inp&&document.activeElement!==inp)inp.value=tgt;
   const note=$('#pjGaugeNote');
-  if(note)note.innerHTML='Projection = '+fmtINR(proj)+' across '+fmtN(awbs)+
-    ' AWBs in Intracity, Intracity DC FMRTS, Intracity-FM/RTS, Large, Tertiary (LM - LM) and Zonal, '+
-    'ageing buckets 6 to 30 days.'+(pctRaw>100?' Target exceeds the projection, so the needle is capped at 100%.':'');
+  const moves=PJ_MOVE_SEL.size?[...PJ_MOVE_SEL]:[...PJ_MOVES];
+  const allSix=!PJ_MOVE_SEL.size;
+  if(note)note.innerHTML=
+    '<div class="pj-note">'+
+      '<div class="pj-note-l"><b>How this is calculated</b></div>'+
+      '<div class="pj-note-r">'+
+        '<div><span class="k">Projection</span> <b>'+fmtINR(proj)+'</b> '+
+          '— sum of <b>Product_value</b> across <b>'+fmtN(awbs)+' AWBs</b></div>'+
+        '<div><span class="k">Movement types</span> <b>'+rmEsc(moves.join(', '))+'</b>'+
+          (allSix?' <i>(all six covered)</i>':' <i>('+moves.length+' of 6 selected)</i>')+'</div>'+
+        '<div><span class="k">Ageing buckets</span> <b>6, 7, 8–10, 11–15, 16–30 days</b> '+
+          '<i>(in-transit ageing; under 6 and over 30 days are excluded)</i></div>'+
+        '<div><span class="k">Target</span> <b>'+fmtINR(tgt)+'</b> · '+
+          '<span class="k">Achievement</span> <b>'+pct.toFixed(1)+'%</b> = target ÷ projection</div>'+
+        (pctRaw>100?'<div class="pj-note-warn"><b>Target exceeds the projection</b>, so the needle is capped at 100%.</div>':'')+
+      '</div>'+
+    '</div>';
+  const sn=$('#pjScopeNote');
+  if(sn)sn.textContent='Filters the gauge and the lane table together · ageing 6–30 days is fixed by the target definition.';
 }
 
-function pjRender(){ pjRenderGauge(); pjRenderTable(); }
+function pjRender(){
+  if(RAW.length)pjBuildFilter();
+  pjRenderGauge(); pjRenderLanes(); pjRenderTable();
+}
 /* called by navTo() — pull the sheet if the last read has gone stale */
 function pjOnPage(){
   pjRender();
@@ -6457,6 +6633,10 @@ function wireControls(){
   /* projection / target */
   $('#pjSync').onclick=()=>pjSync(false);
   $('#pjCsv').onclick=pjExport;
+  $('#pjLaneCsv').onclick=()=>{
+    if(!PJ_LANE_EXPORT.length){alert('No lanes in the current scope.');return;}
+    lvExport(PJ_LANE_EXPORT,'csv','projection_lanes','lanes');
+  };
   $('#pjTargetSave').onclick=()=>{
     const n=+($('#pjTargetIn').value||0);
     if(!(n>0)){alert('Enter a target above zero.');return;}
