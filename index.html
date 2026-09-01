@@ -977,7 +977,8 @@ thead th{background:#F1F3FB;color:var(--pine);}
   padding:12px 10px;font-weight:800;color:var(--ink);}
 #pjFilterBar{margin-top:14px;}
 .mv-lane-count{font-size:11px;padding:5px 11px;box-shadow:none;}
-#mvLaneShot{width:auto;padding:0 11px;font-size:9px;font-weight:800;letter-spacing:-.2px;}
+#mvLaneShot,#mvPodShot{width:auto;padding:0 11px;font-size:9px;font-weight:800;letter-spacing:-.2px;}
+#mvPodTbl tbody td:first-child{font-weight:700;color:var(--ink);}
 /* while a shot is being taken the table is expanded, so hide the chrome that
    would otherwise be baked into the image */
 .mv-shooting .card-tools{visibility:hidden;}
@@ -1584,6 +1585,26 @@ thead th{background:#F1F3FB;color:var(--pine);}
               <div class="mv-legend" id="mvTypeLegend"></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ===== POD Name × Bag Creation Ageing · AWB counts ===== -->
+      <div class="card lv-sec mv-stack" id="mvPodCard">
+        <div class="card-head">
+          <div><h3>POD Name by Ageing Bucket</h3>
+            <span class="sub">count of Awb_number by POD Name × Bag Creation Ageing · largest Grand Total first</span></div>
+          <div class="card-tools">
+            <span class="pill mv-lane-count" id="mvPodCount">—</span>
+            <button class="tool" id="mvPodCsv">CSV</button>
+            <button class="tool" id="mvPodShot" title="Save this table as a PNG image">PNG</button>
+          </div>
+        </div>
+        <div class="lv-mini-wrap" style="overflow-x:auto">
+          <table class="lv-mini mv-pivot" id="mvPodTbl">
+            <thead><tr id="mvPodHead"></tr></thead>
+            <tbody id="mvPodBody"></tbody>
+            <tfoot id="mvPodFoot"></tfoot>
+          </table>
         </div>
       </div>
 
@@ -3171,7 +3192,7 @@ function mvBuildHeaders(){
   $('#mvReset').onclick=mvClearCols;
 
   /* ===== three page-level multi-check filters ===== */
-  const mvRerender=()=>{mvRenderKpis();mvRenderLaneTbl();mvRenderTypeTbl();mvRenderDetail(true);};
+  const mvRerender=()=>{mvRenderKpis();mvRenderLaneTbl();mvRenderTypeTbl();mvRenderPodTbl();mvRenderDetail(true);};
 
   /* generic builder: panelId, btnId, mcselId, options[], selSet, baseLabel, setter */
   function buildMcsel(cfg){
@@ -3867,6 +3888,64 @@ function mvRenderTypeChart(arr,rank){
   mvRenderPieLegend(byVal,colours,total);
 }
 
+/* ---- POD Name x Bag Creation Ageing, counting AWBs ----
+   Same shape as the Excel pivot: POD down the side, the six ageing bands
+   across, Count of Awb_number in the cells. Reads mvScopeRows, so every page
+   filter drives it exactly as it drives the two pivots around it. */
+let mvPodSort={k:'total',dir:-1}, mvPodExport=[];
+function mvRenderPodTbl(){
+  const head=$('#mvPodHead'), body=$('#mvPodBody'), foot=$('#mvPodFoot');
+  if(!head||!body)return;
+  const m=new Map();
+  for(const r of mvScopeRows()){
+    const k=r['POD Name']||'Unknown';
+    let e=m.get(k);
+    if(!e){e={pod:k,bkts:{},total:0};ABKT.forEach(b=>e.bkts[b]=0);m.set(k,e);}
+    const ab=r['Ageing bucket'];
+    if(ab in e.bkts)e.bkts[ab]++;
+    e.total++;
+  }
+  let arr=[...m.values()];
+  arr.sort((a,b)=>b.total-a.total);                 // largest Grand Total first
+  if(mvPodSort.k!=='total'||mvPodSort.dir!==-1){
+    arr.sort((a,b)=>{
+      const k=mvPodSort.k,d=mvPodSort.dir;
+      if(k==='pod')return String(a.pod).localeCompare(String(b.pod))*d;
+      if(k==='total')return (a.total-b.total)*d;
+      return ((a.bkts[k]||0)-(b.bkts[k]||0))*d;
+    });
+  }
+  const mark=k=>mvPodSort.k===k?(mvPodSort.dir<0?' ▼':' ▲'):'';
+  head.innerHTML=
+    `<th class="sortable" data-k="pod" style="text-align:left">POD Name${mark('pod')}</th>`+
+    ABKT.map((b,i)=>`<th class="sortable num ${ABKT_HCLS[i]}" data-k="${b}">${b}${mark(b)}</th>`).join('')+
+    `<th class="sortable num tot-col" data-k="total">Grand Total${mark('total')}</th>`;
+  $$('#mvPodHead th[data-k]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    mvPodSort.dir=mvPodSort.k===k?-mvPodSort.dir:-1;
+    mvPodSort.k=k; mvRenderPodTbl();
+  });
+  const cell=v=>v>0?fmtN(v):'';
+  body.innerHTML=arr.map(o=>
+    `<tr><td>${rmEsc(o.pod)}</td>`+
+    ABKT.map(b=>`<td class="num">${cell(o.bkts[b])}</td>`).join('')+
+    `<td class="num tot-col">${fmtN(o.total)}</td></tr>`).join('')
+    || `<tr><td colspan="${ABKT.length+2}" style="text-align:center;padding:20px;color:var(--mut)">No PODs in scope.</td></tr>`;
+  const gt={}; ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
+  foot.innerHTML=arr.length
+    ? `<tr><td>Grand Total</td>${ABKT.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}`+
+      `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.total,0))}</td></tr>`
+    : '';
+  const cnt=$('#mvPodCount');
+  if(cnt)cnt.textContent=fmtN(arr.length)+' POD'+(arr.length===1?'':'s');
+  mvPodExport=arr.map(o=>{
+    const row={POD_Name:o.pod};
+    ABKT.forEach(b=>row[b]=o.bkts[b]||0);
+    row.Grand_Total=o.total;
+    return row;
+  });
+}
+
 /* Save the lane pivot as a PNG that matches what is on screen.
    html2canvas is pulled in on first use rather than on every page load, so the
    dashboard keeps booting at the same speed for everyone who never uses it. */
@@ -3883,9 +3962,10 @@ function loadHtml2Canvas(){
   });
   return H2C_LOADING;
 }
-async function mvShootLaneTbl(){
-  const card=$('#mvLaneCard'), wrap=card&&card.querySelector('.lv-mini-wrap');
-  const btn=$('#mvLaneShot');
+async function mvShootLaneTbl(cardId,btnId,fileStem){
+  const card=$(cardId||'#mvLaneCard'), wrap=card&&card.querySelector('.lv-mini-wrap');
+  const btn=$(btnId||'#mvLaneShot');
+  const stem=fileStem||'lanes_by_pending_manifest';
   if(!card||!wrap)return;
 
   /* Browsers cap a canvas at roughly 32,767px a side and ~250M pixels. With
@@ -3918,7 +3998,7 @@ async function mvShootLaneTbl(){
       scrollX:0,scrollY:-window.scrollY,
       windowWidth:document.documentElement.scrollWidth});
     const stamp=new Date().toISOString().slice(0,10);
-    const name='lanes_by_pending_manifest_'+stamp+'.png';
+    const name=stem+'_'+stamp+'.png';
     const done=b=>{ if(b){dl(b,name);return true;} return false; };
     if(!canvas.width||!canvas.height)throw new Error('the capture came back empty');
     canvas.toBlob(b=>{
@@ -3947,7 +4027,7 @@ async function mvShootLaneTbl(){
 function renderManifestView(){
   if(!RAW.length)return;
   if(!mvBuilt)mvBuildHeaders();
-  mvRenderKpis(); mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderDetail(true);
+  mvRenderKpis(); mvRenderLaneTbl(); mvRenderTypeTbl(); mvRenderPodTbl(); mvRenderDetail(true);
 }
 function mvDetailExport(){
   const cap=80000;
@@ -4693,6 +4773,10 @@ const DOC_SECTIONS=[
   fields:'<code>movement_type</code>, <code>Movement</code>, <code>Product_value</code>, <code>Awb_number</code>, <code>Manifest_code</code>',
   logic:'SHARE = that row\u0027s value / the Grand Total value\nthe doughnut beside the table plots the same PRODUCT_VALUE column:\n  slices at or above 5.5% print their figure inside the ring\n  thinner slices get a leader line and arrow out to the margin\n  the hole carries the total\nper movement_type:\n  MOVEMENT       = the Movement column value (sheet column H)\n  PRODUCT_VALUE  = SUM(Product_value)\n  AWB_NUMBER     = COUNT(rows)\n  MANIFEST_CODE  = DISTINCT Manifest_code\nsorted by value descending\nthe PRODUCT_VALUE pill is coloured by the row\u0027s rank, palest green = lowest, deep red = highest',
   note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
+ {t:'table', n:'POD Name by Ageing Bucket', what:'AWB counts by POD and Bag Creation ageing band.',
+  fields:'<code>POD Name</code>, <code>Ageing bucket</code>, <code>Awb_number</code>',
+  logic:'rows    = POD Name\ncolumns = the six Ageing bucket bands\nvalues  = COUNT of rows (one per AWB)\nsorted by Grand Total descending; any column can be clicked to re-sort',
+  note:'Counts AWBs, not value and not manifests, so it will not tie to the value pivots on this page. Reads the same filtered scope as the tables around it.'},
  {t:'table', n:'Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
   logic:'rows    = Lane Code\ncolumns = the six Ageing bucket bands\nvalues  = SUM(Product_value)\nevery lane in scope, sorted by row total descending\nclicking a lane expands SUM(Product_value) by MM_destination',
@@ -6920,7 +7004,9 @@ function wireControls(){
 
   /* manifest view */
   $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','lanes_by_pending_manifest','manifest_lanes');
-  $('#mvLaneShot').onclick=mvShootLaneTbl;
+  $('#mvLaneShot').onclick=()=>mvShootLaneTbl('#mvLaneCard','#mvLaneShot','lanes_by_pending_manifest');
+  $('#mvPodCsv').onclick=()=>lvExport(mvPodExport,'csv','pod_by_ageing_bucket','pod_ageing');
+  $('#mvPodShot').onclick=()=>mvShootLaneTbl('#mvPodCard','#mvPodShot','pod_by_ageing_bucket');
   $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','movement_type_matrix','movement_type');
   $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','manifest_detail');
   $('#mvPrev').onclick=()=>{mvPage--;mvRenderDetail();};
