@@ -976,6 +976,11 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #pjLaneTbl tfoot td{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--ink);
   padding:12px 10px;font-weight:800;color:var(--ink);}
 #pjFilterBar{margin-top:14px;}
+.mv-lane-count{font-size:11px;padding:5px 11px;box-shadow:none;}
+#mvLaneShot{width:auto;padding:0 11px;font-size:9px;font-weight:800;letter-spacing:-.2px;}
+/* while a shot is being taken the table is expanded, so hide the chrome that
+   would otherwise be baked into the image */
+.mv-shooting .card-tools{visibility:hidden;}
 
 /* ---- LH Recovery live source strip ---- */
 .lhr-src{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;}
@@ -1008,7 +1013,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11px;}
 
 /* ---- Remarks page ---- */
-.rmpg-new{display:grid;grid-template-columns:210px 190px 150px 150px auto;gap:8px;align-items:center;justify-content:start;
+.rmpg-new{display:grid;grid-template-columns:210px 190px 190px 150px 150px auto;gap:8px;align-items:center;justify-content:start;
   background:#FBFBFE;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
 .rmpg-new input,.rmpg-new textarea{border:1px solid var(--line);border-radius:9px;padding:8px 10px;
   font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
@@ -1482,6 +1487,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvMoveMcsel">
+            <button class="mv-mcsel-btn" id="mvMoveBtn">Movement ▾</button>
+            <div class="mv-mcsel-panel" id="mvMovePanel">
+              <div class="mc-actions">
+                <button id="mvMoveAll">All</button>
+                <button id="mvMoveNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="mvLaneTypeMcsel">
             <button class="mv-mcsel-btn" id="mvLaneTypeBtn">Lane Type ▾</button>
             <div class="mv-mcsel-panel" id="mvLaneTypePanel">
@@ -1573,8 +1587,8 @@ thead th{background:#F1F3FB;color:var(--pine);}
         </div>
       </div>
 
-      <!-- ===== Top 20 Lanes by Pending Manifest Code — full width, below the matrix ===== -->
-      <div class="card lv-sec mv-stack">
+      <!-- ===== Lanes by Pending Manifest Code — full width, below the matrix ===== -->
+      <div class="card lv-sec mv-stack" id="mvLaneCard">
         <div class="card-head">
           <div><h3>Lanes by Pending Manifest Code</h3>
             <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · every lane in scope, largest value first · click a lane to expand MM_destination</span>
@@ -1587,7 +1601,9 @@ thead th{background:#F1F3FB;color:var(--pine);}
               <span><i class="lane-status-dot lane-dot-darkred"></i>35+ days</span>
             </div></div>
           <div class="card-tools">
+            <span class="pill mv-lane-count" id="mvLaneCount">—</span>
             <button class="tool" id="mvLaneCsv">CSV</button>
+            <button class="tool" id="mvLaneShot" title="Save this table as a PNG image, exactly as it looks here">PNG</button>
           </div>
         </div>
         <div class="lv-mini-wrap" style="overflow-x:auto">
@@ -1984,6 +2000,10 @@ thead th{background:#F1F3FB;color:var(--pine);}
           <div class="mv-mcsel rmpg-lanesel" id="rmPgLaneMcsel">
             <button class="mv-mcsel-btn" id="rmPgLaneBtn">Lane Code ▾</button>
             <div class="mv-mcsel-panel" id="rmPgLanePanel"></div>
+          </div>
+          <div class="mv-mcsel rmpg-lanesel" id="rmPgTypeMcsel">
+            <button class="mv-mcsel-btn" id="rmPgTypeBtn">Lane Type ▾</button>
+            <div class="mv-mcsel-panel" id="rmPgTypePanel"></div>
           </div>
           <div class="mv-mcsel rmpg-lanesel" id="rmPgNameMcsel">
             <button class="mv-mcsel-btn" id="rmPgNameBtn">Name ▾</button>
@@ -3077,7 +3097,7 @@ let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'total',dir:-1}, mvTypeS
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
-    mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvExpandedLane=null;
+    mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvMoveSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -3215,33 +3235,41 @@ function mvBuildHeaders(){
     all:'mvZoneAll',none:'mvZoneNone',label:'Zone',opts:zOpts,
     set:s=>{mvZoneSel=s;}});
 
-  /* 2. Lane Type */
+  /* 2. Movement — the Movement column (sheet column H), the second column of
+     the Movement Type Matrix. Distinct from movement_type. */
+  const mvOpts=[...new Set(RAW.map(r=>r.Movement))].filter(x=>x&&x!=='—')
+    .sort((a,b)=>String(a).localeCompare(String(b)));
+  const mcMV=buildMcsel({panel:'mvMovePanel',btn:'mvMoveBtn',mcsel:'mvMoveMcsel',
+    all:'mvMoveAll',none:'mvMoveNone',label:'Movement',opts:mvOpts,
+    set:s=>{mvMoveSel=s;}});
+
+  /* 3. Lane Type */
   const ltOpts=[...new Set(RAW.map(r=>r['Lane Type']))].filter(x=>x&&x!=='Unknown').sort((a,b)=>String(a).localeCompare(String(b)));
   const mcLT=buildMcsel({panel:'mvLaneTypePanel',btn:'mvLaneTypeBtn',mcsel:'mvLaneTypeMcsel',
     all:'mvLaneTypeAll',none:'mvLaneTypeNone',label:'Lane Type',opts:ltOpts,
     set:s=>{mvLaneTypeSel=s;}});
 
-  /* 3. Bag Creation Ageing  ← 'Ageing bucket' column */
+  /* 4. Bag Creation Ageing  ← 'Ageing bucket' column */
   const abOpts=ABKT.filter(b=>RAW.some(r=>r['Ageing bucket']===b));
   const mcAB=buildMcsel({panel:'mvAgeingPanel',btn:'mvAgeingBtn',mcsel:'mvAgeingMcsel',
     all:'mvAgeingAll',none:'mvAgeingNone',label:'Bag Creation Ageing',opts:abOpts.length?abOpts:ABKT,
     set:s=>{mvAgeingSel=s;}});
 
-  /* 4. Bag Intransit Ageing ← 'intransit_ageing_bucket' column */
+  /* 5. Bag Intransit Ageing ← 'intransit_ageing_bucket' column */
   const itOpts=[...new Set(RAW.map(r=>r.intransit_ageing_bucket))].filter(x=>x!=='')
     .sort((a,b)=>itBktRank(a)-itBktRank(b));
   const mcIT=buildMcsel({panel:'mvItBktPanel',btn:'mvItBktBtn',mcsel:'mvItBktMcsel',
     all:'mvItBktAll',none:'mvItBktNone',label:'Bag Intransit Ageing',opts:itOpts,
     set:s=>{mvItBktSel=s;}});
 
-  /* 5. Lane Code — thousands of codes, so the search box does the work */
+  /* 6. Lane Code — thousands of codes, so the search box does the work */
   const lcOpts=[...new Set(RAW.map(r=>r['Lane Code']))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcLC=buildMcsel({panel:'mvLaneCodePanel',btn:'mvLaneCodeBtn',mcsel:'mvLaneCodeMcsel',
     all:'mvLaneCodeAll',none:'mvLaneCodeNone',label:'Lane Code',opts:lcOpts,
     set:s=>{mvLaneCodeSel=s;}});
 
-  /* 6. Client */
+  /* 7. Client */
   const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcCL=buildMcsel({panel:'mvClientPanel',btn:'mvClientBtn',mcsel:'mvClientMcsel',
@@ -3249,10 +3277,11 @@ function mvBuildHeaders(){
     set:s=>{mvClientSel=s;}});
 
   $('#mvClearAllFilters').onclick=()=>{
-    [mcZN,mcLT,mcAB,mcIT,mcLC,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
     mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
-    mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();
+    mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();mvMoveSel=new Set();
     mcZN.btn.classList.remove('active');mcZN.btn.textContent='Zone ▾';
+    mcMV.btn.classList.remove('active');mcMV.btn.textContent='Movement ▾';
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
     mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
     mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
@@ -3276,6 +3305,7 @@ function mvClearCols(){
 function mvScopeRows(){
   let d=FILTERED;
   if(mvZoneSel.size)     d=d.filter(r=>mvZoneSel.has(r.Zone));
+  if(mvMoveSel.size)     d=d.filter(r=>mvMoveSel.has(r.Movement));
   if(mvLaneTypeSel.size) d=d.filter(r=>mvLaneTypeSel.has(r['Lane Type']));
   if(mvAgeingSel.size)   d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
   if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
@@ -3425,6 +3455,17 @@ function mvRenderLaneTbl(){
   let arr=mvLaneAgg();
   /* every lane in scope, largest value first — no top-N cut */
   arr.sort((a,b)=>b.total-a.total);
+  /* a lane left expanded can drop out of scope when a filter changes; forget it
+     rather than leaving an orphaned open row */
+  if(mvExpandedLane&&!arr.some(o=>o.lane===mvExpandedLane))mvExpandedLane=null;
+  const cnt=$('#mvLaneCount');
+  if(cnt){
+    const allLanes=new Set(FILTERED.map(r=>r['Lane Code']||'Unknown')).size;
+    cnt.textContent=fmtN(arr.length)+' of '+fmtN(allLanes)+' lanes';
+    cnt.title=arr.length<allLanes
+      ? 'The page filters above are narrowing this table'
+      : 'No page filters applied';
+  }
   /* optional user re-sort on a clicked column */
   if(mvLaneSort.k!=='total'||mvLaneSort.dir!==-1){
     arr.sort((a,b)=>{
@@ -3824,6 +3865,83 @@ function mvRenderTypeChart(arr,rank){
   if(mvTypeChart){mvTypeChart.destroy();mvTypeChart=null;}
   mvTypeChart=new Chart(cv,cfg);
   mvRenderPieLegend(byVal,colours,total);
+}
+
+/* Save the lane pivot as a PNG that matches what is on screen.
+   html2canvas is pulled in on first use rather than on every page load, so the
+   dashboard keeps booting at the same speed for everyone who never uses it. */
+let H2C_LOADING=null;
+function loadHtml2Canvas(){
+  if(window.html2canvas)return Promise.resolve(window.html2canvas);
+  if(H2C_LOADING)return H2C_LOADING;
+  H2C_LOADING=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=()=>res(window.html2canvas);
+    s.onerror=()=>rej(new Error('could not load the screenshot library'));
+    document.head.appendChild(s);
+  });
+  return H2C_LOADING;
+}
+async function mvShootLaneTbl(){
+  const card=$('#mvLaneCard'), wrap=card&&card.querySelector('.lv-mini-wrap');
+  const btn=$('#mvLaneShot');
+  if(!card||!wrap)return;
+
+  /* Browsers cap a canvas at roughly 32,767px a side and ~250M pixels. With
+     2,000+ lanes expanded the image ran past that and toBlob handed back null,
+     which is what "Could not build the image" was. So: only open the table out
+     when the result will fit, and pick a scale that keeps it inside the cap. */
+  const MAX_PX=12000, MAX_AREA=180e6;
+  const rows=wrap.querySelectorAll('tbody tr').length;
+  const fullH=wrap.scrollHeight, viewH=wrap.clientHeight;
+  const cardW=card.scrollWidth;
+  const wantH=(card.scrollHeight-viewH)+fullH;          // card height with the table open
+  const expand = wantH<=MAX_PX && cardW*wantH<=MAX_AREA;
+  const h=expand?wantH:card.scrollHeight;
+  let scale=Math.min(2,MAX_PX/Math.max(cardW,h),Math.sqrt(MAX_AREA/(cardW*h)));
+  if(!(scale>0.4))scale=0.4;
+
+  if(!expand&&rows>0&&!confirm(
+      'This table has '+fmtN(rows)+' rows — too many to fit in one image.\n\n'+
+      'Capture just the part on screen instead?\n'+
+      'Cancel, then filter the lanes down for a full-table image.'))return;
+
+  const old=btn?btn.textContent:'';
+  if(btn){btn.textContent='…';btn.disabled=true;}
+  const savedMax=wrap.style.maxHeight, savedOv=wrap.style.overflow;
+  if(expand){wrap.style.maxHeight='none';wrap.style.overflow='visible';}
+  card.classList.add('mv-shooting');
+  try{
+    const h2c=await loadHtml2Canvas();
+    const canvas=await h2c(card,{backgroundColor:'#ffffff',scale,useCORS:true,
+      scrollX:0,scrollY:-window.scrollY,
+      windowWidth:document.documentElement.scrollWidth});
+    const stamp=new Date().toISOString().slice(0,10);
+    const name='lanes_by_pending_manifest_'+stamp+'.png';
+    const done=b=>{ if(b){dl(b,name);return true;} return false; };
+    if(!canvas.width||!canvas.height)throw new Error('the capture came back empty');
+    canvas.toBlob(b=>{
+      if(done(b))return;
+      /* toBlob can still refuse on a very large canvas — fall back to a data URL */
+      try{
+        const a=document.createElement('a');
+        a.href=canvas.toDataURL('image/png');a.download=name;a.click();
+        try{ if(typeof logEvent==='function')logEvent('download',name); }catch(e){}
+      }catch(e){
+        alert('The image is too large for this browser to save.\n\n'+
+              'Filter the lanes down — by Zone, Lane Type or Lane Code — and try again.');
+      }
+    },'image/png');
+  }catch(e){
+    alert('Screenshot failed: '+e.message+
+      '\n\nThis needs one-time access to cdnjs.cloudflare.com. If the network blocks it, '+
+      'use the CSV button instead.');
+  }finally{
+    wrap.style.maxHeight=savedMax; wrap.style.overflow=savedOv;
+    card.classList.remove('mv-shooting');
+    if(btn){btn.textContent=old||'PNG';btn.disabled=false;}
+  }
 }
 
 function renderManifestView(){
@@ -4564,9 +4682,9 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'Bag wise View', items:[
- {t:'panel', n:'Page filters', what:'Six page-level filters that apply on top of the global filter bar.',
-  fields:'<code>Zone</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
-  logic:'Zone                 -> Zone column\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the six\nlists over 12 options get a search box'},
+ {t:'panel', n:'Page filters', what:'Seven page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Zone</code>, <code>Movement</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
+  logic:'Zone                 -> Zone column\nMovement             -> Movement column (sheet column H)\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the seven\nlists over 12 options get a search box'},
  {t:'kpi', n:'Bag wise View KPI strip', what:'Total value in scope, then one card per Bag Creation ageing band.',
   fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>',
   logic:'VALUE IN THESE BAGS = SUM(Product_value), sub DISTINCT Manifest_code + row count\nthen for each of the six Ageing bucket bands:\n  value = SUM(Product_value) in that band\n  sub   = that value / total value, and DISTINCT Manifest_code in the band\nband dots use the same colours as the lane status dots',
@@ -4586,7 +4704,7 @@ const DOC_SECTIONS=[
  {t:'panel', n:'Feedback Manifest Lanes (follow-up log)', what:'A dated follow-up trail attached to each lane in the Top 20 pivot, so a lane can be tracked across days.',
   src:'Supabase Storage · remarks.json',
   fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
-  logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code, by Name (the Added by column) and by date range\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
+  logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code, lane type, Name (the Added by column) and date range\nlane type is looked up from the shipment file, so a lane no longer in today\u0027s data cannot be filtered by type\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
   note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
   fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
@@ -4886,7 +5004,9 @@ function rmExportAll(){
 let RM_EDIT=null;               // id of the remark currently being edited
 
 /* flatten lane -> remarks into one list, newest date first */
+let RM_LANE_TYPES=null;
 function rmPageRows(all){
+  if(!RM_LANE_TYPES||!RM_LANE_TYPES.size)RM_LANE_TYPES=rmLaneTypes();
   const out=[];
   Object.keys(REMARKS).forEach(lane=>(REMARKS[lane]||[]).forEach(r=>out.push({...r,lane})));
   out.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))
@@ -4898,6 +5018,10 @@ function rmPageRows(all){
   return out.filter(r=>{
     if(RM_LANE_SEL.size&&!RM_LANE_SEL.has(r.lane))return false;
     if(RM_NAME_SEL.size&&!RM_NAME_SEL.has(r.byName||r.by||''))return false;
+    if(RM_TYPE_SEL.size){
+      const t=RM_LANE_TYPES?RM_LANE_TYPES.get(r.lane):null;
+      if(!t||!RM_TYPE_SEL.has(t))return false;
+    }
     /* dates are stored as YYYY-MM-DD, so a plain string compare is a date compare */
     if(from&&String(r.date||'')<from)return false;
     if(to&&String(r.date||'')>to)return false;
@@ -4979,6 +5103,71 @@ function rmPageRender(){
   body.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{RM_EDIT=null;rmPageRender();});
   body.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>rmPageSave(b.dataset.lane,b.dataset.save));
   body.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>rmPageDelete(b.dataset.lane,b.dataset.del));
+}
+
+let RM_TYPE_SEL=new Set();
+/* A remark only stores its lane, so lane type is looked up from the shipment
+   file — the dominant type on that lane, the same convention the pivots use.
+   A lane that has cleared out of today's data has no type to show. */
+function rmLaneTypes(){
+  const m=new Map();
+  for(const r of RAW){
+    const k=r['Lane Code']||'', t=r['Lane Type']||'';
+    if(!k||!t)continue;
+    let o=m.get(k); if(!o){o={};m.set(k,o);}
+    o[t]=(o[t]||0)+1;
+  }
+  const out=new Map();
+  for(const [k,o] of m)out.set(k,Object.entries(o).sort((a,b)=>b[1]-a[1])[0][0]);
+  return out;
+}
+function rmPageTypeList(){
+  const panel=$('#rmPgTypePanel'), btn=$('#rmPgTypeBtn'), sel=$('#rmPgTypeMcsel');
+  if(!panel||!btn)return;
+  const types=rmLaneTypes();
+  const opts=[...new Set(rmPageRows(true).map(r=>types.get(r.lane)).filter(Boolean))]
+    .sort((a,b)=>String(a).localeCompare(String(b)));
+  RM_TYPE_SEL=new Set([...RM_TYPE_SEL].filter(t=>opts.includes(t)));
+  panel.innerHTML=
+    (opts.length>12?`<div class="mv-mcsel-search"><input type="text" placeholder="Search lane type…"></div>`:'')+
+    `<div class="mc-actions"><button type="button" data-a="all">All</button>`+
+    `<button type="button" data-a="clear">Clear</button></div>`+
+    (opts.length
+      ? opts.map(o=>`<label><input type="checkbox" value="${rmEsc(o)}"${RM_TYPE_SEL.has(o)?' checked':''}><span>${rmEsc(o)}</span></label>`).join('')
+      : `<div class="msel-more">No lane types available for these remarks</div>`);
+  const syncBtn=()=>{
+    btn.classList.toggle('active',RM_TYPE_SEL.size>0);
+    btn.textContent=(RM_TYPE_SEL.size?RM_TYPE_SEL.size+' selected':'Lane Type')+' ▾';
+  };
+  const apply=()=>{
+    RM_TYPE_SEL=new Set([...panel.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value));
+    syncBtn(); rmPageRender();
+  };
+  panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=apply);
+  const sBox=panel.querySelector('.mv-mcsel-search input');
+  if(sBox){
+    sBox.onclick=e=>e.stopPropagation();
+    sBox.oninput=()=>{
+      const q=sBox.value.trim().toLowerCase();
+      panel.querySelectorAll('label').forEach(l=>{
+        l.style.display=(!q||l.textContent.toLowerCase().includes(q))?'':'none';});
+    };
+  }
+  panel.querySelectorAll('.mc-actions button').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const all=b.dataset.a==='all';
+    panel.querySelectorAll('label').forEach(l=>{
+      if(all&&l.style.display==='none')return;
+      const c=l.querySelector('input'); if(c)c.checked=all;
+    });
+    apply();
+  });
+  panel.onclick=e=>e.stopPropagation();
+  btn.onclick=e=>{e.stopPropagation();
+    const open=sel.classList.contains('open');
+    $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));
+    if(!open)sel.classList.add('open');};
+  syncBtn();
 }
 
 let RM_NAME_SEL=new Set();
@@ -5088,13 +5277,17 @@ function rmPageLaneList(){
 /* called by navTo() whenever the page is opened */
 async function rmPageOpen(){
   RM_EDIT=null;
+  RM_LANE_TYPES=rmLaneTypes();
   rmPageLaneList();
+  rmPageTypeList();
   rmPageNameList();
   rmPageRender();
   rmPgStatus('Syncing…');
   await rmFetch();
   rmPgStatus('');
+  RM_LANE_TYPES=rmLaneTypes();
   rmPageLaneList();
+  rmPageTypeList();
   rmPageNameList();
   rmPageRender();
 }
@@ -5103,8 +5296,8 @@ async function rmPageOpen(){
    to attach to. This page filters, edits and deletes the resulting trail. */
 function rmPageClearFilters(){
   ['#rmPgFrom','#rmPgTo','#rmPgFilter'].forEach(id=>{const el=$(id);if(el)el.value='';});
-  RM_LANE_SEL=new Set(); RM_NAME_SEL=new Set();
-  rmPageLaneList(); rmPageNameList();
+  RM_LANE_SEL=new Set(); RM_NAME_SEL=new Set(); RM_TYPE_SEL=new Set();
+  rmPageLaneList(); rmPageTypeList(); rmPageNameList();
   rmPageRender();
 }
 
@@ -6726,7 +6919,8 @@ function wireControls(){
   $('#lvNext').onclick=()=>{lvPage++;lvRenderDetail();};
 
   /* manifest view */
-  $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','top20_lanes_manifest','manifest_lanes');
+  $('#mvLaneCsv').onclick=()=>lvExport(mvLaneExport,'csv','lanes_by_pending_manifest','manifest_lanes');
+  $('#mvLaneShot').onclick=mvShootLaneTbl;
   $('#mvTypeCsv').onclick=()=>lvExport(mvTypeExport,'csv','movement_type_matrix','movement_type');
   $('#mvDetCsv').onclick=()=>lvExport(mvDetailExport(),'csv','manifest_detail','manifest_detail');
   $('#mvPrev').onclick=()=>{mvPage--;mvRenderDetail();};
