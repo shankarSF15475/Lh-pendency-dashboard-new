@@ -1533,6 +1533,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvDestMcsel">
+            <button class="mv-mcsel-btn" id="mvDestBtn">MM Destination ▾</button>
+            <div class="mv-mcsel-panel" id="mvDestPanel">
+              <div class="mc-actions">
+                <button id="mvDestAll">All</button>
+                <button id="mvDestNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="mvClientMcsel">
             <button class="mv-mcsel-btn" id="mvClientBtn">Client ▾</button>
             <div class="mv-mcsel-panel" id="mvClientPanel">
@@ -1592,7 +1601,19 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lv-sec mv-stack" id="mvPodCard">
         <div class="card-head">
           <div><h3>POD Name by Ageing Bucket</h3>
-            <span class="sub">count of Awb_number by POD Name × Bag Creation Ageing · largest Grand Total first</span></div>
+            <span class="sub">count of Awb_number by POD Name × Bag Creation Ageing · largest Grand Total first</span>
+            <div class="mv-heat-legend">
+              <span>Low</span>
+              <span class="sw" style="background:#E7F6EC"></span>
+              <span class="sw" style="background:#CDECD5"></span>
+              <span class="sw" style="background:#FAF0BE"></span>
+              <span class="sw" style="background:#F9CE7A"></span>
+              <span class="sw" style="background:#F0A44E"></span>
+              <span class="sw" style="background:#EE6B4D"></span>
+              <span class="sw" style="background:#D42B34"></span>
+              <span>High</span>
+              <span class="hint">each ageing column shaded against its own range</span>
+            </div></div>
           <div class="card-tools">
             <span class="pill mv-lane-count" id="mvPodCount">—</span>
             <button class="tool" id="mvPodCsv">CSV</button>
@@ -3118,7 +3139,8 @@ let mvColF={}, mvSort={k:'value',dir:-1}, mvLaneSort={k:'total',dir:-1}, mvTypeS
 let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
-    mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvMoveSel=new Set(), mvExpandedLane=null;
+    mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvMoveSel=new Set(),
+    mvDestSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -3290,7 +3312,14 @@ function mvBuildHeaders(){
     all:'mvLaneCodeAll',none:'mvLaneCodeNone',label:'Lane Code',opts:lcOpts,
     set:s=>{mvLaneCodeSel=s;}});
 
-  /* 7. Client */
+  /* 7. MM Destination — hundreds of nodes, so the search box does the work */
+  const dstOpts=[...new Set(RAW.map(r=>r.MM_destination))].filter(x=>x&&x!=='Unknown')
+    .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
+  const mcDS=buildMcsel({panel:'mvDestPanel',btn:'mvDestBtn',mcsel:'mvDestMcsel',
+    all:'mvDestAll',none:'mvDestNone',label:'MM Destination',opts:dstOpts,
+    set:s=>{mvDestSel=s;}});
+
+  /* 8. Client */
   const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcCL=buildMcsel({panel:'mvClientPanel',btn:'mvClientBtn',mcsel:'mvClientMcsel',
@@ -3298,15 +3327,17 @@ function mvBuildHeaders(){
     set:s=>{mvClientSel=s;}});
 
   $('#mvClearAllFilters').onclick=()=>{
-    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcDS,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
     mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
-    mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();mvMoveSel=new Set();
+    mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();
+    mvMoveSel=new Set();mvDestSel=new Set();
     mcZN.btn.classList.remove('active');mcZN.btn.textContent='Zone ▾';
     mcMV.btn.classList.remove('active');mcMV.btn.textContent='Movement ▾';
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
     mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
     mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
     mcLC.btn.classList.remove('active');mcLC.btn.textContent='Lane Code ▾';
+    mcDS.btn.classList.remove('active');mcDS.btn.textContent='MM Destination ▾';
     mcCL.btn.classList.remove('active');mcCL.btn.textContent='Client ▾';
     mvRerender();
   };
@@ -3332,6 +3363,7 @@ function mvScopeRows(){
   if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
   if(mvClientSel.size)   d=d.filter(r=>mvClientSel.has(r.Client));
   if(mvLaneCodeSel.size) d=d.filter(r=>mvLaneCodeSel.has(r['Lane Code']));
+  if(mvDestSel.size)     d=d.filter(r=>mvDestSel.has(r.MM_destination));
   return d;
 }
 
@@ -3925,10 +3957,22 @@ function mvRenderPodTbl(){
     mvPodSort.dir=mvPodSort.k===k?-mvPodSort.dir:-1;
     mvPodSort.k=k; mvRenderPodTbl();
   });
+  /* Each ageing column is shaded against its own range: a band with a few
+     hundred AWBs would otherwise sit invisible beside a band with tens of
+     thousands. The Grand Total stays plain so it still reads as a total. */
+  const rng={};
+  ABKT.forEach(b=>{
+    const vs=arr.map(o=>o.bkts[b]||0);
+    rng[b]=[Math.min(...vs,0),Math.max(...vs,1)];
+  });
   const cell=v=>v>0?fmtN(v):'';
   body.innerHTML=arr.map(o=>
     `<tr><td>${rmEsc(o.pod)}</td>`+
-    ABKT.map(b=>`<td class="num">${cell(o.bkts[b])}</td>`).join('')+
+    ABKT.map(b=>{
+      const v=o.bkts[b]||0;
+      if(!v)return `<td class="num"></td>`;
+      return `<td class="num" style="${heatCellStyle(v,rng[b][0],rng[b][1])}">${fmtN(v)}</td>`;
+    }).join('')+
     `<td class="num tot-col">${fmtN(o.total)}</td></tr>`).join('')
     || `<tr><td colspan="${ABKT.length+2}" style="text-align:center;padding:20px;color:var(--mut)">No PODs in scope.</td></tr>`;
   const gt={}; ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
@@ -4762,9 +4806,9 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'Bag wise View', items:[
- {t:'panel', n:'Page filters', what:'Seven page-level filters that apply on top of the global filter bar.',
-  fields:'<code>Zone</code>, <code>Movement</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
-  logic:'Zone                 -> Zone column\nMovement             -> Movement column (sheet column H)\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the seven\nlists over 12 options get a search box'},
+ {t:'panel', n:'Page filters', what:'Eight page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Zone</code>, <code>Movement</code>, <code>MM_destination</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
+  logic:'Zone                 -> Zone column\nMovement             -> Movement column (sheet column H)\nMM Destination       -> MM_destination column\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the eight\nlists over 12 options get a search box'},
  {t:'kpi', n:'Bag wise View KPI strip', what:'Total value in scope, then one card per Bag Creation ageing band.',
   fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>',
   logic:'VALUE IN THESE BAGS = SUM(Product_value), sub DISTINCT Manifest_code + row count\nthen for each of the six Ageing bucket bands:\n  value = SUM(Product_value) in that band\n  sub   = that value / total value, and DISTINCT Manifest_code in the band\nband dots use the same colours as the lane status dots',
@@ -4775,7 +4819,7 @@ const DOC_SECTIONS=[
   note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
  {t:'table', n:'POD Name by Ageing Bucket', what:'AWB counts by POD and Bag Creation ageing band.',
   fields:'<code>POD Name</code>, <code>Ageing bucket</code>, <code>Awb_number</code>',
-  logic:'rows    = POD Name\ncolumns = the six Ageing bucket bands\nvalues  = COUNT of rows (one per AWB)\nsorted by Grand Total descending; any column can be clicked to re-sort',
+  logic:'rows    = POD Name\ncolumns = the six Ageing bucket bands\nvalues  = COUNT of rows (one per AWB)\nsorted by Grand Total descending; any column can be clicked to re-sort\neach ageing column is heat shaded against its own min and max',
   note:'Counts AWBs, not value and not manifests, so it will not tie to the value pivots on this page. Reads the same filtered scope as the tables around it.'},
  {t:'table', n:'Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
