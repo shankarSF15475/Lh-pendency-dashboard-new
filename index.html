@@ -976,9 +976,36 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #pjLaneTbl tfoot td{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--ink);
   padding:12px 10px;font-weight:800;color:var(--ink);}
 #pjFilterBar{margin-top:14px;}
+.pj-plan-head{margin-top:14px;padding:14px 16px;}
+.pj-plan-head h3{font-size:15px;color:var(--ink);}
+.pj-plan-head h3 span{color:#B42318;}
+.pj-plan-head p{font-size:12px;color:var(--mut);margin-top:5px;line-height:1.6;}
+.pj-plan-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px;}
+.pj-mini{padding:14px 16px;}
+.pj-mini .lv-mini-wrap{max-height:300px;}
+.pj-bags-card{margin-top:12px;padding:14px 16px;}
+.pj-bags-wrap{max-height:420px;}
+#pjZoneTbl thead th,#pjPodTbl thead th,#pjLaneGapTbl thead th,#pjBagsTbl thead th{
+  background:#FFFFFF;color:var(--mut);font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;padding:10px 8px;border-bottom:1px solid var(--line);}
+#pjZoneTbl tbody td,#pjPodTbl tbody td,#pjLaneGapTbl tbody td,#pjBagsTbl tbody td{
+  padding:8px;font-size:11.5px;border-bottom:1px solid var(--line);}
+#pjZoneTbl tbody td:first-child,#pjPodTbl tbody td:first-child,
+#pjLaneGapTbl tbody td:first-child,#pjBagsTbl tbody td:first-child{font-weight:700;color:var(--ink);}
+.pj-num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;}
+tr.pj-in-gap td{background:#FEF6F5;}
+tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
+.pj-cover{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;
+  background:#FDECEC;color:#B42318;margin-left:6px;}
+@media(max-width:1100px){.pj-plan-row{grid-template-columns:1fr;}}
 .mv-lane-count{font-size:11px;padding:5px 11px;box-shadow:none;}
 #mvLaneShot,#mvPodShot{width:auto;padding:0 11px;font-size:9px;font-weight:800;letter-spacing:-.2px;}
 #mvPodTbl tbody td:first-child{font-weight:700;color:var(--ink);}
+#mvPodTbl tbody td{padding:7px 8px;}
+.pod-pill{display:inline-block;min-width:74px;padding:5px 11px;border-radius:8px;
+  font-weight:700;font-size:11.5px;text-align:center;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
 /* while a shot is being taken the table is expanded, so hide the chrome that
    would otherwise be baked into the image */
 .mv-shooting .card-tools{visibility:hidden;}
@@ -1601,18 +1628,21 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lv-sec mv-stack" id="mvPodCard">
         <div class="card-head">
           <div><h3>POD Name by Ageing Bucket</h3>
-            <span class="sub">count of Awb_number by POD Name × Bag Creation Ageing · largest Grand Total first</span>
+            <span class="sub">count of Awb_number by POD Name × In-transit Ageing · largest Grand Total first</span>
             <div class="mv-heat-legend">
-              <span>Low</span>
-              <span class="sw" style="background:#E7F6EC"></span>
-              <span class="sw" style="background:#CDECD5"></span>
-              <span class="sw" style="background:#FAF0BE"></span>
-              <span class="sw" style="background:#F9CE7A"></span>
-              <span class="sw" style="background:#F0A44E"></span>
-              <span class="sw" style="background:#EE6B4D"></span>
-              <span class="sw" style="background:#D42B34"></span>
-              <span>High</span>
-              <span class="hint">each ageing column shaded against its own range</span>
+              <span>2–15 DAYS</span>
+              <span class="sw" style="background:#EAF3FE"></span>
+              <span class="sw" style="background:#C7E0FC"></span>
+              <span class="sw" style="background:#96C4F9"></span>
+              <span class="sw" style="background:#5C9FF3"></span>
+              <span class="sw" style="background:#256EDC"></span>
+              <span style="margin-left:12px">16+ DAYS</span>
+              <span class="sw" style="background:#FDEBEB"></span>
+              <span class="sw" style="background:#FACDCD"></span>
+              <span class="sw" style="background:#F69696"></span>
+              <span class="sw" style="background:#F06060"></span>
+              <span class="sw" style="background:#E23636"></span>
+              <span class="hint">each column shaded against its own range</span>
             </div></div>
           <div class="card-tools">
             <span class="pill mv-lane-count" id="mvPodCount">—</span>
@@ -1633,14 +1663,14 @@ thead th{background:#F1F3FB;color:var(--pine);}
       <div class="card lv-sec mv-stack" id="mvLaneCard">
         <div class="card-head">
           <div><h3>Lanes by Pending Manifest Code</h3>
-            <span class="sub">Sum of Product_value by Lane Code × Bag Creation Ageing · every lane in scope, largest value first · click a lane to expand MM_destination</span>
+            <span class="sub">Sum of Product_value by Lane Code × In-transit Ageing · every lane in scope, largest value first · click a lane to expand MM_destination</span>
             <div class="lane-dot-legend">
-              <span><i class="lane-status-dot lane-dot-green"></i>0–6 days</span>
-              <span><i class="lane-status-dot lane-dot-yellow"></i>7–13 days</span>
-              <span><i class="lane-status-dot lane-dot-orange"></i>14–20 days</span>
-              <span><i class="lane-status-dot lane-dot-darkorange"></i>21–27 days</span>
-              <span><i class="lane-status-dot lane-dot-red"></i>28–34 days</span>
-              <span><i class="lane-status-dot lane-dot-darkred"></i>35+ days</span>
+              <span><i class="lane-status-dot lane-dot-green"></i>2–4 days</span>
+              <span><i class="lane-status-dot lane-dot-yellow"></i>5–7 days</span>
+              <span><i class="lane-status-dot lane-dot-orange"></i>8–10 days</span>
+              <span><i class="lane-status-dot lane-dot-darkorange"></i>11–15 days</span>
+              <span><i class="lane-status-dot lane-dot-red"></i>16–30 days</span>
+              <span><i class="lane-status-dot lane-dot-darkred"></i>30+ days</span>
             </div></div>
           <div class="card-tools">
             <span class="pill mv-lane-count" id="mvLaneCount">—</span>
@@ -1734,10 +1764,10 @@ thead th{background:#F1F3FB;color:var(--pine);}
             <span class="pj-tgt">Target: <b id="pjTgtVal">—</b></span>
           </div>
           <div class="pj-kpis">
-            <div class="pj-kpi"><div class="l">ACHIEVED VALUE</div>
+            <div class="pj-kpi"><div class="l">TARGET TO BE ACHIEVED</div>
+              <div class="v" id="pjGapVal">—</div><div class="s" id="pjGapPct">—</div></div>
+            <div class="pj-kpi"><div class="l">ALREADY WITHIN TARGET</div>
               <div class="v" id="pjAchVal">—</div><div class="s" id="pjAchPct">—</div></div>
-            <div class="pj-kpi"><div class="l">REMAINING VALUE</div>
-              <div class="v" id="pjRemVal">—</div><div class="s" id="pjRemPct">—</div></div>
           </div>
           <div class="pj-target-set">
             <label for="pjTargetIn">TARGET (₹)</label>
@@ -1763,6 +1793,49 @@ thead th{background:#F1F3FB;color:var(--pine);}
           </div>
           <button class="mv-fb-clear" id="pjMoveClear">✕ Clear all</button>
           <span class="hint" style="margin:0" id="pjScopeNote"></span>
+        </div>
+      </div>
+
+      <div class="card pj-plan-head">
+        <h3>Where to find <span id="pjPlanGap">—</span></h3>
+        <p id="pjPlanLead">Everything below is ranked by how much of the gap it removes. Clearing the rows
+          at the top of each table gets you to target fastest.</p>
+      </div>
+
+      <div class="pj-plan-row">
+        <div class="card lv-sec pj-mini"><div class="card-head"><div>
+          <h3>By Zone</h3><span class="sub">which region carries the gap</span></div>
+          <div class="card-tools"><button class="tool" id="pjZoneCsv">CSV</button></div></div>
+          <div class="lv-mini-wrap"><table class="lv-mini" id="pjZoneTbl">
+            <thead><tr id="pjZoneHead"></tr></thead><tbody id="pjZoneBody"></tbody></table></div>
+        </div>
+        <div class="card lv-sec pj-mini"><div class="card-head"><div>
+          <h3>By POD</h3><span class="sub">delivery clusters holding the gap</span></div>
+          <div class="card-tools"><button class="tool" id="pjPodCsv">CSV</button></div></div>
+          <div class="lv-mini-wrap"><table class="lv-mini" id="pjPodTbl">
+            <thead><tr id="pjPodHead"></tr></thead><tbody id="pjPodBody"></tbody></table></div>
+        </div>
+        <div class="card lv-sec pj-mini"><div class="card-head"><div>
+          <h3>By Lane</h3><span class="sub">the lanes to attack first</span></div>
+          <div class="card-tools"><button class="tool" id="pjLaneGapCsv">CSV</button></div></div>
+          <div class="lv-mini-wrap"><table class="lv-mini" id="pjLaneGapTbl">
+            <thead><tr id="pjLaneGapHead"></tr></thead><tbody id="pjLaneGapBody"></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="card lv-sec pj-bags-card">
+        <div class="card-head">
+          <div><h3>Bags that close the gap</h3>
+            <span class="sub" id="pjBagsSub">every manifest ranked by value, with a running total — the shaded rows are the ones that add up to the gap</span></div>
+          <div class="card-tools">
+            <span class="pill mv-lane-count" id="pjBagsCount">—</span>
+            <button class="tool" id="pjBagsCsv">CSV</button>
+          </div>
+        </div>
+        <div class="lv-mini-wrap pj-bags-wrap">
+          <table class="lv-mini" id="pjBagsTbl">
+            <thead><tr id="pjBagsHead"></tr></thead><tbody id="pjBagsBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -2857,7 +2930,7 @@ function updateAll(){
   renderHOV();
   renderLHRecovery();
   renderLock();
-  if(RAW.length){pjBuildFilter();pjRenderGauge();pjRenderLanes();}
+  if(RAW.length){pjBuildFilter();pjRenderGauge();pjRenderPlan();pjRenderLanes();}
 }
 </script>
 <script>
@@ -3118,6 +3191,7 @@ const MV_DETAIL_COLS=[
   {k:'Manifest_status',      label:'Status',      type:'cat'},
   {k:'intransit_ageing',     label:'Ageing (d)',  type:'num'},
   {k:'Ageing bucket',        label:'Ageing Bkt',  type:'cat'},
+  {k:'intransit_ageing_bucket', label:'IT Bucket', type:'cat'},
   {k:'Product_value',        label:'Value ₹',     type:'num'},
   {k:'trip_code',            label:'Trip Code',   type:'text', cls:'mono'},
 ];
@@ -3127,9 +3201,42 @@ const ABKT_HCLS=['age-a','age-b','age-c','age-d','age-e','age-f'];
 function ageBktOf(d){d=+d||0;if(d<=6)return ABKT[0];if(d<=13)return ABKT[1];if(d<=20)return ABKT[2];if(d<=27)return ABKT[3];if(d<=34)return ABKT[4];return ABKT[5];}
 const ABKT_CLS={};ABKT.forEach((b,i)=>ABKT_CLS[b]=i>=4?'aged-red':i>=2?'aged-ora':'');
 
+/* ---- In-transit ageing bands used by the two pivots ----
+   The raw intransit_ageing_bucket column is per-day at the young end
+   (2,3,4,5,6,7), which makes six near-identical columns. These bands group the
+   first six into two, leaving six meaningful columns across the pivots. */
+const ITB=[
+  {label:'2-4',   keys:['2','3','4']},
+  {label:'5-7',   keys:['5','6','7']},
+  {label:'8-10',  keys:['8-10']},
+  {label:'11-15', keys:['11-15']},
+  {label:'16-30', keys:['16-30']},
+  {label:'30+',   keys:['30+']}
+];
+const ITB_LABELS=ITB.map(b=>b.label);
+const ITB_HCLS=['age-a','age-b','age-c','age-d','age-e','age-f'];
+/* Excel writes some of these buckets as text — "08-10'" and "11-15'" carry a
+   leading zero and a trailing apostrophe — so match on a normalised form
+   rather than the literal cell value, or those columns come back empty. */
+function itNorm(v){
+  let s=String(v==null?'':v).replace(/[''`"\u2018\u2019\u201C\u201D]/g,'').trim();
+  if(!s)return '';
+  const plus=/\+\s*$/.test(s);
+  s=s.replace(/\+\s*$/,'').replace(/\s*days?\s*$/i,'').trim();
+  s=s.split('-').map(x=>{
+    const t=x.trim();
+    return /^\d+$/.test(t)?String(parseInt(t,10)):t;      // 08 -> 8
+  }).join('-');
+  return plus?s+'+':s;
+}
+const ITB_OF={};
+ITB.forEach(b=>b.keys.forEach(k=>{ITB_OF[itNorm(k)]=b.label;}));
+/* a row's band, or null when its bucket is blank or outside the ladder */
+function itBandOf(r){return ITB_OF[itNorm(r.intransit_ageing_bucket)]||null;}
+
 /* natural sort for intransit_ageing_bucket: 2,3,4,5,6,7,8-10,11-15,16-30,30+ */
 function itBktRank(v){
-  const s=String(v).trim();
+  const s=itNorm(v);
   const m=s.match(/^(\d+)/);
   const n=m?+m[1]:9999;
   return s.includes('+')?n+0.5:n;
@@ -3400,9 +3507,28 @@ function mvFilterDetailBy(opts){
     cs.querySelectorAll('input').forEach(ch=>ch.checked=false);
     delete mvColF[k]; btn.textContent='All ▾'; btn.classList.remove('on');
   };
+  /* the pivots are banded on intransit_ageing_bucket, so a clicked cell ticks
+     every raw bucket inside that band */
+  const setCatMany=(k,vals)=>{
+    const cs=document.querySelector('#mvDetFilters .lv-csel[data-k="'+k+'"]');
+    if(!cs)return;
+    const btn=cs.querySelector('.lv-csel-btn');
+    /* compare normalised, so "08-10'" in the data still matches the 8-10 band */
+    const want=new Set((vals||[]).map(itNorm));
+    const picked=[];
+    cs.querySelectorAll('input').forEach(ch=>{
+      const on=want.has(itNorm(ch.value));
+      ch.checked=on; if(on)picked.push(ch.value);
+    });
+    const n=picked.length;
+    if(n){mvColF[k]=new Set(picked);btn.textContent=n+' sel ▾';btn.classList.add('on');}
+    else {delete mvColF[k];btn.textContent='All ▾';btn.classList.remove('on');}
+  };
   setText('Lane Code', opts.lane||'');
   setText('Manifest_Destination', opts.dest||'');
-  setCat('Ageing bucket', opts.bucket||'');
+  setCat('Ageing bucket', '');
+  const band=ITB.find(b=>b.label===opts.bucket);
+  setCatMany('intransit_ageing_bucket', band?band.keys:[]);
   mvRenderDetail(true);
   const el=document.querySelector('#page-manifest .lv-detail');
   if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
@@ -3466,17 +3592,17 @@ function mvLaneAgg(){
     let e=m.get(k);
     if(!e){
       e={lane:k,bkts:{},total:0,dests:new Map()};
-      ABKT.forEach(b=>e.bkts[b]=0);
+      ITB_LABELS.forEach(b=>e.bkts[b]=0);
       m.set(k,e);
     }
-    const ab=r['Ageing bucket'], v=r.Product_value||0;
-    if(ab in e.bkts) e.bkts[ab]+=v;
+    const ab=itBandOf(r), v=r.Product_value||0;
+    if(ab&&ab in e.bkts) e.bkts[ab]+=v;
     e.total+=v;
     /* destination sub-pivot — MM_destination as per the requirement */
     const dk=r.MM_destination||'Unknown';
     let d=e.dests.get(dk);
-    if(!d){d={dest:dk,bkts:{},total:0};ABKT.forEach(b=>d.bkts[b]=0);e.dests.set(dk,d);}
-    if(ab in d.bkts) d.bkts[ab]+=v;
+    if(!d){d={dest:dk,bkts:{},total:0};ITB_LABELS.forEach(b=>d.bkts[b]=0);e.dests.set(dk,d);}
+    if(ab&&ab in d.bkts) d.bkts[ab]+=v;
     d.total+=v;
   }
   return [...m.values()].map(e=>({...e,
@@ -3494,14 +3620,14 @@ function mvLaneAgg(){
 const LANE_DOT_CLS=['lane-dot-green','lane-dot-yellow','lane-dot-orange',
                     'lane-dot-darkorange','lane-dot-red','lane-dot-darkred'];
 function laneDotIndex(o){
-  for(let i=ABKT.length-1;i>0;i--){ if((o.bkts[ABKT[i]]||0)>0) return i; }
+  for(let i=ITB_LABELS.length-1;i>0;i--){ if((o.bkts[ITB_LABELS[i]]||0)>0) return i; }
   return 0;
 }
 function laneDotHTML(o){
   const i=laneDotIndex(o);
   const cls=LANE_DOT_CLS[i]||LANE_DOT_CLS[0];
-  const worst=(o.bkts[ABKT[i]]||0)>0?ABKT[i]:ABKT[0];
-  return `<span class="lane-status-dot ${cls}" title="Worst ageing bucket carrying value: ${worst}"></span>`;
+  const worst=(o.bkts[ITB_LABELS[i]]||0)>0?ITB_LABELS[i]:ITB_LABELS[0];
+  return `<span class="lane-status-dot ${cls}" title="Oldest in-transit band carrying value: ${worst} days"></span>`;
 }
 
 function mvRenderLaneTbl(){
@@ -3529,7 +3655,7 @@ function mvRenderLaneTbl(){
     });
   }
 
-  const NCOL=1+ABKT.length+2;   // lane + buckets + total + remarks
+  const NCOL=1+ITB_LABELS.length+2;   // lane + bands + total + remarks
   const mark=k=>mvLaneSort.k===k?(mvLaneSort.dir<0?' ▼':' ▲'):'';
 
   /* fixed column widths keep parent rows and destination rows perfectly aligned */
@@ -3539,13 +3665,13 @@ function mvRenderLaneTbl(){
     if(cg)cg.remove();
     tbl.insertAdjacentHTML('afterbegin',
       '<colgroup><col style="width:230px">'+
-      ABKT.map(()=>'<col style="width:118px">').join('')+
+      ITB_LABELS.map(()=>'<col style="width:118px">').join('')+
       '<col style="width:130px"><col style="width:170px"></colgroup>');
   }
 
   $('#mvLaneHead').innerHTML=
     `<th class="sortable" data-k="lane" style="text-align:left">Lane code${mark('lane')}</th>`+
-    ABKT.map((b,i)=>`<th class="sortable num ${ABKT_HCLS[i]}" data-k="${b}">${b}${mark(b)}</th>`).join('')+
+    ITB_LABELS.map((b,i)=>`<th class="sortable num ${ITB_HCLS[i]}" data-k="${b}">${b} days${mark(b)}</th>`).join('')+
     `<th class="sortable num tot-col" data-k="total">Total${mark('total')}</th>`+
     `<th class="rm-col">Remarks</th>`;
   $$('#mvLaneHead th[data-k]').forEach(th=>th.onclick=()=>{
@@ -3562,7 +3688,7 @@ function mvRenderLaneTbl(){
     body.push(
       `<tr class="mv-lane-row${open?' open':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Click the lane name to expand MM_destination">`+
       `<td><span class="exp-ic">${open?'▼':'▶'}</span>${laneDotHTML(o)}${o.lane}</td>`+
-      ABKT.map(b=>`<td class="num${o.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(o.bkts[b])}</td>`).join('')+
+      ITB_LABELS.map(b=>`<td class="num${o.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(o.bkts[b])}</td>`).join('')+
       `<td class="num tot-col drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Show every manifest on this lane below">${fmtINR(o.total)}</td>`+
       rmCellHTML(o.lane)+`</tr>`
     );
@@ -3575,7 +3701,7 @@ function mvRenderLaneTbl(){
           body.push(
             `<tr class="mv-dest">`+
             `<td class="dest-name">${d.dest}</td>`+
-            ABKT.map(b=>`<td class="num${d.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(d.bkts[b])}</td>`).join('')+
+            ITB_LABELS.map(b=>`<td class="num${d.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(d.bkts[b])}</td>`).join('')+
             `<td class="num drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" title="Show these manifests below">${fmtINR(d.total)}</td><td></td></tr>`
           );
         });
@@ -3600,14 +3726,14 @@ function mvRenderLaneTbl(){
 
   /* --- grand total row across every lane shown --- */
   const gt={},gtot=arr.reduce((a,o)=>a+o.total,0);
-  ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
+  ITB_LABELS.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
   $('#mvLaneFoot').innerHTML=arr.length
-    ? `<tr><td>Total</td>${ABKT.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtINR(gtot)}</td><td></td></tr>`
+    ? `<tr><td>Total</td>${ITB_LABELS.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtINR(gtot)}</td><td></td></tr>`
     : '';
 
   mvLaneExport=arr.map(o=>{
     const row={Lane_Code:o.lane};
-    ABKT.forEach(b=>row[b]=Math.round(o.bkts[b]||0));
+    ITB_LABELS.forEach(b=>row[b+' days']=Math.round(o.bkts[b]||0));
     row.Total=Math.round(o.total);
     return row;
   });
@@ -3925,6 +4051,18 @@ function mvRenderTypeChart(arr,rank){
    across, Count of Awb_number in the cells. Reads mvScopeRows, so every page
    filter drives it exactly as it drives the two pivots around it. */
 let mvPodSort={k:'total',dir:-1}, mvPodExport=[];
+/* two pill ramps, mixed exactly as the reference does: pale to solid, with the
+   ink flipping to white once the fill is dark enough to need it */
+const POD_BLUE=[[234,243,254],[199,224,252],[150,196,249],[92,159,243],[37,110,220]];
+const POD_RED =[[253,235,235],[250,205,205],[246,150,150],[240,96,96],[226,54,54]];
+function podMix(stops,t){
+  t=Math.max(0,Math.min(1,+t||0));
+  const n=stops.length-1,pos=t*n,i=Math.min(n-1,Math.floor(pos)),f=pos-i;
+  const a=stops[i],b=stops[i+1];
+  return 'rgb('+[0,1,2].map(k=>Math.round(a[k]+(b[k]-a[k])*f)).join(',')+')';
+}
+function podBluePill(t){return 'background:'+podMix(POD_BLUE,t)+';color:'+(t>=.62?'#FFFFFF':'#0B3D91');}
+function podRedPill(t){ return 'background:'+podMix(POD_RED ,t)+';color:'+(t>=.55?'#FFFFFF':'#8E1B1B');}
 function mvRenderPodTbl(){
   const head=$('#mvPodHead'), body=$('#mvPodBody'), foot=$('#mvPodFoot');
   if(!head||!body)return;
@@ -3932,9 +4070,9 @@ function mvRenderPodTbl(){
   for(const r of mvScopeRows()){
     const k=r['POD Name']||'Unknown';
     let e=m.get(k);
-    if(!e){e={pod:k,bkts:{},total:0};ABKT.forEach(b=>e.bkts[b]=0);m.set(k,e);}
-    const ab=r['Ageing bucket'];
-    if(ab in e.bkts)e.bkts[ab]++;
+    if(!e){e={pod:k,bkts:{},total:0};ITB_LABELS.forEach(b=>e.bkts[b]=0);m.set(k,e);}
+    const ab=itBandOf(r);
+    if(ab&&ab in e.bkts)e.bkts[ab]++;
     e.total++;
   }
   let arr=[...m.values()];
@@ -3950,41 +4088,44 @@ function mvRenderPodTbl(){
   const mark=k=>mvPodSort.k===k?(mvPodSort.dir<0?' ▼':' ▲'):'';
   head.innerHTML=
     `<th class="sortable" data-k="pod" style="text-align:left">POD Name${mark('pod')}</th>`+
-    ABKT.map((b,i)=>`<th class="sortable num ${ABKT_HCLS[i]}" data-k="${b}">${b}${mark(b)}</th>`).join('')+
+    ITB_LABELS.map((b,i)=>`<th class="sortable num ${ITB_HCLS[i]}" data-k="${b}">${b} days${mark(b)}</th>`).join('')+
     `<th class="sortable num tot-col" data-k="total">Grand Total${mark('total')}</th>`;
   $$('#mvPodHead th[data-k]').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;
     mvPodSort.dir=mvPodSort.k===k?-mvPodSort.dir:-1;
     mvPodSort.k=k; mvRenderPodTbl();
   });
-  /* Each ageing column is shaded against its own range: a band with a few
-     hundred AWBs would otherwise sit invisible beside a band with tens of
-     thousands. The Grand Total stays plain so it still reads as a total. */
+  /* Pill cells on two scales, following the reference layout: the fresh bands
+     read blue (volume, not a problem) and the two oldest bands read red
+     (ageing that needs clearing). Each column is scaled against its own range,
+     since 0-6 days runs to tens of thousands while 35+ is in the hundreds. */
   const rng={};
-  ABKT.forEach(b=>{
+  ITB_LABELS.forEach(b=>{
     const vs=arr.map(o=>o.bkts[b]||0);
     rng[b]=[Math.min(...vs,0),Math.max(...vs,1)];
   });
   const cell=v=>v>0?fmtN(v):'';
   body.innerHTML=arr.map(o=>
     `<tr><td>${rmEsc(o.pod)}</td>`+
-    ABKT.map(b=>{
+    ITB_LABELS.map((b,i)=>{
       const v=o.bkts[b]||0;
       if(!v)return `<td class="num"></td>`;
-      return `<td class="num" style="${heatCellStyle(v,rng[b][0],rng[b][1])}">${fmtN(v)}</td>`;
+      const t=heatT(v,rng[b][0],rng[b][1]);
+      const st=i>=4?podRedPill(t):podBluePill(t);      // 16-30 and 30+ are the risk bands
+      return `<td class="num"><span class="pod-pill" style="${st}">${fmtN(v)}</span></td>`;
     }).join('')+
     `<td class="num tot-col">${fmtN(o.total)}</td></tr>`).join('')
-    || `<tr><td colspan="${ABKT.length+2}" style="text-align:center;padding:20px;color:var(--mut)">No PODs in scope.</td></tr>`;
-  const gt={}; ABKT.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
+    || `<tr><td colspan="${ITB_LABELS.length+2}" style="text-align:center;padding:20px;color:var(--mut)">No PODs in scope.</td></tr>`;
+  const gt={}; ITB_LABELS.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
   foot.innerHTML=arr.length
-    ? `<tr><td>Grand Total</td>${ABKT.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}`+
+    ? `<tr><td>Grand Total</td>${ITB_LABELS.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}`+
       `<td class="num">${fmtN(arr.reduce((a,o)=>a+o.total,0))}</td></tr>`
     : '';
   const cnt=$('#mvPodCount');
   if(cnt)cnt.textContent=fmtN(arr.length)+' POD'+(arr.length===1?'':'s');
   mvPodExport=arr.map(o=>{
     const row={POD_Name:o.pod};
-    ABKT.forEach(b=>row[b]=o.bkts[b]||0);
+    ITB_LABELS.forEach(b=>row[b+' days']=o.bkts[b]||0);
     row.Grand_Total=o.total;
     return row;
   });
@@ -4819,7 +4960,7 @@ const DOC_SECTIONS=[
   note:'Rows with a blank Movement are excluded. Grand Total for manifests is the distinct count across all rows, so it is smaller than the sum of the rows above it. This table sits directly below the page filters and runs full width.'},
  {t:'table', n:'POD Name by Ageing Bucket', what:'AWB counts by POD and Bag Creation ageing band.',
   fields:'<code>POD Name</code>, <code>Ageing bucket</code>, <code>Awb_number</code>',
-  logic:'rows    = POD Name\ncolumns = the six Ageing bucket bands\nvalues  = COUNT of rows (one per AWB)\nsorted by Grand Total descending; any column can be clicked to re-sort\neach ageing column is heat shaded against its own min and max',
+  logic:'rows    = POD Name\ncolumns = the six Ageing bucket bands\nvalues  = COUNT of rows (one per AWB)\nsorted by Grand Total descending; any column can be clicked to re-sort\nthe four fresher bands are shaded blue and the two oldest bands red, each column against its own min and max',
   note:'Counts AWBs, not value and not manifests, so it will not tie to the value pivots on this page. Reads the same filtered scope as the tables around it.'},
  {t:'table', n:'Lanes by Pending Manifest Code', what:'Pivot of value by lane and creation-ageing band, expandable to destination.',
   fields:'<code>Lane Code</code>, <code>Ageing bucket</code>, <code>Product_value</code>, <code>MM_destination</code>',
@@ -4844,6 +4985,10 @@ const DOC_SECTIONS=[
   src:'Google Sheet · Dashboard workbook · gid 1822832288',
   logic:'read via the sheet\u0027s CSV endpoint\nrow 1 of that sheet is a merged title, so the real header row is promoted\n  out of the data and the unnamed leading column is labelled Date\na column is treated as money when at least 60% of its cells parse as numbers\neach money column is heat shaded against its own min and max, so one large\n  month cannot wash out the rest\na row whose first cells read "Grand Total" is ruled off and bolded',
   note:'That workbook must be shared "Anyone with the link · Viewer" or Google returns a sign-in page and the strip turns red. The table is whatever the sheet holds — add or rename a month column there and it appears here on the next refresh.'},
+ {t:'table', n:'Gap-closing plan', what:'Where the loss above target can be found — by zone, POD, lane and bag.',
+  fields:'<code>Zone</code>, <code>POD Name</code>, <code>Lane Code</code>, <code>Manifest_code</code>, <code>Product_value</code>',
+  logic:'gap = current loss - target\neach table groups the same scope, sorts largest value first and carries a\n  running total, so the rows needed to cover the gap are the shaded ones\nthe bag table is one row per Manifest_code with its lane, POD, zone and ageing',
+  note:'The shaded rows are a best case: they assume a bag cleared is a rupee saved. Treat them as the shortest worklist to the target, not a guarantee. Everything respects the Movement Type filter, so a team can filter to its own scope and export just its list.'},
  {t:'chart', n:'Current Loss vs Target gauge', what:'Current loss measured against the loss target.',
   fields:'<code>movement_type</code>, <code>intransit_ageing_bucket</code>, <code>Product_value</code>',
   logic:'achieved  = min(current loss, target)        target completion % = achieved / target\nremaining = max(target - current loss, 0)    remaining target % = remaining / target\nachieved + remaining always equals the target, so the two percentages add to 100\n\ncurrent loss = SUM(Product_value) WHERE\n  movement_type in Intracity, Intracity DC FMRTS, Intracity-FM/RTS,\n                   Large, Tertiary (LM - LM), Zonal\n  AND ageing bucket in 6, 7, 8-10, 11-15, 16-30\nneedle % = target / current loss, capped at 100 — it reaches 100% when loss falls to the target\nneedle sweeps 0% left to 100% right; red to 50, amber to 75, green beyond',
@@ -5798,6 +5943,114 @@ function pjProjection(){
   return {value:v,awbs:rows.length};
 }
 
+/* =============================================================
+   GAP-CLOSING PLAN
+   -------------------------------------------------------------
+   The target is a ceiling, so the working number is the gap:
+       gap = current loss - target
+   Every table below answers "where do I find that gap?" — ranked
+   largest first, with a running total so it is obvious how far down
+   the list you have to go before the gap is covered.
+============================================================= */
+let PJ_GAP=0, PJ_ZONE_EXP=[], PJ_POD_EXP=[], PJ_LANEGAP_EXP=[], PJ_BAGS_EXP=[];
+
+/* group the scope by any key, largest value first, with a running total */
+function pjRank(rows,key){
+  const m=new Map();
+  for(const r of rows){
+    const k=(typeof key==='function'?key(r):r[key])||'Unknown';
+    let o=m.get(k);
+    if(!o){o={name:k,value:0,awbs:0,bags:new Set()};m.set(k,o);}
+    o.value+=r.Product_value||0; o.awbs++;
+    if(r.Manifest_code)o.bags.add(r.Manifest_code);
+  }
+  const arr=[...m.values()].sort((a,b)=>b.value-a.value);
+  let cum=0;
+  arr.forEach(o=>{cum+=o.value;o.cum=cum;o.bagCount=o.bags.size;});
+  return arr;
+}
+/* how many rows from the top before the gap is covered */
+function pjCoverCount(arr,gap){
+  if(gap<=0)return 0;
+  for(let i=0;i<arr.length;i++)if(arr[i].cum>=gap)return i+1;
+  return arr.length;
+}
+function pjMiniTable(headId,bodyId,label,arr,gap){
+  const head=$(headId), body=$(bodyId);
+  if(!head||!body)return [];
+  const need=pjCoverCount(arr,gap);
+  head.innerHTML=`<th style="text-align:left">${label}</th>`+
+    `<th class="pj-num">Value</th><th class="pj-num">% of gap</th><th class="pj-num">Running</th>`;
+  const vMin=arr.length?Math.min(...arr.map(o=>o.value)):0;
+  const vMax=arr.length?Math.max(...arr.map(o=>o.value)):1;
+  body.innerHTML=arr.slice(0,60).map((o,i)=>
+    `<tr class="${i<need?'pj-in-gap':''}"><td>${rmEsc(o.name)}</td>`+
+    `<td class="pj-num" style="${heatCellStyle(o.value,vMin,vMax)}">${fmtINR(o.value)}</td>`+
+    `<td class="pj-num">${gap>0?(o.value/gap*100).toFixed(1)+'%':'—'}</td>`+
+    `<td class="pj-num">${fmtINR(o.cum)}</td></tr>`).join('')
+    || `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mut)">Nothing in scope.</td></tr>`;
+  return arr.map(o=>({[label]:o.name,Value:Math.round(o.value),
+    Pct_of_gap:gap>0?+(o.value/gap*100).toFixed(2):0,Running_total:Math.round(o.cum),
+    AWBs:o.awbs,Bags:o.bagCount}));
+}
+
+function pjRenderPlan(){
+  const rows=pjScopeRows();
+  const gap=PJ_GAP||0;
+  const gapEl=$('#pjPlanGap'); if(gapEl)gapEl.textContent=fmtINR(gap);
+
+  PJ_ZONE_EXP   =pjMiniTable('#pjZoneHead','#pjZoneBody','Zone',   pjRank(rows,'Zone'),gap);
+  PJ_POD_EXP    =pjMiniTable('#pjPodHead','#pjPodBody','POD',      pjRank(rows,'POD Name'),gap);
+  PJ_LANEGAP_EXP=pjMiniTable('#pjLaneGapHead','#pjLaneGapBody','Lane',pjRank(rows,'Lane Code'),gap);
+
+  /* bag level: one row per manifest, biggest first, running total */
+  const m=new Map();
+  for(const r of rows){
+    const code=r.Manifest_code||''; if(!code)continue;
+    let o=m.get(code);
+    if(!o){o={bag:code,lane:r['Lane Code'],pod:r['POD Name'],zone:r.Zone,
+      bkt:r['Ageing bucket'],value:0,awbs:0};m.set(code,o);}
+    o.value+=r.Product_value||0; o.awbs++;
+  }
+  const bags=[...m.values()].sort((a,b)=>b.value-a.value);
+  let cum=0; bags.forEach(o=>{cum+=o.value;o.cum=cum;});
+  const need=pjCoverCount(bags,gap);
+
+  const head=$('#pjBagsHead'), body=$('#pjBagsBody');
+  if(head)head.innerHTML='<th style="text-align:left">Manifest</th><th style="text-align:left">Lane</th>'+
+    '<th style="text-align:left">POD</th><th style="text-align:left">Zone</th>'+
+    '<th style="text-align:left">Ageing</th><th class="pj-num">AWBs</th>'+
+    '<th class="pj-num">Value</th><th class="pj-num">Running</th><th class="pj-num">% of gap</th>';
+  const CAP=400;                                   // enough to cover the gap, still quick to render
+  const show=bags.slice(0,Math.max(need,Math.min(CAP,bags.length)));
+  if(body)body.innerHTML=show.slice(0,CAP).map((o,i)=>
+    `<tr class="${i<need?'pj-in-gap':''}"><td>${rmEsc(o.bag)}</td><td>${rmEsc(o.lane)}</td>`+
+    `<td>${rmEsc(o.pod)}</td><td>${rmEsc(o.zone)}</td><td>${rmEsc(o.bkt)}</td>`+
+    `<td class="pj-num">${fmtN(o.awbs)}</td><td class="pj-num">${fmtINR(o.value)}</td>`+
+    `<td class="pj-num">${fmtINR(o.cum)}</td>`+
+    `<td class="pj-num">${gap>0?(o.cum/gap*100).toFixed(1)+'%':'—'}</td></tr>`).join('')
+    || `<tr><td colspan="9" style="text-align:center;padding:18px;color:var(--mut)">Nothing in scope.</td></tr>`;
+
+  const cnt=$('#pjBagsCount');
+  if(cnt)cnt.textContent=gap>0
+    ? fmtN(need)+' of '+fmtN(bags.length)+' bags close the gap'
+    : fmtN(bags.length)+' bags';
+  const sub=$('#pjBagsSub');
+  if(sub)sub.innerHTML=gap>0
+    ? 'Clearing the top <b>'+fmtN(need)+'</b> bags — the shaded rows — removes '+fmtINR(gap)+
+      ' and lands the loss on target. Ranked by value, with a running total.'
+    : 'Loss is already at or below target; nothing needs to be cleared.';
+  const lead=$('#pjPlanLead');
+  if(lead)lead.innerHTML=gap>0
+    ? 'Current loss is <b>'+fmtINR(gap)+'</b> above target. Each table is ranked largest first with a '+
+      'running total, and the shaded rows are the ones that add up to that gap — so a zone, POD, lane '+
+      'or bag list can be handed straight to the team that owns it.'
+    : 'Loss is at or below target — nothing to close.';
+
+  PJ_BAGS_EXP=bags.map(o=>({Manifest:o.bag,Lane:o.lane,POD:o.pod,Zone:o.zone,
+    Ageing_bucket:o.bkt,AWBs:o.awbs,Value:Math.round(o.value),Running_total:Math.round(o.cum)}));
+}
+
 /* ---------- lanes inside that scope ---------- */
 function pjRenderLanes(){
   const head=$('#pjLaneHead'), body=$('#pjLaneBody'), foot=$('#pjLaneFoot');
@@ -5864,7 +6117,7 @@ function pjBuildFilter(){
     PJ_MOVE_SEL=new Set([...panel.querySelectorAll('input:checked')].map(x=>x.value));
     btn.classList.toggle('active',PJ_MOVE_SEL.size>0);
     btn.textContent=(PJ_MOVE_SEL.size?PJ_MOVE_SEL.size+' selected':'Movement Type')+' ▾';
-    pjRenderGauge(); pjRenderLanes();       // gauge and table move together
+    pjRenderGauge(); pjRenderPlan(); pjRenderLanes();   // gauge, plan and table move together
   };
   panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=sync);
   panel.onclick=e=>e.stopPropagation();
@@ -5925,20 +6178,23 @@ function pjRenderGauge(){
      The two always add up to the target, so the two percentages add to 100%.
      Once the loss passes the target the allowance is spent — achieved is the
      full target, remaining is nil, and the overshoot is called out instead. */
-  const achieved=Math.min(proj,tgt);
-  const remaining=Math.max(tgt-proj,0);
-  const over=Math.max(proj-tgt,0);
-  const achPct=tgt>0?achieved/tgt*100:0;
-  const remPct=tgt>0?remaining/tgt*100:0;
+  /* The target is a ceiling the loss has to come DOWN to, so the number that
+     matters is the gap: how much loss must be removed to land on target. */
+  const gap=Math.max(proj-tgt,0);                 // still to be taken out
+  const within=Math.min(proj,tgt);                // loss already inside the ceiling
+  const gapPct=proj>0?gap/proj*100:0;             // share of today's loss to remove
+  const withinPct=tgt>0?within/tgt*100:0;
+  const gapCard=$('#pjGapVal')&&$('#pjGapVal').parentElement;
   const achCard=$('#pjAchVal')&&$('#pjAchVal').parentElement;
-  const remCard=$('#pjRemVal')&&$('#pjRemVal').parentElement;
-  if(achCard)achCard.className='pj-kpi'+(over>0?' over':'');
-  if(remCard)remCard.className='pj-kpi'+(remaining>0?' good':'');
-  $('#pjAchVal').textContent=fmtINR(achieved);
-  $('#pjAchPct').textContent='Target completion '+achPct.toFixed(1)+'%';
-  $('#pjRemVal').textContent=fmtINR(remaining);
-  $('#pjRemPct').textContent='Remaining target '+remPct.toFixed(1)+'%'+
-    (over>0?' · over by '+fmtINR(over):'');
+  if(gapCard)gapCard.className='pj-kpi'+(gap>0?' over':' good');
+  if(achCard)achCard.className='pj-kpi good';
+  $('#pjGapVal').textContent=fmtINR(gap);
+  $('#pjGapPct').textContent=gap>0
+    ? 'reduce today\u0027s loss by '+gapPct.toFixed(1)+'%'
+    : 'already at or below target';
+  $('#pjAchVal').textContent=fmtINR(within);
+  $('#pjAchPct').textContent=withinPct.toFixed(1)+'% of the target ceiling used';
+  PJ_GAP=gap;
 
   $('#pjProjVal').textContent=fmtINR(proj);
   $('#pjTgtVal').textContent=fmtINR(tgt);
@@ -5958,13 +6214,12 @@ function pjRenderGauge(){
           '<i>(in-transit ageing; under 6 and over 30 days are excluded)</i></div>'+
         '<div><span class="k">Target</span> <b>'+fmtINR(tgt)+'</b> '+
           '<i>(the most loss allowed)</i></div>'+
-        '<div><span class="k">Achieved</span> <b>'+fmtINR(achieved)+'</b> = min(current loss, target) · '+
-          '<b>'+achPct.toFixed(1)+'%</b> target completion = achieved ÷ target</div>'+
-        '<div><span class="k">Remaining</span> <b>'+fmtINR(remaining)+'</b> = target − current loss, floored at zero · '+
-          '<b>'+remPct.toFixed(1)+'%</b> remaining target = remaining ÷ target</div>'+
+        '<div><span class="k">To be achieved</span> <b>'+fmtINR(gap)+'</b> = current loss − target — '+
+          'the loss that has to be taken out to land on target</div>'+
+        '<div><span class="k">Reduction needed</span> <b>'+gapPct.toFixed(1)+'%</b> of today\u0027s loss</div>'+
         '<div><span class="k">Needle</span> <b>'+pct.toFixed(1)+'%</b> = target ÷ current loss — '+
           'it reaches 100% when loss falls to the target</div>'+
-        (over>0?'<div class="pj-note-warn">Loss is <b>'+fmtINR(over)+'</b> over target, so the allowance is fully used: achieved sits at 100% and remaining at 0%.</div>':'')+
+        (gap>0?'<div class="pj-note-warn">The tables below rank where that <b>'+fmtINR(gap)+'</b> can be found — by lane, POD, zone and individual bag.</div>':'')+
         (pctRaw>100?'<div class="pj-note-warn"><b>Target exceeds the current loss</b>, so the needle is capped at 100%.</div>':'')+
       '</div>'+
     '</div>';
@@ -5974,7 +6229,9 @@ function pjRenderGauge(){
 
 function pjRender(){
   if(RAW.length)pjBuildFilter();
-  pjRenderGauge(); pjRenderLanes(); pjRenderTable();
+  pjRenderGauge();          // sets PJ_GAP, which the plan below reads
+  pjRenderPlan();
+  pjRenderLanes(); pjRenderTable();
 }
 /* called by navTo() — pull the sheet if the last read has gone stale */
 function pjOnPage(){
@@ -7059,6 +7316,10 @@ function wireControls(){
   /* projection / target */
   $('#pjSync').onclick=()=>pjSync(false);
   $('#pjCsv').onclick=pjExport;
+  $('#pjZoneCsv').onclick=()=>lvExport(PJ_ZONE_EXP,'csv','gap_by_zone','zone');
+  $('#pjPodCsv').onclick=()=>lvExport(PJ_POD_EXP,'csv','gap_by_pod','pod');
+  $('#pjLaneGapCsv').onclick=()=>lvExport(PJ_LANEGAP_EXP,'csv','gap_by_lane','lane');
+  $('#pjBagsCsv').onclick=()=>lvExport(PJ_BAGS_EXP,'csv','gap_closing_bags','bags');
   $('#pjLaneCsv').onclick=()=>{
     if(!PJ_LANE_EXPORT.length){alert('No lanes in the current scope.');return;}
     lvExport(PJ_LANE_EXPORT,'csv','projection_lanes','lanes');
@@ -7066,7 +7327,7 @@ function wireControls(){
   $('#pjTargetSave').onclick=()=>{
     const n=+($('#pjTargetIn').value||0);
     if(!(n>0)){alert('Enter a target above zero.');return;}
-    pjSetTarget(n); pjRenderGauge();
+    pjSetTarget(n); pjRenderGauge(); pjRenderPlan(); 
   };
   $('#pjTargetIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pjTargetSave').click();});
 
