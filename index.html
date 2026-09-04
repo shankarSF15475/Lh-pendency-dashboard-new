@@ -761,7 +761,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
 #page-manifest .mv-stack .lv-mini-wrap{max-height:520px;}
 /* …but not the matrix, which must run the full height of the chart card
    beside it. Same specificity as the rule above, declared later, so it wins. */
-#page-manifest .mv-matrix-row .lv-mini-wrap{max-height:none;height:100%;}
+#page-manifest .mv-matrix-row>.lv-mini-wrap{max-height:none;}
 #page-manifest .mv-stack #mvTypeTbl{width:100%;}
 
 /* ---- LANE REMARKS · Bag wise View follow-up log ---- */
@@ -820,17 +820,39 @@ thead th{background:#F1F3FB;color:var(--pine);}
 @media(max-width:820px){.mv-kpi{grid-template-columns:repeat(2,minmax(0,1fr));}}
 
 /* Movement Type Matrix · table left, ring + colour index right, equal height */
-.mv-matrix-row{--mv-h:560px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
-  gap:14px;align-items:stretch;}
-.mv-matrix-row .lv-mini-wrap{margin-top:10px;height:var(--mv-h);max-height:none;align-self:stretch;}
+/* two pivots side by side, equal width, and nothing scrolls: the type is sized
+   down instead so every column fits on one line */
+.mv-matrix-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;align-items:start;}
+.mv-pod-col{min-width:0;}
+/* both cards keep the same body height, so the pair lines up top and bottom
+   the way Top 20 Lanes and AWB Count by Lane Type do on Lane View */
+.mv-matrix-row>.card{display:flex;flex-direction:column;}
+.mv-matrix-row .lv-mini-wrap{margin-top:10px;flex:1;height:470px;max-height:470px!important;
+  overflow-y:auto!important;overflow-x:hidden!important;}
+.mv-matrix-row tfoot td{position:sticky;bottom:0;z-index:4;}
+.mv-matrix-row table{width:100%;min-width:0!important;table-layout:fixed;}
+.mv-matrix-row table td,.mv-matrix-row table th{white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;}
+/* compact enough for eight columns without a horizontal scrollbar */
+#page-manifest .mv-matrix-row #mvTypeTbl thead th,
+#page-manifest .mv-matrix-row #mvPodTbl thead th{font-size:9.5px;padding:10px 6px;}
+#page-manifest .mv-matrix-row #mvTypeTbl tbody td,
+#page-manifest .mv-matrix-row #mvPodTbl tbody td{font-size:11px;padding:6px 5px;}
+#page-manifest .mv-matrix-row #mvTypeTbl tfoot td,
+#page-manifest .mv-matrix-row #mvPodTbl tfoot td{font-size:11px;padding:9px 5px;}
+#page-manifest .mv-matrix-row #mvTypeTbl .mv-heat{min-width:0;width:100%;padding:4px 6px;font-size:10.5px;}
+#page-manifest .mv-matrix-row .pod-pill{min-width:0;width:100%;padding:4px 4px;font-size:10px;}
+/* first column takes the slack, the numeric ones stay tight */
+.mv-matrix-row #mvTypeTbl col.c0,.mv-matrix-row #mvPodTbl col.c0{width:auto;}
+.mv-matrix-row>.lv-mini-wrap{margin-top:10px;max-height:none;align-self:stretch;}
 /* the table is the reference index for the chart, so give it room to breathe */
 #page-manifest .mv-stack #mvTypeTbl tbody td{padding:11px 12px;font-size:12.5px;}
 #page-manifest .mv-stack #mvTypeTbl thead th{padding:13px 12px;font-size:11px;}
 #page-manifest .mv-stack #mvTypeTbl tfoot td{padding:13px 12px;}
 #mvTypeTbl .mv-heat{min-width:96px;padding:6px 13px;font-size:12.5px;}
 .mv-matrix-chart{margin-top:10px;border:1px solid var(--line);border-radius:11px;
-  background:#fff;padding:12px 14px 14px;align-self:stretch;height:var(--mv-h);min-height:0;
-  display:flex;flex-direction:column;}
+  background:#fff;padding:12px 14px 14px;display:flex;flex-direction:column;}
 /* ring on the left, index on the right — the index is the chart's legend */
 .mv-chart-body{flex:1;min-height:420px;display:grid;grid-template-columns:minmax(0,1fr) 232px;
   gap:10px;align-items:center;}
@@ -851,7 +873,7 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .mv-lg-tot{border-top:2px solid var(--ink)!important;margin-top:4px;padding-top:7px;font-weight:800;}
 @media(max-width:1350px){.mv-chart-body{grid-template-columns:minmax(0,1fr) 200px;}}
 @media(max-width:1150px){
-  .mv-matrix-row{grid-template-columns:1fr;--mv-h:auto;}
+  .mv-matrix-row{grid-template-columns:1fr;}
   .mv-matrix-chart{min-height:0;}
   .mv-chart-body{grid-template-columns:1fr;}
   .mv-chart-wrap{height:360px;}
@@ -878,11 +900,12 @@ thead th{background:#F1F3FB;color:var(--pine);}
    this file: tokens rather than one-off hexes, .lv-mini's 10.5px header /
    11.5px body sizing, and the Consolas/SF-Mono tabular numerals every other
    numeric table here uses. */
-#mvTypeTbl thead th{background:#FFFFFF;color:var(--mut);font-size:10.5px;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;padding:12px 10px;
-  border-bottom:1px solid var(--line);}
-#mvTypeTbl thead th:hover{background:#F7F8FC;color:var(--pine);}
-#mvTypeTbl thead th .arr{color:var(--mut);}
+/* the indigo header band every other pivot in the app uses */
+#mvTypeTbl thead th,#mvPodTbl thead th{background:#F1F3FB;color:var(--pine);font-size:10.5px;
+  font-weight:700;letter-spacing:.02em;text-transform:none;padding:11px 8px;
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;}
+#mvTypeTbl thead th:hover,#mvPodTbl thead th:hover{background:#E7E9F5;}
+#mvTypeTbl thead th .arr{color:var(--pine);}
 #mvTypeTbl tbody td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--line);background:#FFFFFF;}
 #mvTypeTbl tbody tr:hover td{background:#F8F9FE;}
 #mvTypeTbl tbody td:first-child{color:var(--ink);font-weight:600;}
@@ -952,7 +975,6 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .pj-kpi .s{font-size:10.5px;color:var(--mut);margin-top:3px;font-weight:700;}
 .pj-kpi.over .v{color:#B42318;}
 .pj-kpi.good .v{color:#15803D;}
-#pjGaugeNote{text-align:left;max-width:none;width:100%;margin-top:12px;}
 .pj-note{border:1px solid var(--line);border-radius:10px;background:#FBFBFE;padding:10px 12px;}
 .pj-note-l{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
   color:var(--pine);margin-bottom:6px;}
@@ -985,9 +1007,14 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .pj-mini .lv-mini-wrap{max-height:300px;}
 .pj-bags-card{margin-top:12px;padding:14px 16px;}
 .pj-bags-wrap{max-height:420px;}
+/* one header treatment across all four gap tables: Title Case as written, no
+   uppercase transform, same weight and size, numbers right aligned */
 #pjZoneTbl thead th,#pjPodTbl thead th,#pjLaneGapTbl thead th,#pjBagsTbl thead th{
-  background:#FFFFFF;color:var(--mut);font-size:10px;font-weight:700;letter-spacing:.05em;
-  text-transform:uppercase;padding:10px 8px;border-bottom:1px solid var(--line);}
+  background:#FFFFFF;color:var(--mut);font-size:10.5px;font-weight:700;letter-spacing:.01em;
+  text-transform:none;text-align:left;white-space:nowrap;
+  padding:11px 9px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;}
+#pjZoneTbl thead th.pj-num,#pjPodTbl thead th.pj-num,
+#pjLaneGapTbl thead th.pj-num,#pjBagsTbl thead th.pj-num{text-align:right;}
 #pjZoneTbl tbody td,#pjPodTbl tbody td,#pjLaneGapTbl tbody td,#pjBagsTbl tbody td{
   padding:8px;font-size:11.5px;border-bottom:1px solid var(--line);}
 #pjZoneTbl tbody td:first-child,#pjPodTbl tbody td:first-child,
@@ -1585,77 +1612,66 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <!-- ===== KPI strip: what to act on, before the pivots ===== -->
       <div class="kpi-grid mv-kpi" id="mvKpis"></div>
 
-      <!-- ===== Movement type matrix — full width, directly below the filters ===== -->
-      <div class="card lv-sec mv-stack">
-        <div class="card-head">
-          <div><h3>Movement Type Matrix</h3>
-            <span class="sub">movement · product value · AWB count · manifest codes per movement type · sorted large → small</span></div>
-          <div class="card-tools">
-            <button class="tool" id="mvTypeCsv">CSV</button>
+      <!-- ===== Two pivots side by side, laid out like the Lane View pair ===== -->
+      <div class="mv-matrix-row">
+        <div class="card lv-sec mv-stack">
+          <div class="card-head">
+            <div><h3>Movement Type Matrix</h3>
+              <span class="sub">product value, AWB count and manifest codes per movement type · click a header to sort</span></div>
+            <div class="card-tools">
+              <button class="tool" id="mvTypeCsv">CSV</button>
+            </div>
           </div>
-        </div>
-        <div class="mv-heat-legend">
-          <span>Low</span>
-          <span class="sw" style="background:#E7F6EC"></span>
-          <span class="sw" style="background:#CDECD5"></span>
-          <span class="sw" style="background:#FAF0BE"></span>
-          <span class="sw" style="background:#F9CE7A"></span>
-          <span class="sw" style="background:#F0A44E"></span>
-          <span class="sw" style="background:#EE6B4D"></span>
-          <span class="sw" style="background:#D42B34"></span>
-          <span>High</span>
-          <span class="hint">Hover any value to spotlight it</span>
-        </div>
-        <div class="mv-matrix-row">
-          <div class="lv-mini-wrap" style="overflow-x:auto">
-            <table class="lv-mini mv-pivot" id="mvTypeTbl" style="min-width:660px">
+          <div class="mv-heat-legend">
+            <span>Low</span>
+            <span class="sw" style="background:#E7F6EC"></span>
+            <span class="sw" style="background:#CDECD5"></span>
+            <span class="sw" style="background:#FAF0BE"></span>
+            <span class="sw" style="background:#F9CE7A"></span>
+            <span class="sw" style="background:#F0A44E"></span>
+            <span class="sw" style="background:#EE6B4D"></span>
+            <span class="sw" style="background:#D42B34"></span>
+            <span>High</span>
+            <span class="hint">hover any value to spotlight it</span>
+          </div>
+          <div class="lv-mini-wrap">
+            <table class="lv-mini mv-pivot" id="mvTypeTbl">
               <thead><tr id="mvTypeHead"></tr></thead>
               <tbody id="mvTypeBody"></tbody>
               <tfoot id="mvTypeFoot"></tfoot>
             </table>
           </div>
-          <div class="mv-matrix-chart">
-            <span class="mv-chart-ttl">Product Value by Movement Type</span>
-            <div class="mv-chart-body">
-              <div class="mv-chart-wrap"><canvas id="mvTypeChart"></canvas></div>
-              <div class="mv-legend" id="mvTypeLegend"></div>
+        </div>
+
+        <div class="card lv-sec mv-stack" id="mvPodCard">
+          <div class="card-head">
+            <div><h3>POD Name by Ageing Bucket</h3>
+              <span class="sub">AWB count by POD Name × in-transit ageing · largest Grand Total first</span></div>
+            <div class="card-tools">
+              <span class="pill mv-lane-count" id="mvPodCount">—</span>
+              <button class="tool" id="mvPodCsv">CSV</button>
+              <button class="tool" id="mvPodShot" title="Save this table as a PNG image">PNG</button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- ===== POD Name × Bag Creation Ageing · AWB counts ===== -->
-      <div class="card lv-sec mv-stack" id="mvPodCard">
-        <div class="card-head">
-          <div><h3>POD Name by Ageing Bucket</h3>
-            <span class="sub">count of Awb_number by POD Name × In-transit Ageing · largest Grand Total first</span>
-            <div class="mv-heat-legend">
-              <span>2–15 DAYS</span>
-              <span class="sw" style="background:#EAF3FE"></span>
-              <span class="sw" style="background:#C7E0FC"></span>
-              <span class="sw" style="background:#96C4F9"></span>
-              <span class="sw" style="background:#5C9FF3"></span>
-              <span class="sw" style="background:#256EDC"></span>
-              <span style="margin-left:12px">16+ DAYS</span>
-              <span class="sw" style="background:#FDEBEB"></span>
-              <span class="sw" style="background:#FACDCD"></span>
-              <span class="sw" style="background:#F69696"></span>
-              <span class="sw" style="background:#F06060"></span>
-              <span class="sw" style="background:#E23636"></span>
-              <span class="hint">each column shaded against its own range</span>
-            </div></div>
-          <div class="card-tools">
-            <span class="pill mv-lane-count" id="mvPodCount">—</span>
-            <button class="tool" id="mvPodCsv">CSV</button>
-            <button class="tool" id="mvPodShot" title="Save this table as a PNG image">PNG</button>
+          <div class="mv-heat-legend">
+            <span>Low</span>
+            <span class="sw" style="background:#E7F6EC"></span>
+            <span class="sw" style="background:#CDECD5"></span>
+            <span class="sw" style="background:#FAF0BE"></span>
+            <span class="sw" style="background:#F9CE7A"></span>
+            <span class="sw" style="background:#F0A44E"></span>
+            <span class="sw" style="background:#EE6B4D"></span>
+            <span class="sw" style="background:#D42B34"></span>
+            <span>High</span>
+            <span class="hint">each column shaded against its own range</span>
           </div>
-        </div>
-        <div class="lv-mini-wrap" style="overflow-x:auto">
-          <table class="lv-mini mv-pivot" id="mvPodTbl">
-            <thead><tr id="mvPodHead"></tr></thead>
-            <tbody id="mvPodBody"></tbody>
-            <tfoot id="mvPodFoot"></tfoot>
-          </table>
+          <div class="lv-mini-wrap">
+            <table class="lv-mini mv-pivot" id="mvPodTbl">
+              <thead><tr id="mvPodHead"></tr></thead>
+              <tbody id="mvPodBody"></tbody>
+              <tfoot id="mvPodFoot"></tfoot>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1774,7 +1790,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
             <input type="number" id="pjTargetIn" min="0" step="100000">
             <button class="tool" id="pjTargetSave">SET</button>
           </div>
-          <div class="hint" id="pjGaugeNote"></div>
+
         </div>
       </div>
 
@@ -1782,6 +1798,15 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <div class="card mv-filterbar" id="pjFilterBar">
         <span class="mv-fb-ttl">FILTERS</span>
         <div class="mv-filters">
+          <div class="mv-mcsel" id="pjZoneMcsel">
+            <button class="mv-mcsel-btn" id="pjZoneBtn">Zone ▾</button>
+            <div class="mv-mcsel-panel" id="pjZonePanel">
+              <div class="mc-actions">
+                <button id="pjZoneAllBtn">All</button>
+                <button id="pjZoneNoneBtn">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="pjMoveMcsel">
             <button class="mv-mcsel-btn" id="pjMoveBtn">Movement Type ▾</button>
             <div class="mv-mcsel-panel" id="pjMovePanel">
@@ -2323,6 +2348,11 @@ function normalize(r){
     'IT Date':excelDate(r['IT Date']),'IT Time':excelTime(r['IT Time']),
     Manifest_origin:s(r.Manifest_origin)||'Unknown',Manifest_Destination:s(r.Manifest_Destination)||'Unknown',
     Manifest_status:s(r.Manifest_status)||'Unknown',
+    /* header spelling varies between exports, so accept the usual variants */
+    ShipmentInManifest:s(r.ShipmentInManifest||r['Shipment In Manifest']||
+      r['Shipment_In_Manifest']||r.shipment_in_manifest||r['ShipmentinManifest']||''),
+    CurrentShipmentInManifest:s(r.CurrentShipmentInManifest||r['Current Shipment In Manifest']||
+      r['Current_Shipment_In_Manifest']||r.current_shipment_in_manifest||r['CurrentShipmentinManifest']||''),
     'Ageing bucket':s(r['Ageing bucket'])||'',
     /* --- fields the HOV cuts are built from (Dashboard sheet) --- */
     HHOV:s(r.HHOV)||'',
@@ -3838,6 +3868,13 @@ function mvRenderTypeTbl(){
     {k:'awbs',     label:'AWB_NUMBER',    num:true},
     {k:'manifests',label:'MANIFEST_CODE', num:true}
   ];
+  /* fixed layout: label column takes the slack, numbers share the rest */
+  const tt=$('#mvTypeTbl');
+  if(tt){
+    const cg=tt.querySelector('colgroup'); if(cg)cg.remove();
+    tt.insertAdjacentHTML('afterbegin','<colgroup><col style="width:26%"><col style="width:18%">'+
+      '<col style="width:20%"><col style="width:18%"><col style="width:18%"></colgroup>');
+  }
   $('#mvTypeHead').innerHTML=cols.map(c=>
     `<th data-k="${c.k}" class="sortable ${c.num?'num':''}"${(c.k==='type'||c.k==='move')?' style="text-align:left"':''}>${c.label}${mark(c.k)}</th>`).join('');
   $$('#mvTypeHead th[data-k]').forEach(th=>th.onclick=()=>{
@@ -3879,171 +3916,9 @@ function mvRenderTypeTbl(){
       `<td class="num">${fmtN(allManifests.size)}</td></tr>`
     : '';
 
-  mvRenderTypeChart(arr,rank);
-
   mvTypeExport=arr.map(o=>({movement_type:o.type,movement:o.move,
     Sum_of_Product_value:Math.round(o.value),Share_pct:+o.share.toFixed(1),
     Count_of_Awb_number:o.awbs,Count_of_Manifest_code:o.manifests}));
-}
-
-/* Doughnut of the same PRODUCT_VALUE column. Slices big enough to hold text
-   get their figure printed inside; anything thinner gets a leader line and an
-   arrow out to the margin, so the small movement types are still readable.
-   The table beside it carries the share %, so the chart needs no legend. */
-let mvTypeChart=null;
-const MV_PIE_INSIDE=0.055;          // slices under ~5.5% are called out instead
-const mvPieLabels={
-  id:'mvPieLabels',
-  afterDatasetsDraw(chart){
-    const meta=chart.getDatasetMeta(0);
-    if(!meta||!meta.data||!meta.data.length)return;
-    const ctx=chart.ctx, ds=chart.data.datasets[0];
-    const labels=chart.data.labels||[], data=ds.data||[];
-    const total=data.reduce((a,v)=>a+(+v||0),0);
-    if(!total)return;
-    const area=chart.chartArea;
-    const first=meta.data[0];
-    const cx=first.x, cy=first.y;                 // the arc's own centre, not the canvas
-    const colours=ds.backgroundColor||[];
-
-    ctx.save();
-    ctx.lineJoin='round';
-
-    /* ---- pass 1: figures inside the fat slices, thin ones set aside ---- */
-    const thin=[];
-    meta.data.forEach((a,i)=>{
-      const v=+data[i]||0; if(!v)return;
-      const share=v/total;
-      const mid=(a.startAngle+a.endAngle)/2;
-      const cos=Math.cos(mid), sin=Math.sin(mid);
-      if(share>=MV_PIE_INSIDE){
-        const r=(a.innerRadius+a.outerRadius)/2;
-        ctx.font='800 11.5px "Segoe UI",system-ui,sans-serif';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.30)';
-        ctx.strokeText(fmtINR(v),cx+cos*r,cy+sin*r);
-        ctx.fillStyle='#FFFFFF'; ctx.fillText(fmtINR(v),cx+cos*r,cy+sin*r);
-        return;
-      }
-      /* every callout goes left: that is where the padding is, and a single
-         column reads far better than labels split either side of the ring */
-      thin.push({side:'l',v,cos,sin,col:colours[i]||'#94A3B8',
-        name:String(labels[i]||''), rOut:a.outerRadius,
-        x1:cx+cos*(a.outerRadius+3), y1:cy+sin*(a.outerRadius+3),
-        yIdeal:cy+sin*(a.outerRadius+22)});
-    });
-
-    /* ---- pass 2: lay the callouts out per side so none collide or clip ----
-       Sort by where each label wants to be, walk down assigning at least GAP
-       between them, then shift the whole column up if it ran past the bottom.
-       This is why the old version overprinted at the top-left. */
-    const GAP=16, PAD=6;
-    ['r','l'].forEach(side=>{
-      const list=thin.filter(t=>t.side===side).sort((a,b)=>a.yIdeal-b.yIdeal);
-      if(!list.length)return;
-      let y=area.top+PAD;
-      list.forEach(t=>{ t.y=Math.max(t.yIdeal,y); y=t.y+GAP; });
-      const over=(y-GAP)-(area.bottom-PAD);
-      if(over>0){
-        let prev=Infinity;
-        for(let k=list.length-1;k>=0;k--){         // push back up from the bottom
-          list[k].y=Math.min(list[k].y-over,prev-GAP);
-          prev=list[k].y;
-        }
-        if(list[0].y<area.top+PAD){                // still tight — space evenly
-          const room=Math.max(GAP,(area.bottom-area.top-2*PAD)/list.length);
-          list.forEach((t,k)=>t.y=area.top+PAD+k*room);
-        }
-      }
-      const right=side==='r';
-      list.forEach(t=>{
-        /* Measure first: "₹27.85 L" is wider than the old fixed margin, and the
-           label was being clipped by the canvas edge. Work out where the text
-           actually starts and pull the elbow in if there is not room. */
-        const txt=fmtINR(t.v);
-        ctx.font='800 11px "Segoe UI",system-ui,sans-serif';
-        const w=ctx.measureText(txt).width;
-        const EDGE=4;
-        const elbow=cx+(right?1:-1)*(t.rOut+20);
-        let lx=elbow+(right?26:-26);
-        let tx=lx+(right?4:-4);
-        if(right){ if(tx+w>chart.width-EDGE){ tx=chart.width-EDGE-w; lx=tx-4; } }
-        else     { if(tx-w<EDGE){ tx=EDGE+w; lx=tx+4; } }
-        ctx.strokeStyle=t.col; ctx.lineWidth=1.4;
-        ctx.beginPath(); ctx.moveTo(t.x1,t.y1); ctx.lineTo(elbow,t.y); ctx.lineTo(lx,t.y); ctx.stroke();
-        /* arrowhead back at the slice */
-        const ah=5;
-        ctx.beginPath();
-        ctx.moveTo(t.x1,t.y1);
-        ctx.lineTo(t.x1-t.cos*ah-t.sin*ah*.8, t.y1-t.sin*ah+t.cos*ah*.8);
-        ctx.lineTo(t.x1-t.cos*ah+t.sin*ah*.8, t.y1-t.sin*ah-t.cos*ah*.8);
-        ctx.closePath(); ctx.fillStyle=t.col; ctx.fill();
-
-        /* value only — the index beside the ring names each slice and gives
-           its share */
-        ctx.textAlign=right?'left':'right'; ctx.textBaseline='middle';
-        ctx.lineWidth=3.5; ctx.strokeStyle='rgba(255,255,255,.95)';
-        ctx.strokeText(txt,tx,t.y);
-        ctx.fillStyle='#334155'; ctx.fillText(txt,tx,t.y);
-      });
-    });
-
-    /* ---- total in the hole ---- */
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.font='600 10px "Segoe UI",system-ui,sans-serif'; ctx.fillStyle='#64748B';
-    ctx.fillText('Total Product Value',cx,cy-11);
-    ctx.font='800 18px "Segoe UI",system-ui,sans-serif'; ctx.fillStyle='#1E293B';
-    ctx.fillText(fmtINR(total),cx,cy+9);
-    ctx.restore();
-  }
-};
-
-/* Colour index under the ring: swatch, movement type, value and share, in the
-   same order and colours as the slices. */
-function mvRenderPieLegend(byVal,colours,total){
-  const host=$('#mvTypeLegend'); if(!host)return;
-  host.innerHTML=byVal.map((o,i)=>
-    `<div class="mv-lg-row">
-       <span class="mv-lg-sw" style="background:${colours[i]}"></span>
-       <span class="mv-lg-nm" title="${rmEsc(o.type)}">${rmEsc(o.type)}</span>
-       <span class="mv-lg-v">${fmtINR(o.value)}</span>
-       <span class="mv-lg-p">${total?(o.value/total*100).toFixed(1):'0.0'}%</span>
-     </div>`).join('')+
-    `<div class="mv-lg-row mv-lg-tot">
-       <span class="mv-lg-sw" style="background:transparent"></span>
-       <span class="mv-lg-nm">Total</span>
-       <span class="mv-lg-v">${fmtINR(total)}</span>
-       <span class="mv-lg-p">100.0%</span>
-     </div>`;
-}
-
-function mvRenderTypeChart(arr,rank){
-  const cv=$('#mvTypeChart'); if(!cv)return;
-  const byVal=[...arr].sort((a,b)=>b.value-a.value);
-  const colours=byVal.map(o=>{
-    const t=rank?(rank.get(o.type+'\u0000'+o.move)||0):0;
-    return chartRamp(t);
-  });
-  const total=byVal.reduce((a,o)=>a+o.value,0);
-  const cfg={type:'doughnut',
-    data:{labels:byVal.map(o=>o.type),
-      datasets:[{data:byVal.map(o=>o.value),backgroundColor:colours,
-        borderColor:'#fff',borderWidth:2,hoverBorderWidth:3}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'56%',
-      animation:{duration:400},
-      /* generous side padding is what keeps the callouts on the canvas */
-      /* the callouts all elbow out to the left, so the ring can sit close to
-         the index on the right and use the space that frees up */
-      layout:{padding:{left:96,right:16,top:14,bottom:14}},
-      plugins:{legend:{display:false},
-        tooltip:{backgroundColor:'rgba(30,41,59,.94)',padding:10,cornerRadius:8,
-          callbacks:{label:c=>{
-            const d=c.dataset.data,t=d.reduce((a,v)=>a+(+v||0),0)||1;
-            return ' '+fmtINR(c.parsed)+' · '+(c.parsed/t*100).toFixed(1)+'%';}}}}},
-    plugins:[mvPieLabels]};
-  if(mvTypeChart){mvTypeChart.destroy();mvTypeChart=null;}
-  mvTypeChart=new Chart(cv,cfg);
-  mvRenderPieLegend(byVal,colours,total);
 }
 
 /* ---- POD Name x Bag Creation Ageing, counting AWBs ----
@@ -4051,18 +3926,8 @@ function mvRenderTypeChart(arr,rank){
    across, Count of Awb_number in the cells. Reads mvScopeRows, so every page
    filter drives it exactly as it drives the two pivots around it. */
 let mvPodSort={k:'total',dir:-1}, mvPodExport=[];
-/* two pill ramps, mixed exactly as the reference does: pale to solid, with the
-   ink flipping to white once the fill is dark enough to need it */
-const POD_BLUE=[[234,243,254],[199,224,252],[150,196,249],[92,159,243],[37,110,220]];
-const POD_RED =[[253,235,235],[250,205,205],[246,150,150],[240,96,96],[226,54,54]];
-function podMix(stops,t){
-  t=Math.max(0,Math.min(1,+t||0));
-  const n=stops.length-1,pos=t*n,i=Math.min(n-1,Math.floor(pos)),f=pos-i;
-  const a=stops[i],b=stops[i+1];
-  return 'rgb('+[0,1,2].map(k=>Math.round(a[k]+(b[k]-a[k])*f)).join(',')+')';
-}
-function podBluePill(t){return 'background:'+podMix(POD_BLUE,t)+';color:'+(t>=.62?'#FFFFFF':'#0B3D91');}
-function podRedPill(t){ return 'background:'+podMix(POD_RED ,t)+';color:'+(t>=.55?'#FFFFFF':'#8E1B1B');}
+/* the POD pivot now uses the shared Movement Type Matrix ramp (heatColor /
+   heatText), so the blue and red pill ramps are no longer needed */
 function mvRenderPodTbl(){
   const head=$('#mvPodHead'), body=$('#mvPodBody'), foot=$('#mvPodFoot');
   if(!head||!body)return;
@@ -4084,6 +3949,13 @@ function mvRenderPodTbl(){
       if(k==='total')return (a.total-b.total)*d;
       return ((a.bkts[k]||0)-(b.bkts[k]||0))*d;
     });
+  }
+  const pt=$('#mvPodTbl');
+  if(pt){
+    const cg=pt.querySelector('colgroup'); if(cg)cg.remove();
+    pt.insertAdjacentHTML('afterbegin','<colgroup><col style="width:24%">'+
+      ITB_LABELS.map(()=>'<col style="width:'+(63/ITB_LABELS.length).toFixed(2)+'%">').join('')+
+      '<col style="width:13%"></colgroup>');
   }
   const mark=k=>mvPodSort.k===k?(mvPodSort.dir<0?' ▼':' ▲'):'';
   head.innerHTML=
@@ -4107,12 +3979,12 @@ function mvRenderPodTbl(){
   const cell=v=>v>0?fmtN(v):'';
   body.innerHTML=arr.map(o=>
     `<tr><td>${rmEsc(o.pod)}</td>`+
-    ITB_LABELS.map((b,i)=>{
+    ITB_LABELS.map(b=>{
       const v=o.bkts[b]||0;
       if(!v)return `<td class="num"></td>`;
+      /* the Movement Type Matrix ramp: pale green low, deep red high */
       const t=heatT(v,rng[b][0],rng[b][1]);
-      const st=i>=4?podRedPill(t):podBluePill(t);      // 16-30 and 30+ are the risk bands
-      return `<td class="num"><span class="pod-pill" style="${st}">${fmtN(v)}</span></td>`;
+      return `<td class="num"><span class="pod-pill" style="background:${heatColor(t)};color:${heatText(t)}">${fmtN(v)}</span></td>`;
     }).join('')+
     `<td class="num tot-col">${fmtN(o.total)}</td></tr>`).join('')
     || `<tr><td colspan="${ITB_LABELS.length+2}" style="text-align:center;padding:20px;color:var(--mut)">No PODs in scope.</td></tr>`;
@@ -5923,7 +5795,7 @@ function pjExport(){
    One definition drives the gauge and the lane table below it, so the two can
    never disagree: the six movement types the target covers, ageing 6 to 30
    days, narrowed further by the page's Movement Type filter. */
-let PJ_MOVE_SEL=new Set(), PJ_BUILT=false;
+let PJ_MOVE_SEL=new Set(), PJ_ZONE_SEL=new Set(), PJ_BUILT=false;
 let pjLaneSort={k:'value',dir:-1}, PJ_LANE_EXPORT=[];
 
 function pjScopeRows(){
@@ -5932,6 +5804,7 @@ function pjScopeRows(){
   for(const r of RAW){
     if(!sel.has(r.movement_type))continue;
     if(!PJ_BUCKETS.has(r.bucket))continue;
+    if(PJ_ZONE_SEL.size&&!PJ_ZONE_SEL.has(r.Zone))continue;
     out.push(r);
   }
   return out;
@@ -5952,6 +5825,7 @@ function pjProjection(){
    largest first, with a running total so it is obvious how far down
    the list you have to go before the gap is covered.
 ============================================================= */
+let PJ_ZONE_PICKER=null;
 let PJ_GAP=0, PJ_ZONE_EXP=[], PJ_POD_EXP=[], PJ_LANEGAP_EXP=[], PJ_BAGS_EXP=[];
 
 /* group the scope by any key, largest value first, with a running total */
@@ -5979,8 +5853,8 @@ function pjMiniTable(headId,bodyId,label,arr,gap){
   const head=$(headId), body=$(bodyId);
   if(!head||!body)return [];
   const need=pjCoverCount(arr,gap);
-  head.innerHTML=`<th style="text-align:left">${label}</th>`+
-    `<th class="pj-num">Value</th><th class="pj-num">% of gap</th><th class="pj-num">Running</th>`;
+  head.innerHTML=`<th>${label}</th>`+
+    `<th class="pj-num">Value (₹)</th><th class="pj-num">Share of Gap</th><th class="pj-num">Running Total (₹)</th>`;
   const vMin=arr.length?Math.min(...arr.map(o=>o.value)):0;
   const vMax=arr.length?Math.max(...arr.map(o=>o.value)):1;
   body.innerHTML=arr.slice(0,60).map((o,i)=>
@@ -6008,8 +5882,13 @@ function pjRenderPlan(){
   for(const r of rows){
     const code=r.Manifest_code||''; if(!code)continue;
     let o=m.get(code);
-    if(!o){o={bag:code,lane:r['Lane Code'],pod:r['POD Name'],zone:r.Zone,
-      bkt:r['Ageing bucket'],value:0,awbs:0};m.set(code,o);}
+    if(!o){o={bag:code,lane:r['Lane Code'],origin:r.MM_origin,dest:r.MM_destination,
+      ship:r.ShipmentInManifest,cship:r.CurrentShipmentInManifest,
+      pod:r['POD Name'],bkt:r['Ageing bucket'],value:0,awbs:0};m.set(code,o);}
+    /* the manifest-level counts are the same on every row of a bag, but a blank
+       on the first row should not win over a value on a later one */
+    if(!o.ship&&r.ShipmentInManifest)o.ship=r.ShipmentInManifest;
+    if(!o.cship&&r.CurrentShipmentInManifest)o.cship=r.CurrentShipmentInManifest;
     o.value+=r.Product_value||0; o.awbs++;
   }
   const bags=[...m.values()].sort((a,b)=>b.value-a.value);
@@ -6017,19 +5896,28 @@ function pjRenderPlan(){
   const need=pjCoverCount(bags,gap);
 
   const head=$('#pjBagsHead'), body=$('#pjBagsBody');
-  if(head)head.innerHTML='<th style="text-align:left">Manifest</th><th style="text-align:left">Lane</th>'+
-    '<th style="text-align:left">POD</th><th style="text-align:left">Zone</th>'+
-    '<th style="text-align:left">Ageing</th><th class="pj-num">AWBs</th>'+
-    '<th class="pj-num">Value</th><th class="pj-num">Running</th><th class="pj-num">% of gap</th>';
+  /* Title Case throughout, units spelled out, numeric columns right aligned —
+     the uppercase transform was mangling ShipmentInManifest into one long word */
+  if(head)head.innerHTML=
+    '<th>Manifest</th>'+
+    '<th>Lane</th>'+
+    '<th>Origin</th>'+
+    '<th>Destination</th>'+
+    '<th class="pj-num">Shipments in Manifest</th>'+
+    '<th class="pj-num">Current Shipments</th>'+
+    '<th>POD</th>'+
+    '<th>Ageing Bucket</th>'+
+    '<th class="pj-num">AWBs</th>'+
+    '<th class="pj-num">Value (₹)</th>';
   const CAP=400;                                   // enough to cover the gap, still quick to render
   const show=bags.slice(0,Math.max(need,Math.min(CAP,bags.length)));
   if(body)body.innerHTML=show.slice(0,CAP).map((o,i)=>
     `<tr class="${i<need?'pj-in-gap':''}"><td>${rmEsc(o.bag)}</td><td>${rmEsc(o.lane)}</td>`+
-    `<td>${rmEsc(o.pod)}</td><td>${rmEsc(o.zone)}</td><td>${rmEsc(o.bkt)}</td>`+
-    `<td class="pj-num">${fmtN(o.awbs)}</td><td class="pj-num">${fmtINR(o.value)}</td>`+
-    `<td class="pj-num">${fmtINR(o.cum)}</td>`+
-    `<td class="pj-num">${gap>0?(o.cum/gap*100).toFixed(1)+'%':'—'}</td></tr>`).join('')
-    || `<tr><td colspan="9" style="text-align:center;padding:18px;color:var(--mut)">Nothing in scope.</td></tr>`;
+    `<td>${rmEsc(o.origin)}</td><td>${rmEsc(o.dest)}</td>`+
+    `<td class="pj-num">${rmEsc(o.ship||'—')}</td><td class="pj-num">${rmEsc(o.cship||'—')}</td>`+
+    `<td>${rmEsc(o.pod)}</td><td>${rmEsc(o.bkt)}</td>`+
+    `<td class="pj-num">${fmtN(o.awbs)}</td><td class="pj-num">${fmtINR(o.value)}</td></tr>`).join('')
+    || `<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--mut)">Nothing in scope.</td></tr>`;
 
   const cnt=$('#pjBagsCount');
   if(cnt)cnt.textContent=gap>0
@@ -6047,8 +5935,9 @@ function pjRenderPlan(){
       'or bag list can be handed straight to the team that owns it.'
     : 'Loss is at or below target — nothing to close.';
 
-  PJ_BAGS_EXP=bags.map(o=>({Manifest:o.bag,Lane:o.lane,POD:o.pod,Zone:o.zone,
-    Ageing_bucket:o.bkt,AWBs:o.awbs,Value:Math.round(o.value),Running_total:Math.round(o.cum)}));
+  PJ_BAGS_EXP=bags.map(o=>({Manifest:o.bag,Lane:o.lane,MM_origin:o.origin,MM_destination:o.dest,
+    ShipmentInManifest:o.ship,CurrentShipmentInManifest:o.cship,POD:o.pod,
+    Ageing_bucket:o.bkt,AWBs:o.awbs,Value:Math.round(o.value)}));
 }
 
 /* ---------- lanes inside that scope ---------- */
@@ -6103,9 +5992,52 @@ function pjRenderLanes(){
 }
 
 /* ---------- the movement-type filter ---------- */
+/* generic picker used by both filters on this page */
+function pjPicker(panelId,btnId,selId,allId,noneId,label,opts,setter,after){
+  const panel=$(panelId), btn=$(btnId), sel=$(selId);
+  if(!panel||!btn)return;
+  panel.insertAdjacentHTML('afterbegin', opts.length
+    ? (opts.length>12?`<div class="mv-mcsel-search"><input type="text" placeholder="Search ${label.toLowerCase()}…"></div>`:'')
+      +opts.map(o=>`<label><input type="checkbox" value="${rmEsc(o)}"><span>${rmEsc(o)}</span></label>`).join('')
+    : `<div class="msel-more">Nothing to filter</div>`);
+  const actions=panel.querySelector('.mc-actions'), firstOpt=panel.querySelector('label');
+  if(actions&&firstOpt)panel.insertBefore(actions,firstOpt);
+  const sBox=panel.querySelector('.mv-mcsel-search input');
+  if(sBox){
+    sBox.onclick=e=>e.stopPropagation();
+    sBox.oninput=()=>{const q=sBox.value.trim().toLowerCase();
+      panel.querySelectorAll('label').forEach(l=>{
+        l.style.display=(!q||l.textContent.toLowerCase().includes(q))?'':'none';});};
+  }
+  const sync=()=>{
+    const picked=new Set([...panel.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value));
+    setter(picked);
+    btn.classList.toggle('active',picked.size>0);
+    btn.textContent=(picked.size?picked.size+' selected':label)+' ▾';
+    after();
+  };
+  panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=sync);
+  panel.onclick=e=>e.stopPropagation();
+  btn.onclick=e=>{e.stopPropagation();
+    const open=sel.classList.contains('open');
+    $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));
+    if(!open)sel.classList.add('open');};
+  const tick=on=>{panel.querySelectorAll('label').forEach(l=>{
+      if(on&&l.style.display==='none')return;
+      const c=l.querySelector('input'); if(c)c.checked=on;});sync();};
+  if($(allId))$(allId).onclick=()=>tick(true);
+  if($(noneId))$(noneId).onclick=()=>tick(false);
+  return {panel,btn,clear:()=>tick(false)};
+}
+
 function pjBuildFilter(){
   const panel=$('#pjMovePanel'), btn=$('#pjMoveBtn'), sel=$('#pjMoveMcsel');
   if(!panel||!btn||PJ_BUILT)return;
+  const repaint=()=>{pjRenderGauge();pjRenderPlan();pjRenderLanes();};
+  const zOpts=[...new Set(RAW.map(r=>r.Zone))].filter(x=>x&&x!=='Unknown').sort();
+  const pjZ=pjPicker('#pjZonePanel','#pjZoneBtn','#pjZoneMcsel','#pjZoneAllBtn','#pjZoneNoneBtn',
+    'Zone',zOpts,s=>{PJ_ZONE_SEL=s;},repaint);
+  PJ_ZONE_PICKER=pjZ;
   /* only the movement types the projection actually covers */
   const opts=[...PJ_MOVES].filter(mt=>RAW.some(r=>r.movement_type===mt)).sort();
   panel.insertAdjacentHTML('afterbegin', opts.length
@@ -6127,7 +6059,11 @@ function pjBuildFilter(){
     if(!open)sel.classList.add('open');};
   $('#pjMoveAll').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=true);sync();};
   $('#pjMoveNone').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
-  $('#pjMoveClear').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
+  $('#pjMoveClear').onclick=()=>{
+    panel.querySelectorAll('input').forEach(c=>c.checked=false);
+    if(PJ_ZONE_PICKER)PJ_ZONE_PICKER.clear();      // one Clear all for both filters
+    sync();
+  };
   PJ_BUILT=true;
 }
 function pjArc(cx,cy,r,a0,a1){
@@ -6199,30 +6135,8 @@ function pjRenderGauge(){
   $('#pjProjVal').textContent=fmtINR(proj);
   $('#pjTgtVal').textContent=fmtINR(tgt);
   const inp=$('#pjTargetIn'); if(inp&&document.activeElement!==inp)inp.value=tgt;
-  const note=$('#pjGaugeNote');
-  const moves=PJ_MOVE_SEL.size?[...PJ_MOVE_SEL]:[...PJ_MOVES];
-  const allSix=!PJ_MOVE_SEL.size;
-  if(note)note.innerHTML=
-    '<div class="pj-note">'+
-      '<div class="pj-note-l"><b>How this is calculated</b></div>'+
-      '<div class="pj-note-r">'+
-        '<div><span class="k">Current loss</span> <b>'+fmtINR(proj)+'</b> '+
-          '— sum of <b>Product_value</b> across <b>'+fmtN(awbs)+' AWBs</b></div>'+
-        '<div><span class="k">Movement types</span> <b>'+rmEsc(moves.join(', '))+'</b>'+
-          (allSix?' <i>(all six covered)</i>':' <i>('+moves.length+' of 6 selected)</i>')+'</div>'+
-        '<div><span class="k">Ageing buckets</span> <b>6, 7, 8–10, 11–15, 16–30 days</b> '+
-          '<i>(in-transit ageing; under 6 and over 30 days are excluded)</i></div>'+
-        '<div><span class="k">Target</span> <b>'+fmtINR(tgt)+'</b> '+
-          '<i>(the most loss allowed)</i></div>'+
-        '<div><span class="k">To be achieved</span> <b>'+fmtINR(gap)+'</b> = current loss − target — '+
-          'the loss that has to be taken out to land on target</div>'+
-        '<div><span class="k">Reduction needed</span> <b>'+gapPct.toFixed(1)+'%</b> of today\u0027s loss</div>'+
-        '<div><span class="k">Needle</span> <b>'+pct.toFixed(1)+'%</b> = target ÷ current loss — '+
-          'it reaches 100% when loss falls to the target</div>'+
-        (gap>0?'<div class="pj-note-warn">The tables below rank where that <b>'+fmtINR(gap)+'</b> can be found — by lane, POD, zone and individual bag.</div>':'')+
-        (pctRaw>100?'<div class="pj-note-warn"><b>Target exceeds the current loss</b>, so the needle is capped at 100%.</div>':'')+
-      '</div>'+
-    '</div>';
+  /* the calculation note was removed from the page; the scope line below the
+     filter bar still says what the gauge is reading */
   const sn=$('#pjScopeNote');
   if(sn)sn.textContent='Filters the gauge and the lane table together · ageing 6–30 days is fixed by the target definition.';
 }
