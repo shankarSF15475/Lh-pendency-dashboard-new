@@ -5918,9 +5918,7 @@ const PJ_BAG_COLS=[
   {k:'dest',  label:'Destination',           type:'text'},
   {k:'shipN', label:'Shipments in Manifest', type:'num'},
   {k:'cshipN',label:'Current Shipments',     type:'num'},
-  {k:'pod',   label:'POD',                   type:'cat'},
   {k:'bkt',   label:'Ageing Bucket',         type:'cat'},
-  {k:'awbs',  label:'AWBs',                  type:'num'},
   {k:'value', label:'Value (₹)',             type:'num'}
 ];
 let PJ_BAGS_ALL=[], PJ_BAG_F={}, PJ_BAG_SORT={k:'value',dir:-1}, PJ_BAGS_BUILT=false;
@@ -6002,8 +6000,8 @@ function pjRenderBags(){
     `<td>${rmEsc(o.origin)}</td><td>${rmEsc(o.dest)}</td>`+
     `<td class="pj-num">${o.shipN?fmtN(o.shipN):(o.ship||'—')}</td>`+
     `<td class="pj-num">${o.cshipN?fmtN(o.cshipN):(o.cship||'—')}</td>`+
-    `<td>${rmEsc(o.pod)}</td><td>${rmEsc(o.bkt)}</td>`+
-    `<td class="pj-num">${fmtN(o.awbs)}</td><td class="pj-num">${fmtINR(o.value)}</td></tr>`).join('')
+    `<td>${rmEsc(o.bkt)}</td>`+
+    `<td class="pj-num">${fmtINR(o.value)}</td></tr>`).join('')
     || `<tr><td colspan="${PJ_BAG_COLS.length}" style="text-align:center;padding:18px;color:var(--mut)">No bags match the column filters.</td></tr>`;
   $$('#pjBagsHead th').forEach(th=>{
     const a=th.querySelector('.arr');
