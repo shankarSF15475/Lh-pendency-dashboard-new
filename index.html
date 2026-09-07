@@ -1611,6 +1611,15 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvLossMcsel">
+            <button class="mv-mcsel-btn" id="mvLossBtn">Process Type ▾</button>
+            <div class="mv-mcsel-panel" id="mvLossPanel">
+              <div class="mc-actions">
+                <button id="mvLossAll">All</button>
+                <button id="mvLossNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="mvDestMcsel">
             <button class="mv-mcsel-btn" id="mvDestBtn">MM Destination ▾</button>
             <div class="mv-mcsel-panel" id="mvDestPanel">
@@ -3355,7 +3364,7 @@ let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
     mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvMoveSel=new Set(),
-    mvDestSel=new Set(), mvExpandedLane=null;
+    mvDestSel=new Set(), mvLossSel=new Set(), mvExpandedLane=null;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -3536,14 +3545,21 @@ function mvBuildHeaders(){
     all:'mvLaneCodeAll',none:'mvLaneCodeNone',label:'Lane Code',opts:lcOpts,
     set:s=>{mvLaneCodeSel=s;}});
 
-  /* 7. MM Destination — hundreds of nodes, so the search box does the work */
+  /* 7. Process Type — derived, not a column: Created vs Present */
+  const lossOpts=[LOSS_BAG,LOSS_SHIP,LOSS_NONE]
+    .filter(t=>RAW.some(r=>mvLossType(r)===t));
+  const mcLS=buildMcsel({panel:'mvLossPanel',btn:'mvLossBtn',mcsel:'mvLossMcsel',
+    all:'mvLossAll',none:'mvLossNone',label:'Process Type',opts:lossOpts,
+    set:s=>{mvLossSel=s;}});
+
+  /* 8. MM Destination — hundreds of nodes, so the search box does the work */
   const dstOpts=[...new Set(RAW.map(r=>r.MM_destination))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcDS=buildMcsel({panel:'mvDestPanel',btn:'mvDestBtn',mcsel:'mvDestMcsel',
     all:'mvDestAll',none:'mvDestNone',label:'MM Destination',opts:dstOpts,
     set:s=>{mvDestSel=s;}});
 
-  /* 8. Client */
+  /* 9. Client */
   const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const mcCL=buildMcsel({panel:'mvClientPanel',btn:'mvClientBtn',mcsel:'mvClientMcsel',
@@ -3551,16 +3567,17 @@ function mvBuildHeaders(){
     set:s=>{mvClientSel=s;}});
 
   $('#mvClearAllFilters').onclick=()=>{
-    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcDS,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcLS,mcDS,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
     mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
     mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();
-    mvMoveSel=new Set();mvDestSel=new Set();
+    mvMoveSel=new Set();mvDestSel=new Set();mvLossSel=new Set();
     mcZN.btn.classList.remove('active');mcZN.btn.textContent='Zone ▾';
     mcMV.btn.classList.remove('active');mcMV.btn.textContent='Movement ▾';
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
     mcAB.btn.classList.remove('active');mcAB.btn.textContent='Bag Creation Ageing ▾';
     mcIT.btn.classList.remove('active');mcIT.btn.textContent='Bag Intransit Ageing ▾';
     mcLC.btn.classList.remove('active');mcLC.btn.textContent='Lane Code ▾';
+    mcLS.btn.classList.remove('active');mcLS.btn.textContent='Process Type ▾';
     mcDS.btn.classList.remove('active');mcDS.btn.textContent='MM Destination ▾';
     mcCL.btn.classList.remove('active');mcCL.btn.textContent='Client ▾';
     mvRerender();
@@ -3576,6 +3593,23 @@ function mvClearCols(){
   mvRenderDetail(true);
 }
 
+/* ---- Loss type, from the two manifest counts ----
+   Created  = ShipmentInManifest        (shipments the bag was built with)
+   Present  = CurrentShipmentInManifest (shipments still on it)
+   equal    -> the whole bag is missing        -> Bag Miss
+   unequal  -> some shipments left the bag     -> Shipment Level Process
+   Either count blank means the export did not tag the bag, so it is neither. */
+const LOSS_BAG='Bag Miss', LOSS_SHIP='Shipment Level Process', LOSS_NONE='Not tagged';
+function mvNumOf(v){
+  const n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));
+  return isFinite(n)?n:null;
+}
+function mvLossType(r){
+  const a=mvNumOf(r.ShipmentInManifest), b=mvNumOf(r.CurrentShipmentInManifest);
+  if(a===null||b===null)return LOSS_NONE;
+  return a===b?LOSS_BAG:LOSS_SHIP;
+}
+
 /* AWB-level rows after global filters + the three page filters.
    This is the source for both pivots (values = Sum of Product_value). */
 function mvScopeRows(){
@@ -3588,6 +3622,7 @@ function mvScopeRows(){
   if(mvClientSel.size)   d=d.filter(r=>mvClientSel.has(r.Client));
   if(mvLaneCodeSel.size) d=d.filter(r=>mvLaneCodeSel.has(r['Lane Code']));
   if(mvDestSel.size)     d=d.filter(r=>mvDestSel.has(r.MM_destination));
+  if(mvLossSel.size)     d=d.filter(r=>mvLossSel.has(mvLossType(r)));
   return d;
 }
 
@@ -4919,9 +4954,9 @@ const DOC_SECTIONS=[
 ]},
 
 {sec:'Bag wise View', items:[
- {t:'panel', n:'Page filters', what:'Eight page-level filters that apply on top of the global filter bar.',
-  fields:'<code>Zone</code>, <code>Movement</code>, <code>MM_destination</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
-  logic:'Zone                 -> Zone column\nMovement             -> Movement column (sheet column H)\nMM Destination       -> MM_destination column\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the eight\nlists over 12 options get a search box'},
+ {t:'panel', n:'Page filters', what:'Nine page-level filters that apply on top of the global filter bar.',
+  fields:'<code>Zone</code>, <code>Movement</code>, <code>ShipmentInManifest</code>, <code>CurrentShipmentInManifest</code>, <code>MM_destination</code>, <code>Lane Type</code>, <code>Ageing bucket</code>, <code>intransit_ageing_bucket</code>, <code>Lane Code</code>, <code>Client</code>',
+  logic:'Zone                 -> Zone column\nMovement             -> Movement column (sheet column H)\nProcess Type         -> derived: Created = Present -> Bag Miss, otherwise Shipment Level Process\nMM Destination       -> MM_destination column\nLane Type            -> Lane Type column\nBag Creation Ageing  -> Ageing bucket column\nBag Intransit Ageing -> intransit_ageing_bucket column\nLane Code            -> Lane Code column\nClient               -> Client column\nmulti-select, OR within a filter, AND across the nine\nlists over 12 options get a search box'},
  {t:'kpi', n:'Bag wise View KPI strip', what:'Total value in scope, then one card per Bag Creation ageing band.',
   fields:'<code>Product_value</code>, <code>Manifest_code</code>, <code>Ageing bucket</code>',
   logic:'VALUE IN THESE BAGS = SUM(Product_value), sub DISTINCT Manifest_code + row count\nthen for each of the six Ageing bucket bands:\n  value = SUM(Product_value) in that band\n  sub   = that value / total value, and DISTINCT Manifest_code in the band\nband dots use the same colours as the lane status dots',
