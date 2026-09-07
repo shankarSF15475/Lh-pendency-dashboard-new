@@ -1733,7 +1733,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <span class="ttl" style="font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em">MANIFEST DETAIL — SHIPMENT LEVEL</span>
           <span class="pill" id="mvDetailCount">0 rows</span>
           <button id="mvReset">✕ Clear column filters</button>
-          <span class="hint" style="margin:0">Text = contains · numeric = min/max · Ageing Bucket &amp; Lane Type = multi-select (AND)</span>
+          <span class="hint" style="margin:0">Text = contains · Ageing Bucket &amp; Lane Type = multi-select (AND) · Created, Present and Value sort but do not filter</span>
           <div style="margin-left:auto;display:flex;gap:6px">
             <button class="tool" id="mvDetCsv">CSV</button>
           </div>
@@ -3251,10 +3251,13 @@ const MV_DETAIL_COLS=[
   {k:'Manifest_origin',      label:'Origin',      type:'text'},
   {k:'Manifest_Destination', label:'Destination', type:'text'},
   {k:'Manifest_status',      label:'Status',      type:'cat'},
-  {k:'intransit_ageing',     label:'Ageing (d)',  type:'num'},
   {k:'Ageing bucket',        label:'Ageing Bkt',  type:'cat'},
-  {k:'intransit_ageing_bucket', label:'IT Bucket', type:'cat'},
-  {k:'Product_value',        label:'Value ₹',     type:'num'},
+  /* manifest-level shipment counts: how many were created on the bag and how
+     many are still on it */
+  {k:'ShipmentInManifest',   label:'Created',     type:'num', nofilter:true},
+  {k:'CurrentShipmentInManifest', label:'Present', type:'num', nofilter:true},
+  /* sortable but not filterable — see nofilter below */
+  {k:'Product_value',        label:'Value ₹',     type:'num', nofilter:true},
   {k:'trip_code',            label:'Trip Code',   type:'text', cls:'mono'},
 ];
 /* Real 'Ageing bucket' values straight from the Dashboard sheet (Bag Creation Ageing) */
@@ -3365,10 +3368,15 @@ function mvBuildManifestRows(data){
       Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
       MM_destination:r.MM_destination,
       Manifest_status:r.Manifest_status,intransit_ageing:r.intransit_ageing,
+      ShipmentInManifest:r.ShipmentInManifest,CurrentShipmentInManifest:r.CurrentShipmentInManifest,
       'Ageing bucket':r['Ageing bucket']||'',
       intransit_ageing_bucket:r.intransit_ageing_bucket||'',
       Product_value:0,trip_code:r.trip_code,_awbs:0};m.set(code,o);}
     o.Product_value+=r.Product_value; o._awbs++;
+    /* the counts repeat on every row of a bag, but a blank first row must not
+       beat a populated later one */
+    if(!o.ShipmentInManifest&&r.ShipmentInManifest)o.ShipmentInManifest=r.ShipmentInManifest;
+    if(!o.CurrentShipmentInManifest&&r.CurrentShipmentInManifest)o.CurrentShipmentInManifest=r.CurrentShipmentInManifest;
     /* keep the worst (oldest) ageing seen for this manifest */
     if(r.intransit_ageing>o.intransit_ageing){
       o.intransit_ageing=r.intransit_ageing;
@@ -3392,6 +3400,7 @@ function mvBuildHeaders(){
   $('#mvDetHead').innerHTML=MV_DETAIL_COLS.map(c=>
     `<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="arr"></span></th>`).join('');
   $('#mvDetFilters').innerHTML=MV_DETAIL_COLS.map(c=>{
+    if(c.nofilter)return '<th></th>';           // sortable, but no filter box
     if(c.type==='text')return `<th><input data-k="${c.k}" data-ft="text" placeholder="contains…"></th>`;
     if(c.type==='num') return `<th><div class="lv-rng"><input data-k="${c.k}" data-ft="min" type="number" placeholder="min"><input data-k="${c.k}" data-ft="max" type="number" placeholder="max"></div></th>`;
     const opts=mvCatOptions(c,rows);
@@ -3658,7 +3667,10 @@ function mvFilterRows(){
     for(const c of MV_DETAIL_COLS){
       const f=mvColF[c.k]; if(!f)continue;
       if(c.type==='text'){ if(!String(r[c.k]).toLowerCase().includes(f.q))return false; }
-      else if(c.type==='num'){ const v=r[c.k]; if(f.min!=null&&v<f.min)return false; if(f.max!=null&&v>f.max)return false; }
+      else if(c.type==='num'){
+        const n=parseFloat(String(r[c.k]??'').replace(/[^0-9.\-]/g,''));
+        const v=isFinite(n)?n:0;
+        if(f.min!=null&&v<f.min)return false; if(f.max!=null&&v>f.max)return false; }
       else { if(!f.has(String(r[c.k])))return false; }
     }
     return true;
@@ -3669,9 +3681,10 @@ function mvRenderDetail(reset){
   if(reset)mvPage=1;
   let rows=mvFilterRows();
   const col=MV_DETAIL_COLS.find(x=>x.k===mvSort.k);
+  const numOf=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));return isFinite(n)?n:-Infinity;};
   rows.sort((a,b)=>{ const av=a[mvSort.k],bv=b[mvSort.k];
     if(mvSort.k==='value')return (a.Product_value-b.Product_value)*mvSort.dir;
-    if(col&&col.type==='num')return (av-bv)*mvSort.dir;
+    if(col&&col.type==='num')return (numOf(av)-numOf(bv))*mvSort.dir;
     return String(av).localeCompare(String(bv))*mvSort.dir;
   });
   mvDetailRows=rows;
@@ -3680,7 +3693,10 @@ function mvRenderDetail(reset){
   const slice=rows.slice((mvPage-1)*MV_PAGE,mvPage*MV_PAGE);
   $('#mvDetBody').innerHTML=slice.map(r=>'<tr>'+MV_DETAIL_COLS.map(c=>{
     const v=r[c.k];
-    if(c.k==='intransit_ageing')return `<td class="num">${r.intransit_ageing>30?'<span class="badge b-crit">'+v+'d</span>':v+'d'}</td>`;
+    if(c.k==='ShipmentInManifest'||c.k==='CurrentShipmentInManifest'){
+      const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));
+      return `<td class="num">${isFinite(n)?fmtN(n):'—'}</td>`;
+    }
     if(c.k==='Product_value')return `<td class="num">${fmtN(v)}</td>`;
     if(c.k==='Ageing bucket'){const cls=ABKT_CLS[v]||'';return `<td><span class="badge ${cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd'}">${v}</span></td>`;}
     return `<td class="${c.cls||''}">${v||'—'}</td>`;
@@ -4174,7 +4190,8 @@ function mvDetailExport(){
   if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
   return mvDetailRows.slice(0,cap).map(r=>({Manifest:r.Manifest_code,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],
     Origin:r.Manifest_origin,Destination:r.Manifest_Destination,Status:r.Manifest_status,
-    Ageing_days:r.intransit_ageing,Ageing_bucket:r['Ageing bucket'],Product_value:r.Product_value,Trip_code:r.trip_code}));
+    Ageing_bucket:r['Ageing bucket'],Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
+    Product_value:r.Product_value,Trip_code:r.trip_code}));
 }
 </script>
 <script>
