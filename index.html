@@ -516,7 +516,8 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 .hov-chart canvas,.lk-chart canvas{max-height:300px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
-body.remarks-page .filterbar,body.projection-page .filterbar{display:none}
+body.remarks-page .filterbar,body.projection-page .filterbar,
+body.tasks-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
 .lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
 /* Recovery Amount · roomier rows, month in ink, total in indigo */
@@ -1091,6 +1092,77 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .lhr-diag code{background:#fff;border-radius:4px;padding:1px 6px;
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11px;}
 
+/* ---- Tasks page ---- */
+.tk-note{margin-top:14px;padding:12px 15px;font-size:12px;line-height:1.65;color:#8A5A12;
+  background:#FEF9EF;border:1px solid #F3E2C4;}
+.tk-note b{color:#7A3A00;}
+.tk-row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;margin-top:12px;
+  align-items:start;}
+.tk-form,.tk-people{padding:15px 17px;}
+.tk-l{display:block;font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--mut);
+  margin:13px 0 5px;}
+#tkTitle,#tkDetail,#tkDue,#tkFiles,#tkFilter,#tkStatusFilter{width:100%;padding:9px 11px;
+  border:1px solid var(--line);border-radius:9px;font-size:12.5px;font-family:inherit;
+  color:var(--text);background:#fff;outline:none;}
+#tkDetail{resize:vertical;}
+#tkTitle:focus,#tkDetail:focus,#tkDue:focus{border-color:var(--pine);}
+.tk-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tk-actions{display:flex;align-items:center;gap:12px;margin-top:16px;}
+#tkAssign{border:none;border-radius:9px;background:var(--pine);color:#fff;font-weight:700;
+  font-size:13px;padding:10px 18px;}
+#tkAssign:hover{background:#4338CA;}
+#tkAssign:disabled{opacity:.5;cursor:default;}
+.tk-status{font-size:11.5px;color:var(--mut);}
+.tk-hint{font-weight:600;letter-spacing:0;text-transform:none;color:#9AA3B8;}
+.tk-pastes{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;}
+.tk-shot{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  width:96px;height:70px;background:#F8F9FC;}
+.tk-shot img{width:100%;height:100%;object-fit:cover;display:block;}
+.tk-shot button{position:absolute;top:3px;right:3px;width:18px;height:18px;border:none;
+  border-radius:50%;background:rgba(17,24,39,.72);color:#fff;font-size:11px;line-height:1;
+  display:grid;place-items:center;cursor:pointer;padding:0;}
+.tk-shot button:hover{background:var(--red);}
+.tk-shot .nm{position:absolute;left:0;right:0;bottom:0;background:rgba(17,24,39,.62);color:#fff;
+  font-size:8.5px;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tk-people-list{margin-top:10px;max-height:430px;overflow:auto;border:1px solid var(--line);
+  border-radius:10px;}
+.tk-person{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);
+  font-size:12px;cursor:pointer;}
+.tk-person:last-child{border-bottom:none;}
+.tk-person:hover{background:#F8F9FE;}
+.tk-person input{accent-color:var(--pine);width:15px;height:15px;flex:none;}
+.tk-person .nm{font-weight:700;color:var(--ink);}
+.tk-person .em{color:var(--mut);font-size:11px;}
+.tk-person .wa{margin-left:auto;font-size:11px;color:#15803D;font-weight:700;white-space:nowrap;
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;}
+.tk-person .no-wa{margin-left:auto;font-size:10.5px;color:#B45309;}
+.tk-list-card{margin-top:14px;padding:15px 17px;}
+.tk-filters{display:flex;gap:10px;margin:12px 0 0;flex-wrap:wrap;}
+#tkFilter{max-width:320px;}
+#tkStatusFilter{max-width:170px;}
+.tk-wrap{max-height:520px;margin-top:10px;}
+#tkTbl thead th{background:#F1F3FB;color:var(--pine);font-size:10.5px;font-weight:700;
+  text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;}
+#tkTbl tbody td{padding:9px;font-size:12px;border-bottom:1px solid var(--line);vertical-align:top;}
+#tkTbl tbody td.tk-task{font-weight:700;color:var(--ink);min-width:200px;}
+#tkTbl tbody td.tk-task .dt{display:block;font-weight:500;color:var(--mut);font-size:11px;
+  margin-top:3px;white-space:pre-wrap;}
+#tkTbl tbody tr:hover td{background:#F8F9FE;}
+.tk-who{display:block;font-size:11.5px;color:var(--ink);white-space:nowrap;}
+.tk-sel{border:1px solid var(--line);border-radius:7px;padding:4px 7px;font-size:11px;background:#fff;}
+.tk-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;}
+.tk-open{background:#FEF3E2;color:#B45309;}
+.tk-prog{background:#EEF0FF;color:#4F46E5;}
+.tk-done{background:#E7F6EC;color:#15803D;}
+.tk-send{border:1px solid var(--line);background:#fff;border-radius:7px;padding:4px 9px;
+  font-size:10.5px;font-weight:800;margin:0 5px 4px 0;white-space:nowrap;cursor:pointer;}
+.tk-send.mail{color:var(--pine);} .tk-send.mail:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+.tk-send.wa{color:#15803D;} .tk-send.wa:hover{background:#15803D;color:#fff;border-color:#15803D;}
+.tk-send.del{color:var(--red);} .tk-send.del:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.tk-file{display:block;font-size:11px;color:var(--pine);text-decoration:none;white-space:nowrap;}
+.tk-file:hover{text-decoration:underline;}
+@media(max-width:1000px){.tk-row{grid-template-columns:1fr;}}
+
 /* ---- Remarks page ---- */
 .rmpg-new{display:grid;grid-template-columns:210px 190px 190px 150px 150px auto;gap:8px;align-items:center;justify-content:start;
   background:#FBFBFE;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
@@ -1391,6 +1463,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
       <button data-page="remarks"><span class="ic">📝</span>Feedback Manifest Lanes</button>
+      <button data-page="tasks"><span class="ic">✅</span>Tasks</button>
     </nav>
     <div class="side-foot">
       <div>Signed in as <b id="footUser" style="color:#1E293B">—</b></div>
@@ -2163,6 +2236,72 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
         </div>
       </div>
       <div id="docBody"></div>
+    </section>
+
+    <!-- ============ PAGE: TASKS ============ -->
+    <section class="page" id="page-tasks">
+      <div class="card tk-note" id="tkNote"></div>
+
+      <div class="tk-row" id="tkComposer">
+        <div class="card tk-form">
+          <div class="card-head"><div><h3>New task</h3>
+            <span class="sub">assign it, then send by Gmail and WhatsApp from your own accounts</span></div></div>
+          <label class="tk-l" for="tkTitle">TASK NAME</label>
+          <input id="tkTitle" placeholder="e.g. Clear 35+ day bags on BLR-DEL-2">
+          <label class="tk-l" for="tkDetail">DETAILS <span class="tk-hint">— paste a screenshot straight in with Ctrl+V</span></label>
+          <textarea id="tkDetail" rows="4" placeholder="What needs doing, and by when… paste a screenshot here if it helps"></textarea>
+          <div class="tk-pastes" id="tkPastes"></div>
+          <div class="tk-two">
+            <div><label class="tk-l" for="tkDue">DUE DATE</label><input type="date" id="tkDue"></div>
+            <div><label class="tk-l" for="tkFiles">ATTACHMENTS</label>
+              <input type="file" id="tkFiles" multiple accept=".csv,.xlsx,.xls,.pdf,image/*"></div>
+          </div>
+          <div class="tk-actions">
+            <button id="tkAssign">Assign task</button>
+            <span id="tkStatus" class="tk-status"></span>
+          </div>
+        </div>
+
+        <div class="card tk-people">
+          <div class="card-head"><div><h3>Assign to</h3>
+            <span class="sub">email and WhatsApp on file</span></div>
+            <div class="card-tools">
+              <button class="tool" id="tkAllBtn">ALL</button>
+              <button class="tool" id="tkNoneBtn">CLEAR</button>
+            </div>
+          </div>
+          <div class="tk-people-list" id="tkPeople"></div>
+        </div>
+      </div>
+
+      <div class="card tk-list-card">
+        <div class="card-head">
+          <div><h3>Task list</h3><span class="sub" id="tkListSub">every task, newest first</span></div>
+          <div class="card-tools">
+            <span class="pill mv-lane-count" id="tkCount">—</span>
+            <button class="tool" id="tkRefresh">REFRESH</button>
+            <button class="tool" id="tkCsv">CSV</button>
+          </div>
+        </div>
+        <div class="tk-filters">
+          <input id="tkFilter" placeholder="filter by task, person or status…">
+          <select id="tkStatusFilter">
+            <option value="">All statuses</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div class="lv-mini-wrap tk-wrap">
+          <table class="lv-mini" id="tkTbl">
+            <thead><tr>
+              <th>Task</th><th>Assigned to</th><th>Assigned by</th><th>Due</th>
+              <th>Attachments</th><th>Status</th><th>Send</th>
+            </tr></thead>
+            <tbody id="tkBody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ============ PAGE: REMARKS ============ -->
@@ -5852,6 +5991,283 @@ function gsStartAuto(){
   },GS_AUTO_MS);
 }
 /* =============================================================
+   TASKS
+   -------------------------------------------------------------
+   A browser page cannot send email or WhatsApp by itself — there is
+   no server here and no API credentials, and neither service lets a
+   web page send on someone's behalf. What it can do is remove the
+   typing: the task is stored centrally, and each Send button opens
+   the manager's own Gmail or WhatsApp with the recipient, subject
+   and message already filled in. He presses Send. Attachments are
+   uploaded to Supabase and travel as links, because neither a mailto
+   draft nor WhatsApp click-to-chat can carry a file.
+
+   Storage follows the remarks pattern: a per-task journal object no
+   other writer touches, plus a snapshot for fast reads.
+============================================================= */
+const TK_FILE='tasks.json', TK_DIR='tasks/', TK_ATT='task-files/';
+const TK_STATUSES=['Open','In Progress','Completed'];
+let TASKS=[], TK_SEL=new Set();
+/* screenshots pasted into the details box, held until the task is assigned */
+let TK_PASTED=[];
+
+function tkCanAssign(){return !!(CURRENT_USER&&(CURRENT_USER.isAdmin||CURRENT_USER.tasks));}
+function tkPeople(){
+  return Object.keys(AUTH_USERS)
+    .filter(id=>!CURRENT_USER||id!==CURRENT_USER.id)
+    .map(id=>({id,name:AUTH_USERS[id].name||id,wa:AUTH_USERS[id].wa||''}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+function tkStatusClass(s){return s==='Completed'?'tk-done':(s==='In Progress'?'tk-prog':'tk-open');}
+function tkFmtDate(s){
+  if(!s)return '\u2014';
+  const m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?(m[3]+' '+RM_MON[+m[2]-1]+"'"+m[1].slice(-2)):String(s);
+}
+
+async function tkFetch(){
+  let snap=[];
+  try{
+    const res=await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+TK_FILE+'?t='+Date.now());
+    if(res.ok){const j=await res.json();if(Array.isArray(j))snap=j;}
+  }catch(e){}
+  try{
+    const res=await fetch(SUPA_URL+'/storage/v1/object/list/'+SUPA_BUCKET,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({prefix:TK_DIR,limit:1000,offset:0,sortBy:{column:'updated_at',order:'desc'}})
+    });
+    if(res.ok){
+      const items=await res.json();
+      const byId=new Map(snap.map(t=>[t.id,t]));
+      for(const it of (items||[]).slice(0,300)){
+        const id=String(it.name||'').replace(/\.json$/,'');
+        const known=byId.get(id);
+        const t=Date.parse(it.updated_at||'');
+        if(known&&!(isFinite(t)&&t>Date.parse(known.updatedAt||known.at||0)))continue;
+        try{
+          const rec=await (await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+
+            TK_DIR+it.name+'?t='+Date.now())).json();
+          if(rec&&rec.id)byId.set(rec.id,rec);
+        }catch(e){}
+      }
+      snap=[...byId.values()].filter(t=>!t.deleted);
+    }
+  }catch(e){ console.warn('[tasks] journal unavailable:',e.message); }
+  TASKS=snap.sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+  return true;
+}
+async function tkSaveOne(t){
+  await supaUpload(TK_DIR+t.id+'.json',new Blob([JSON.stringify(t)],{type:'application/json'}));
+  try{ await supaUpload(TK_FILE,new Blob([JSON.stringify(TASKS)],{type:'application/json'})); }
+  catch(e){ console.warn('[tasks] snapshot write failed, journal still holds it'); }
+}
+
+/* one message body, used by both channels */
+function tkMessage(t){
+  const lines=[t.title,''];
+  if(t.detail)lines.push(t.detail,'');
+  if(t.due)lines.push('Due: '+tkFmtDate(t.due));
+  lines.push('Assigned by: '+(t.byName||t.by));
+  if(t.files&&t.files.length){
+    lines.push('','Attachments:');
+    t.files.forEach(f=>lines.push('- '+f.name+': '+f.url));
+  }
+  return lines.join('\n');
+}
+/* Gmail compose rather than a mailto: handler — the team is on Google Workspace,
+   so a mailto would hand the draft to whatever desktop client happens to be
+   registered instead of opening Gmail. */
+function tkMailTo(t,who){
+  return 'https://mail.google.com/mail/?view=cm&fs=1&tf=1'+
+    '&to='+encodeURIComponent(who||(t.to||[]).join(','))+
+    '&su='+encodeURIComponent('Task: '+t.title)+
+    '&body='+encodeURIComponent(tkMessage(t));
+}
+function tkWaLink(t,num){
+  return 'https://wa.me/'+String(num).replace(/[^0-9]/g,'')+
+    '?text='+encodeURIComponent(tkMessage(t));
+}
+
+/* Ctrl+V of a screen clipping gives an image blob on the clipboard with no
+   filename, so name it here and treat it exactly like a chosen file. */
+function tkWirePaste(){
+  const box=$('#tkDetail'); if(!box||box.dataset.pasteWired)return;
+  box.dataset.pasteWired='1';
+  box.addEventListener('paste',e=>{
+    const items=(e.clipboardData&&e.clipboardData.items)||[];
+    let took=0;
+    for(const it of items){
+      if(it.kind!=='file')continue;
+      const f=it.getAsFile();
+      if(!f||!/^image\//.test(f.type))continue;
+      const ext=(f.type.split('/')[1]||'png').replace(/[^a-z0-9]/g,'');
+      const stamp=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+      TK_PASTED.push(new File([f],'screenshot-'+stamp+'-'+(TK_PASTED.length+1)+'.'+ext,{type:f.type}));
+      took++;
+    }
+    if(took){ e.preventDefault(); tkRenderPastes(); }   // keep the image, not a blob URL in the text
+  });
+}
+function tkRenderPastes(){
+  const host=$('#tkPastes'); if(!host)return;
+  host.innerHTML=TK_PASTED.map((f,i)=>
+    `<div class="tk-shot"><img src="${URL.createObjectURL(f)}" alt="${rmEsc(f.name)}">
+       <button data-shot="${i}" title="Remove">✕</button>
+       <span class="nm">${rmEsc(f.name)}</span></div>`).join('');
+  host.querySelectorAll('[data-shot]').forEach(b=>b.onclick=()=>{
+    TK_PASTED.splice(+b.dataset.shot,1); tkRenderPastes();
+  });
+}
+
+function tkRenderPeople(){
+  const host=$('#tkPeople'); if(!host)return;
+  host.innerHTML=tkPeople().map(p=>
+    `<label class="tk-person">
+       <input type="checkbox" value="${rmEsc(p.id)}"${TK_SEL.has(p.id)?' checked':''}>
+       <span><span class="nm">${rmEsc(p.name)}</span><br><span class="em">${rmEsc(p.id)}</span></span>
+       ${p.wa?`<span class="wa">${rmEsc(p.wa)}</span>`:'<span class="no-wa">no WhatsApp on file</span>'}
+     </label>`).join('');
+  host.querySelectorAll('input').forEach(c=>c.onchange=()=>{
+    TK_SEL=new Set([...host.querySelectorAll('input:checked')].map(x=>x.value));
+  });
+}
+async function tkAssign(){
+  if(!tkCanAssign())return;
+  const title=($('#tkTitle').value||'').trim();
+  const detail=($('#tkDetail').value||'').trim();
+  const due=$('#tkDue').value||'';
+  const to=[...TK_SEL];
+  const st=$('#tkStatus');
+  if(!title){st.textContent='Give the task a name.';return;}
+  if(!to.length){st.textContent='Tick at least one person.';return;}
+  const btn=$('#tkAssign'); btn.disabled=true; st.textContent='Saving\u2026';
+  try{
+    const id='t'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
+    const files=[];
+    /* chosen files and pasted screenshots upload the same way */
+    const picked=[...$('#tkFiles').files,...TK_PASTED];
+    for(let i=0;i<picked.length;i++){
+      const f=picked[i];
+      st.textContent='Uploading '+f.name+' \u2026';
+      const safe=f.name.replace(/[^A-Za-z0-9._-]+/g,'-');
+      const path=TK_ATT+id+'/'+safe;
+      await supaUpload(path,f);
+      files.push({name:f.name,url:SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+path});
+    }
+    const t={id,title,detail,due,to,files,status:'Open',
+      by:CURRENT_USER.id,byName:CURRENT_USER.name||CURRENT_USER.id,
+      at:new Date().toISOString()};
+    await tkFetch();
+    TASKS.unshift(t);
+    await tkSaveOne(t);
+    $('#tkTitle').value='';$('#tkDetail').value='';$('#tkDue').value='';$('#tkFiles').value='';
+    TK_PASTED=[]; tkRenderPastes();
+    TK_SEL=new Set(); tkRenderPeople(); tkRender();
+    st.textContent='Task assigned \u2014 use the Send buttons below to deliver it.';
+    try{logEvent('task',title+' \u2192 '+to.length+' people');}catch(e){}
+  }catch(e){ st.textContent='Could not save: '+e.message; }
+  btn.disabled=false;
+}
+
+function tkVisible(){
+  const mine=!tkCanAssign();
+  const q=(($('#tkFilter')&&$('#tkFilter').value)||'').trim().toLowerCase();
+  const sf=($('#tkStatusFilter')&&$('#tkStatusFilter').value)||'';
+  return TASKS.filter(t=>{
+    /* anyone who cannot assign sees only their own tasks */
+    if(mine&&!(t.to||[]).includes(CURRENT_USER.id)&&t.by!==CURRENT_USER.id)return false;
+    if(sf&&t.status!==sf)return false;
+    if(q){
+      const names=(t.to||[]).map(id=>(AUTH_USERS[id]&&AUTH_USERS[id].name)||id).join(' ');
+      if(!((t.title+' '+(t.detail||'')+' '+names+' '+(t.byName||'')+' '+(t.status||''))
+        .toLowerCase().includes(q)))return false;
+    }
+    return true;
+  });
+}
+function tkRender(){
+  const body=$('#tkBody'); if(!body)return;
+  const rows=tkVisible();
+  const canEdit=t=>tkCanAssign()||t.by===CURRENT_USER.id||(t.to||[]).includes(CURRENT_USER.id);
+  body.innerHTML=rows.map(t=>{
+    const who=(t.to||[]).map(id=>
+      `<span class="tk-who">${rmEsc((AUTH_USERS[id]&&AUTH_USERS[id].name)||id)}</span>`).join('');
+    const send=(t.to||[]).map(id=>{
+      const u=AUTH_USERS[id]||{};
+      const nm=rmEsc(String(u.name||id).split(' ')[0]);
+      return `<button class="tk-send mail" data-mail="${rmEsc(tkMailTo(t,id))}">\u2709 ${nm}</button>`+
+        (u.wa?`<button class="tk-send wa" data-wa="${rmEsc(tkWaLink(t,u.wa))}">WA ${nm}</button>`:'');
+    }).join('');
+    const files=(t.files||[]).map(f=>
+      `<a class="tk-file" href="${rmEsc(f.url)}" target="_blank" rel="noopener">\u{1F4CE} ${rmEsc(f.name)}</a>`).join('')
+      || '\u2014';
+    const status=canEdit(t)
+      ? `<select class="tk-sel" data-status="${rmEsc(t.id)}">`+
+        TK_STATUSES.map(s=>`<option${s===t.status?' selected':''}>${s}</option>`).join('')+`</select>`
+      : `<span class="tk-badge ${tkStatusClass(t.status)}">${rmEsc(t.status)}</span>`;
+    return `<tr>
+      <td class="tk-task">${rmEsc(t.title)}${t.detail?`<span class="dt">${rmEsc(t.detail)}</span>`:''}</td>
+      <td>${who}</td>
+      <td>${rmEsc(t.byName||t.by)}</td>
+      <td>${tkFmtDate(t.due)}</td>
+      <td>${files}</td>
+      <td>${status}</td>
+      <td>${send}${(tkCanAssign()||t.by===CURRENT_USER.id)?`<button class="tk-send del" data-del="${rmEsc(t.id)}">Delete</button>`:''}</td>
+    </tr>`;
+  }).join('')
+    || `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mut)">No tasks yet.</td></tr>`;
+
+  body.querySelectorAll('[data-mail]').forEach(b=>b.onclick=()=>{
+    window.open(b.dataset.mail,'_blank','noopener');   // Gmail compose in a new tab
+  });
+  body.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>{window.open(b.dataset.wa,'_blank','noopener');});
+  body.querySelectorAll('[data-status]').forEach(s=>s.onchange=()=>tkSetStatus(s.dataset.status,s.value));
+  body.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>tkDelete(b.dataset.del));
+  const cnt=$('#tkCount');
+  if(cnt)cnt.textContent=fmtN(rows.length)+' task'+(rows.length===1?'':'s');
+}
+async function tkSetStatus(id,status){
+  const t=TASKS.find(x=>x.id===id); if(!t)return;
+  t.status=status; t.statusBy=CURRENT_USER.name||CURRENT_USER.id;
+  t.statusAt=new Date().toISOString(); t.updatedAt=t.statusAt;
+  try{ await tkSaveOne(t); tkRender(); }catch(e){ alert('Could not save the status: '+e.message); }
+}
+async function tkDelete(id){
+  const t=TASKS.find(x=>x.id===id); if(!t)return;
+  if(!confirm('Delete "'+t.title+'"? This cannot be undone.'))return;
+  try{
+    TASKS=TASKS.filter(x=>x.id!==id);
+    await tkSaveOne({...t,deleted:true,updatedAt:new Date().toISOString()});
+    tkRender();
+  }catch(e){ alert('Could not delete: '+e.message); }
+}
+function tkExport(){
+  const rows=tkVisible().map(t=>({Task:t.title,Details:String(t.detail||'').replace(/\r?\n/g,' '),
+    Assigned_to:(t.to||[]).map(id=>(AUTH_USERS[id]&&AUTH_USERS[id].name)||id).join('; '),
+    Assigned_by:t.byName||t.by,Assigned_on:String(t.at||'').slice(0,10),Due:t.due||'',
+    Status:t.status,Attachments:(t.files||[]).map(f=>f.url).join(' ')}));
+  if(!rows.length){alert('Nothing to export.');return;}
+  lvExport(rows,'csv','tasks','tasks');
+}
+async function tkOpenPage(){
+  const note=$('#tkNote');
+  if(note)note.innerHTML=tkCanAssign()
+    ? 'The task is saved centrally and everyone sees it here. <b>Sending is one click, not automatic</b> \u2014 '+
+      '\u2709 opens Gmail and <b>WA</b> opens WhatsApp with the message already written; you press Send. '+
+      'Attachments travel as links, because neither an email draft nor WhatsApp click-to-chat can carry a file.'
+    : 'Tasks assigned to you. Update the status here as you work through them.';
+  const comp=$('#tkComposer');
+  if(comp)comp.style.display=tkCanAssign()?'':'none';
+  tkWirePaste();
+  tkRenderPastes();
+  tkRenderPeople();
+  tkRender();
+  await tkFetch();
+  tkRender();
+}
+
+/* =============================================================
    PROJECTION / TARGET
    -------------------------------------------------------------
    Two independent sources on one page:
@@ -6461,20 +6877,20 @@ function gsOnLHRPage(){
 
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
-  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true},
-  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true},
-  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true},
-  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true, tasks:true, wa:'919180203317'},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, wa:'917019052918'},
+  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, wa:'916363726152'},
+  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, wa:'917879065834'},
+  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918597503303'},
+  'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918960267035'},
+  'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918098440612'},
+  'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'919267907661'},
+  'raj.singh1@shadowfax.in':   {pass:'raj@15046',  name:'Raj Singh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'919452577002'},
+  'gaurav.khati@shadowfax.in':   {pass:'gaurav@14966',  name:'Gaurav Khati',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918445430413'},
+  'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'917600855615'},
+  'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'917340093387'},
+  'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'919534174275'},
   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true, remarks:true},
   'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
   'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
@@ -7443,6 +7859,7 @@ const PAGE_META={
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
+  tasks:{t:'Tasks',c:'Assign work, then send it by email and WhatsApp'},
   remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
@@ -7477,6 +7894,7 @@ function navTo(page){
   if(page==='docs'&&!$('#docBody').innerHTML)renderDocs();
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
+  if(page==='tasks')tkOpenPage();
   if(page==='lhrecovery')gsOnLHRPage();
   if(page==='projection')pjOnPage();
   closeSidebar();
@@ -7548,6 +7966,15 @@ function wireControls(){
   $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
   $('#lhrPendCsv').onclick=()=>lvExport(lhrPendingExport(),'csv','lh_pending_for_recovery','pending');
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
+
+  /* tasks */
+  $('#tkAssign').onclick=tkAssign;
+  $('#tkAllBtn').onclick=()=>{TK_SEL=new Set(tkPeople().map(p=>p.id));tkRenderPeople();};
+  $('#tkNoneBtn').onclick=()=>{TK_SEL=new Set();tkRenderPeople();};
+  $('#tkRefresh').onclick=tkOpenPage;
+  $('#tkCsv').onclick=tkExport;
+  $('#tkFilter').oninput=tkRender;
+  $('#tkStatusFilter').onchange=tkRender;
 
   /* lane remarks */
   $('#rmPgFrom').onchange=rmPageRender;
