@@ -2173,7 +2173,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
             <span class="sub">every follow-up remark added from the lane pivot in Bag wise View · newest date first · filter by lane and date, edit or delete here</span></div>
           <div class="card-tools">
             <button class="tool" id="rmPgRefresh">Refresh</button>
-            <button class="tool" id="rmPgCsv">CSV</button>
+            <button class="tool" id="rmPgCsv" title="Downloads only the rows matching the filters above">CSV</button>
           </div>
         </div>
 
@@ -5161,22 +5161,93 @@ function rmCellHTML(lane){
          `<span class="rm-badge">${list.length}</span><span class="rm-date">${rmFmtDate(latest.date)}</span></td>`;
 }
 
+/* ============================================================
+   Why remarks were going missing
+   ------------------------------------------------------------
+   Every save rewrote the whole remarks.json. Two people saving
+   within the same few seconds both read the file, both added
+   their own remark to their own copy, and the second upload
+   overwrote the first — the earlier remark vanished with no
+   error anywhere. Re-reading immediately before saving narrowed
+   the window but could never close it.
+
+   The fix is an append-only journal: each remark is also written
+   as its own object under remarks/<id>.json, which no other
+   writer ever touches. remarks.json is still written as a fast
+   snapshot, but it is no longer the only copy — on load the
+   journal is merged over it, so a clobbered snapshot self-heals
+   and nothing is lost. Edits and deletes write a new version of
+   that same per-remark file, deletes carrying a tombstone flag.
+   ============================================================ */
+const RM_DIR='remarks/';
+
+async function rmListJournal(){
+  const res=await fetch(SUPA_URL+'/storage/v1/object/list/'+SUPA_BUCKET,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({prefix:RM_DIR,limit:1000,offset:0,
+      sortBy:{column:'updated_at',order:'desc'}})
+  });
+  if(!res.ok)throw new Error('list failed: '+res.status);
+  return (await res.json())||[];
+}
+function rmIndexIds(map){
+  const ids=new Set();
+  Object.keys(map).forEach(l=>(map[l]||[]).forEach(r=>ids.add(r.id)));
+  return ids;
+}
 async function rmFetch(){
+  let snap={};
   try{
     const res=await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+RM_FILE+'?t='+Date.now());
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const j=await res.json();
-    REMARKS=(j&&typeof j==='object'&&!Array.isArray(j))?j:{};
-    idbSet(RM_IDB_KEY,{data:REMARKS,saved:Date.now()});
-    return true;
-  }catch(e){
-    /* a 404 simply means nobody has written a remark yet */
-    console.warn('[remarks] could not read remarks.json:',e.message);
-    return false;
-  }
+    if(res.ok){
+      const j=await res.json();
+      if(j&&typeof j==='object'&&!Array.isArray(j))snap=j;
+    }
+  }catch(e){ console.warn('[remarks] snapshot unavailable:',e.message); }
+
+  /* merge the journal over the snapshot */
+  try{
+    const items=await rmListJournal();
+    const have=rmIndexIds(snap);
+    const wanted=items.filter(it=>{
+      const id=String(it.name||'').replace(/\.json$/,'');
+      if(!id)return false;
+      if(!have.has(id))return true;                 // never made it into the snapshot
+      const t=Date.parse(it.updated_at||'');        // or was edited after it did
+      return isFinite(t)&&t>(Date.parse(snap.__savedAt||'')||0);
+    }).slice(0,300);
+    for(const it of wanted){
+      try{
+        const r=await (await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+
+          RM_DIR+it.name+'?t='+Date.now())).json();
+        if(!r||!r.id||!r.lane)continue;
+        const lane=r.lane;
+        snap[lane]=(snap[lane]||[]).filter(x=>x.id!==r.id);
+        if(!r.deleted)snap[lane].push(r);
+        if(!snap[lane].length)delete snap[lane];
+      }catch(e){}
+    }
+    if(wanted.length)console.log('[remarks] recovered',wanted.length,'from the journal');
+  }catch(e){ console.warn('[remarks] journal unavailable:',e.message); }
+
+  delete snap.__savedAt;
+  REMARKS=snap;
+  idbSet(RM_IDB_KEY,{data:REMARKS,saved:Date.now()});
+  return true;
+}
+
+/* write the per-remark journal entry first — that is the copy that cannot be
+   clobbered — then refresh the snapshot as a convenience */
+async function rmSaveOne(rec){
+  await supaUpload(RM_DIR+rec.id+'.json',
+    new Blob([JSON.stringify(rec)],{type:'application/json'}));
 }
 async function rmSave(){
-  await supaUpload(RM_FILE,new Blob([JSON.stringify(REMARKS)],{type:'application/json'}));
+  const out={...REMARKS,__savedAt:new Date().toISOString()};
+  try{
+    await supaUpload(RM_FILE,new Blob([JSON.stringify(out)],{type:'application/json'}));
+  }catch(e){ console.warn('[remarks] snapshot write failed, journal still holds it:',e.message); }
   idbSet(RM_IDB_KEY,{data:REMARKS,saved:Date.now()});
 }
 /* called from boot(): show the cached trail immediately, then refresh */
@@ -5237,11 +5308,13 @@ async function rmAdd(){
   try{
     await rmFetch();                     // merge with whatever is already stored
     if(!REMARKS[lane])REMARKS[lane]=[];
-    REMARKS[lane].push({
+    const rec={
       id:'r'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
-      date,text,
+      lane,date,text,
       by:CURRENT_USER.id,byName:CURRENT_USER.name||CURRENT_USER.id,
-      at:new Date().toISOString()});
+      at:new Date().toISOString()};
+    REMARKS[lane].push(rec);
+    await rmSaveOne(rec);                // the copy no other writer can clobber
     await rmSave();
     $('#rmText').value='';
     $('#rmStatus').textContent='Saved.';
@@ -5260,21 +5333,27 @@ async function rmDelete(id){
   $('#rmStatus').textContent='Deleting…';
   try{
     await rmFetch();
+    const gone=(REMARKS[lane]||[]).find(r=>r.id===id);
     REMARKS[lane]=(REMARKS[lane]||[]).filter(r=>r.id!==id);
     if(!REMARKS[lane].length)delete REMARKS[lane];
+    /* tombstone, so the journal cannot resurrect it on the next read */
+    if(gone)await rmSaveOne({...gone,lane,deleted:true,
+      deletedBy:CURRENT_USER.name||CURRENT_USER.id,deletedAt:new Date().toISOString()});
     await rmSave();
     $('#rmStatus').textContent='';
     rmRenderList();
   }catch(e){$('#rmStatus').textContent='Could not delete: '+e.message;}
 }
 function rmExportAll(){
+  /* export exactly what is on screen: filter to one person and the download
+     holds only their remarks, not everyone's */
   const totals=rmLaneTotals();
-  const rows=rmPageRows(true).map(r=>({
+  const rows=rmPageRows(false).map(r=>({
     Lane_Code:r.lane,Date:r.date||'',
     Lane_pending_value:totals.has(r.lane)?Math.round(totals.get(r.lane)):'',
     Remark:String(r.text||'').replace(/\r?\n/g,' '),
     Added_by:r.byName||r.by||'',Recorded_at:r.at||''}));
-  if(!rows.length){alert('No remarks have been recorded yet.');return;}
+  if(!rows.length){alert('Nothing to export — no remarks match the current filters.');return;}
   lvExport(rows,'csv','lane_remarks','remarks');
 }
 
@@ -5593,8 +5672,10 @@ async function rmPageSave(lane,id){
     if(!row){rmPgStatus('That remark no longer exists — it may have been deleted elsewhere.');RM_EDIT=null;rmPageRender();return;}
     row.date=date||row.date;
     row.text=text;
+    row.lane=row.lane||lane;
     row.editedBy=CURRENT_USER.name||CURRENT_USER.id;
     row.editedAt=new Date().toISOString();
+    await rmSaveOne(row);
     await rmSave();
     RM_EDIT=null;
     rmPgStatus('Saved.');
@@ -5611,8 +5692,11 @@ async function rmPageDelete(lane,id){
   rmPgStatus('Deleting…');
   try{
     await rmFetch();
+    const gone=(REMARKS[lane]||[]).find(r=>r.id===id);
     REMARKS[lane]=(REMARKS[lane]||[]).filter(r=>r.id!==id);
     if(!REMARKS[lane].length)delete REMARKS[lane];
+    if(gone)await rmSaveOne({...gone,lane,deleted:true,
+      deletedBy:CURRENT_USER.name||CURRENT_USER.id,deletedAt:new Date().toISOString()});
     await rmSave();
     RM_EDIT=null;
     rmPgStatus('');
@@ -6396,7 +6480,7 @@ const AUTH_USERS={
   'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
   'm.arivazhagan@shadowfax.in':{pass:'Arivu@123',  name:'arivazhagan',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true}
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
