@@ -519,7 +519,7 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar,body.projection-page .filterbar,
-body.tasks-page .filterbar{display:none}
+body.tasks-page .filterbar,body.team-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
 .lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
 /* Recovery Amount · roomier rows, month in ink, total in indigo */
@@ -1093,6 +1093,77 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .lhr-diag code{background:#fff;border-radius:4px;padding:1px 6px;
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11px;}
 
+/* ---- Team Tree ----
+   Column layout from the reference: the root on top, a bus feeding each
+   direct report, and every branch running straight down its own column. */
+.tt-bar{margin-top:14px;padding:14px 17px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+.tt-bar h3{font-size:15px;color:var(--ink);}
+.tt-tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+#ttSearch{width:250px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;
+  font-size:12.5px;font-family:inherit;outline:none;}
+#ttSearch:focus{border-color:var(--pine);}
+#ttExpand,#ttCollapse,#ttCsv{width:auto;padding:0 12px;font-size:9.5px;font-weight:800;white-space:nowrap;}
+.tt-canvas{margin-top:12px;padding:22px 10px 26px;overflow:hidden;}
+.tt-scroll{overflow:auto;padding:4px 16px 14px;}
+
+.tt-top{display:flex;justify-content:center;}
+.tt-top .tt-card{width:330px;}
+/* stem out of the root, then the bus across the columns */
+.tt-link{height:30px;position:relative;}
+.tt-link::before{content:'';position:absolute;top:0;left:50%;width:2px;height:30px;background:#9FB4D8;}
+.tt-cols{display:grid;gap:16px;position:relative;padding-top:30px;
+  grid-template-columns:repeat(var(--n,5),minmax(258px,1fr));}
+.tt-cols::before{content:'';position:absolute;top:0;height:2px;background:#9FB4D8;
+  left:calc((100% / var(--n,5)) / 2);right:calc((100% / var(--n,5)) / 2);}
+.tt-col{position:relative;min-width:0;}
+/* the drop and arrowhead into each column */
+.tt-col::before{content:'';position:absolute;top:-30px;left:50%;width:2px;height:22px;background:#9FB4D8;}
+.tt-col::after{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #9FB4D8;}
+/* children stack under their manager, each with its own drop */
+.tt-kid{position:relative;margin-top:26px;}
+.tt-kid::before{content:'';position:absolute;top:-26px;left:26px;width:2px;height:18px;background:#9FB4D8;}
+.tt-kid::after{content:'';position:absolute;top:-9px;left:26px;transform:translateX(-50%);
+  border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #9FB4D8;}
+.tt-col.tt-closed .tt-kid{display:none;}
+
+/* cards */
+.tt-card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 3px 12px rgba(30,41,59,.07);cursor:pointer;transition:box-shadow .15s,transform .15s;}
+.tt-card:hover{box-shadow:0 9px 22px rgba(30,41,59,.14);transform:translateY(-1px);}
+.tt-hd{display:flex;align-items:center;gap:10px;padding:11px 13px;}
+.tt-av{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;
+  color:#fff;font-size:12px;font-weight:800;}
+.tt-nm{font-size:14px;font-weight:800;color:#12263F;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;}
+.tt-kids{margin-left:auto;border:none;background:rgba(255,255,255,.75);color:#12263F;
+  border-radius:999px;font-size:10px;font-weight:800;padding:3px 9px;cursor:pointer;flex:none;}
+.tt-kids:hover{background:#12263F;color:#fff;}
+.tt-rows{padding:9px 13px 12px;display:grid;gap:4px;}
+.tt-rows div{display:grid;grid-template-columns:104px 1fr;gap:6px;font-size:11px;line-height:1.5;}
+.tt-rows .k{color:#5A6478;font-weight:600;}
+.tt-rows .v{color:#12263F;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* one palette per branch, as in the reference */
+.tt-p0 .tt-hd{background:#DCE4FA;} .tt-p0 .tt-av{background:#5B6ABF;} .tt-p0{border-color:#C3CEF5;}
+.tt-p0 .tt-rows{background:#EEF2FE;}
+.tt-p1 .tt-hd{background:#D6F3E4;} .tt-p1 .tt-av{background:#22A06B;} .tt-p1{border-color:#B7E7CE;}
+.tt-p1 .tt-rows{background:#EEFBF4;}
+.tt-p2 .tt-hd{background:#FDE7CE;} .tt-p2 .tt-av{background:#EE8A2B;} .tt-p2{border-color:#F8D4AC;}
+.tt-p2 .tt-rows{background:#FFF6EC;}
+.tt-p3 .tt-hd{background:#FBDCE4;} .tt-p3 .tt-av{background:#E0436B;} .tt-p3{border-color:#F6C3D1;}
+.tt-p3 .tt-rows{background:#FEF0F4;}
+.tt-p4 .tt-hd{background:#D6EAFB;} .tt-p4 .tt-av{background:#2E86DE;} .tt-p4{border-color:#B7DAF6;}
+.tt-p4 .tt-rows{background:#EFF7FE;}
+.tt-root-card .tt-hd{background:#CFE4F9;} .tt-root-card .tt-av{background:#2E86DE;}
+.tt-root-card{border-color:#B3D6F5;} .tt-root-card .tt-rows{background:#EAF4FD;}
+.tt-hit{outline:2px solid #F5A623;outline-offset:2px;}
+.tt-dim{opacity:.3;}
+@media(max-width:900px){
+  .tt-tools{margin-left:0;} #ttSearch{width:100%;}
+  .tt-cols{grid-template-columns:1fr;}
+  .tt-cols::before,.tt-col::before,.tt-col::after{display:none;}
+}
+
 /* ---- Tasks page ---- */
 .tk-note{margin-top:14px;padding:12px 15px;font-size:12px;line-height:1.65;color:#8A5A12;
   background:#FEF9EF;border:1px solid #F3E2C4;}
@@ -1448,6 +1519,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <img class="sfx-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPsAAABYCAMAAAAEJHHUAAAA/1BMVEVepZwjaV3f3ovb13DX4uNPa2uVp6aj4tw6opKevcGby715z8UToHhQfoAZPzZogn9u0b78/f0VinXV9/QUknkpiHXV0RvM6eit19LU0STTzS5OmIsxloZSpZWPxblytqsUk4L5+dCJuLFpppm46OUsknmQycOy49kweW3QzEuV1ctrmZRxq6VIh3kVjYLWzhzX126pyshTioXo5pEui4FJeHT087PU0lN4xLTs663F5NzI2tk0amiHqqlFk3u48usAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACTDbSzAAAAQHRSTlP/////////////////////////////////////////////////////////////////////////////////////73leyQAAD21JREFUeNrtmul2o7gSgCG2s/XcxciKFLPZgIGwuAOxY8dL8v5vdatKAmx3ZiaTPzfHaZ050wFkSZ9qVYExfelPp8Nv2YyLx8eLp4vn74hvPD48rFar3tPL95M+sI/vx/er1ePFy/M3wzce7+/v7+7ux+OHx8dvJnzNDvT344fV98JH9jvVYBNQ97+P6R+wa37Af/oelm9crE7gx2j6vadvEPWMJ/Dzd8eSR8f3HYSP7OOfPzX3sfDR8Z01+/PqgP2+k73y+xj0z5j98T25U7u7V7p/rvjGFBI7xX5/LHa6Aumj3z9P3TemT++xj+k/oh+fre4T+/iInXKcXg/8wFgb/vgBHd/zuTn+P2HvXVw8gTEQ/R15fbT8Mwv6xvBldco+Hq+eptPnpweAV7d+jhv8c6IH9sdjdgxuvefhcDoleMUOjfCBfnpG7OToT9gJcPr8SOw/20YZz8X0jNgvGuk2UU2zD6cvAN+w4793dwj/ckbsTytt1i3747N6OH16RE1vcx9iPyu5o7PT2Dqet3ikE2PtD4gdxH5G7EPMalv2A5XH9qLgW8Gfk9iP2O80+6oLZGTyaPPaGT405nAm7Ojoj9gP+aYvvQfNTvXM84rvaNT3HTsA9g75MO8jFw+PVr2zSuwMRdcd3I7MvfN3mNafGTqyY2bXskMUW50EcEpxMKW9eBkOz40d4A7ZeyfCxfzuASzh3NCJXRl8o/MPv2Ts05eL3hmiK/anv2aHY83FxRmWbk7Z78bvRvDpOdarFfsKyxMqqR8/nSHlX7KPf+q0HcsW34odgtzPsTqojs8paf0A+/C5R+eVn/d3J0ndN2Cf9ppz6nte/szZn3Tp5n780aoME9vtdiNEe43t3Yvmmp1cnnZqH14lSSLYez/9k0kY+2XEd1dweIETHLN/9HguktgP8zAs/EyNmHjYNvppdXABU0nP9/111hLcBrp5XpaIk4GztW+4oe9J6t6XNHCiB8IfVeoXm0Bf4E1vrZsfBJKxjeevYUrZDlvhXLeJ3qrkdr0Ogq1mxxeS/4BdeK7Dqc1cn9bl2a+vpe2pxzIvoXlNb7jErm7S/DrEx3DPcRw79OWBfKI4tJ0ZNselzesHr3DxGlCfTQjDpPmWuno0aBgxH1YBTf2P89IXTD3jYbOvMEr5+mqHajOkgYvNbxU7lS9I5XsfUXkR2Jxb2GACx49gKz2c9jXTsDB12rKzIE2x78zTkMLmB61241b0snBm1ki3GcnNIyRFgeNaaV3RqAUOyn3GwpSPRrQUjqviAROhWp3dbquEKWGFPg6TGK/wdxluTtkfPyB25r2qsTW9z5Ad5rc1e0JwDXuSp6qrr1fy5sIF0sH/8fd2oB8kLrdadBga5VQ5MDJ3I3we07ScujOX2GNgV2PBQAtnMbJqCaR6bV5rZqA+f8ACY1oqqAi3pbZ3cPRYnPmgysMScRGgssjATVzAGlY4chp2B5bbsKMCqqXYWunfbKtr2LMmeQyFz62OneA3Q+lOJrBoSQDcQsiCpOfAxuGQzNX7qJstWLzQ7GFrTpsQ2WEPWeSCmvDZmrXsT4p99ZETizfDgV0/yzIcxzJdQXIfNXDIbrXsfqMkzR3F7riG4drQE+DLGO/f2kgODwrXoSksx2PCcADeiUnNFSVtRDZDpYFNU+yWY+sGKl80M9oH3s4l5fDeSErK+XTsEN/vP5LUMYMrbUPHi1pqgUYC+x/Azn5l37itSArW6jwsNhZC9INrgscnIgexgv9YR4xF8bUSXMI8Ykc9F7Q3+EsUAEd21GEldyOJBDVGKj+fT+bzA6VXVjmy3LWD3We3rGXHF5LI/pHEBj3JyJop/ZbuzJkZEYgBRrx+T+7ytVNH9fzt2ppPLLdPg8VuI8oKhnX4Yv1GS80Afm4tYiavgZ0X4PRlTSaBDm449HERjmzZ1weUC0BX7H4XQxIDdxzcAnY3xLBjV3Wp1fOH2Z21oHxBemsfdl86ZO+N3K2OXVmIUvq4kTuyK+8OCkobxRjRoEWqTgayw+KFMQJ2Vw7RjGESsH7QM7UIHEOxT360lKTy8wmwz1sXgy1zCJ40JxsesE+feg8PH8xnadq548dZFDX5kmI34qqSUsYH7OCG0XAdS0UkCuKH7Cx2lChZSKGqkR/cn6sY5lsT1HMw48VkNIGG4oagBZ3RRyo/7/xoEzd4hDNeO4sjpQdX2khBxbqWfUhlqY/VZjzc1/kcMhO3Sb8U+6RxOGCijZDB+EboGJ1O6YF90rJDB7JDDMookdY7SQflDr3i2YQ2J0KlnTiTOYiNdMDiuFE6xhngeTMpwffB8kDjjR/EfqD0Q3JOI+WfjtinL73eB183bV2tVAsL0i9fCrVSHWQpwcDVxs1GoYAin7dKH7nzA/ZEs0eou+2yoBex2xEMPQF3WEQZhgcD3D4oAQw3R5/TsTvXrgu7HpPt4PZEBgfNOfD0sBYSgDWL2TE7wH/4E2KlVehPJiPIEgLRsI+0KwHVBDeljI/CVsziWZveHLOD90bmN2LXTojuX2t2Qd7QzdBenR8/rp0RpJIFn2izJXY0Y0ppfZaARQH7FfMXJ0pPFo/s2fCE/Z80GWLCjOyo3A6Yj1S5qJK61bFfERnsvprXjn7ReaXrDXsn98QGBmRnvgpsa2TPrtwJKG1mWBOtJJodTQDYYwaBH9hhD+MFB/awOytBAmZ1ieFn2eGkFvghmjXB25Vib+wdlHQyWpBmkW+2IBOTjokeCLdcuPxXdibeYbcomfVIdXwDoO2ryMAt8F1kJy2ijEcxzSBlQZWfkMuEqVFx5IG9n6Q8n2PHM3AiAxcsakQpBvo6WBJ4Gykz3xmh3JlK6kAbQPEiu/X04sTXYY7paj//jq+DfYUHIweDhxtFsAWjybUDgDwbduyO68LJN2OR8vIZRN8FxfPuOBnOdPLLi/5n2RNwqEIdhD2bonOA7DSjun1tafYIVX7E5bA5XyDLETvzIK+lWBZQjGscM7rridorTJXIhaCk2XpENgVR0kkUO6Ub/00SgRmHpHwWsgSW0V9p0Qzoo2qSn+dOID7Hvg3tmV3ILlPEFWr2Vl21zktSecCEc4rZqNuRvW9yREbn4PEZRkPZKujEUU5j4xI6aLIVQ8KHjmNCgKxht9C36QMbVz6VKYdsmfam03iMByOrORJ8gh1P0eDfVGBXmUkjd9meYRW7PnnBSmI68c9JBTX7FS51E5SYpKAPVOnKzKe1Jj7lCO5G8Si50wSJ27CvD9l1SqlSKTCyKGxKDFVzkMNM3Fg7vD0LfoLd5jPHmblekkgvJPabP2FXmSe4g6pOU96kVMgOqZHvebdrOg6bKWm6Etks9OLMMxyKFSpCxVwbKkbA9pTGtZYdsavTAyR+QZqmpppRKyjJO3mjwwxG3c+wM30Umr26unxjyz9hlxThHCluaq7F4DbsfIHFKUWhVHCbY1Y0oSIERo05N5I29VPVj4Mzsekk77AH2tzFvix1yYSMizSeor0+QGCK+RlfR8kl4atTNiRTmXPgpEEzJnS+DCipA7sUkOSv6SwBfSA5VdarihddHLotCR7zJnRnvAHahJZi/6GPacTeBArN3p41VDQRVRy7tL6ZbMoiFmk6+nuLqk2fYGfZUW2JY8GO3GvLXoOC81gXEZrUCubnzgx8w5vPR4fVmVy2lSW7K4bBlrQ5WUCFOHORdaNzs4kIWLgzda62fU0P6nSdsD0YgKdlpdNsDkkYbPhn4jurQqctxnAfKxayNMGlNuxlCoqbMZGjkdcNGi6ap3uBldX25459UEpmMnxti5h2zA5cDAf7tUnS/TzFcdJYP/RT00xLNcglPWrzGbIAXsBCdin8Yq80hWyLp2H/c7nN1oNAh+7eDj1Vaysgnwv7OlXb55BoSPiXikiiLe/mtp0HQlQ53nexFZ48KtAnMDAWsO0miupfhgb01bnoDf68bpNVL4RDTKGMv8rzMAzbGTchTrQX28uj21UIM+fF9rN53UbiC4isXTmTsqMQmyjCGkQfbkYdm9gkyUaodzpSYjKyEb++78G3EZXs3syou/gqpUXCcdpXH0KIqHkEA3YXeC1pWf2+iJLD21uJC/ks+9m8j/vN/pv9N/tv9t/sv9n//63f334TdtF8RNKkTP3LweVhavn+TvSrv92gLXVh7Kuyb/GDkhvfj6O41qnsCft+cCne+eHl+7eP3qktK3wR6Msvyh4s4eyyWCyMzE8L/bJpbxyIVCz/nbP3XpiZ+d+wb2xgxzfIwRdll6G9gIObsc58e/1G8KxCiTYvAFlpegc5PhNUqRyyPPWjN9bcY03Gr39ENmTDoQ/Led5XtXeW+LabRW9Xvuv6hQcUIqhg4YFfFFgrFOUyYfLSUGawCcI832MHO3X9kM6AcGw08orRsTLHr67wtX4Rel5Zb1Hutvyy7HDK90FKmb3g6W4XAPZyD9ICU9iZtRwmqZ1kpTmolAmnu3Q52BkiqnfcTs1a4NdcdjkwBB7ezXSR7vIoKsCS4LFNcg/Fl/XzkZ2ik4s5L3zbrCPmmXsWL1PbL3Y7OZSmm7lL/b2Zn6Z5ECzNnEXL1PX8dBezLC2vsnonWbxbFllsA3u8rIMspG/PmFf67MuyJzV9hRNzO2FJvZQsAAP30jpjUQ5Enum6PFRvsEDRi4hFhlkwuasle7OB3TfLK/gjqPIdOMuo2BUg9pjMPQD2oAy+LrsssdjFirQA/c3rhOXAT06fFfiX6dpNyW5T4qdeLN/dMAmyRy3PotJ0Qe7LOFhCb8aMZRzV/4rAAYYYNJmXy6+b23hLDFYixLemwgCdr5eChSVW/XEXQjMMU/0NWVLyDNmXFYvNAH5kDGRSmv6VZxciHtRX8BA0J6nBDbCorim8e1+3bsOCFCtyiY1lVlmCoyoNFtk1ungDPJhhBl6pK5SiTCHeyRo2aG8i2ADYl2mWZeD5Jck9qpdJhJbD4hT1SQSSfV32nFxdVWJhuVqGQi5DBnZwhVeGEECU5KbK4aCvnYFdg7obJn6xNRgIsABPSiAUuVlIWez+FbFil1eySCHEDau8+rr5vMipmh6XGJACMHMKcSXawc0A/hoAqDf4j/LzVZmW9QAD4XKJYINcsGpgBAXEd/hjVxs7dHhVvazDcodj7Af7L3yWuaSSsgzALlkVSpbsKybwalhdymEfqUSwV+zMg9Sm2ING7zHX2V7e4HvQHNId/ACvgmdFgJ+EVfs8LCjxqS5vvv4ZltJSylzbNL3fXXVVcfVJpb6h3hOI7Va0ya16Z8tEm+dCn/8BX1LNmcSS/OUAAAAASUVORK5CYII=" alt="Shadowfax — Think ahead!">
     </div>
     <nav class="nav">
+      <button data-page="team"><span class="ic">🌳</span>Team Tree</button>
       <button data-page="overview" class="active"><span class="ic">🏠</span>Executive Overview</button>
       <button data-page="pendency"><span class="ic">📦</span>Pendency Analytics</button>
       <button data-page="value"><span class="ic">💰</span>Value-at-Risk</button>
@@ -2235,6 +2307,23 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
         </div>
       </div>
       <div id="docBody"></div>
+    </section>
+
+    <!-- ============ PAGE: TEAM TREE ============ -->
+    <section class="page" id="page-team">
+      <div class="card tt-bar">
+        <div>
+          <h3>Team Tree</h3>
+          <span class="sub" id="ttSub">reporting structure · click a card to copy the email</span>
+        </div>
+        <div class="tt-tools">
+          <input id="ttSearch" placeholder="Find a name, code, location or email…">
+          <button class="tool" id="ttExpand">EXPAND ALL</button>
+          <button class="tool" id="ttCollapse">COLLAPSE</button>
+          <button class="tool" id="ttCsv">CSV</button>
+        </div>
+      </div>
+      <div class="card tt-canvas"><div class="tt-scroll" id="ttTree"></div></div>
     </section>
 
     <!-- ============ PAGE: TASKS ============ -->
@@ -5991,6 +6080,121 @@ function gsStartAuto(){
   },GS_AUTO_MS);
 }
 /* =============================================================
+   TEAM TREE
+   -------------------------------------------------------------
+   Straight from the flowchart sheet. The hierarchy is not stored
+   as levels — it is rebuilt from "reporting manager" on each row,
+   matched case-insensitively because the sheet mixes
+   "Sachin.r1@" and "sachin.r1@". Anyone whose manager is not in
+   the list becomes a root, so a typo shows up as a stray card
+   rather than quietly dropping the person.
+============================================================= */
+const TEAM_ROOT={name:'Anup Pandey',code:'',phone:'9180203317',
+  email:'anup.pandey1@shadowfax.in',loc:'Bangalore HQ',mgr:''};
+const TEAM=[
+ {name:'Sachin R',code:'SF11585',phone:'7019052918',email:'sachin.r1@shadowfax.in',loc:'Bangalore HQ',mgr:'anup.pandey1@shadowfax.in'},
+ {name:'Indrajeet Singh Chouhan',code:'SF12508',phone:'7879065834',email:'indrajeet.chouhan@shadowfax.in',loc:'Bangalore HQ',mgr:'anup.pandey1@shadowfax.in'},
+ {name:'Karan Singh Solanki',code:'SF6199',phone:'7340093387',email:'karan.solanki@shadowfax.in',loc:'Bangalore HQ',mgr:'anup.pandey1@shadowfax.in'},
+ {name:'Gowri Shankar Gara',code:'SF15475',phone:'8341761221',email:'gowri.shankar@shadowfax.in',loc:'Bangalore HQ',mgr:'anup.pandey1@shadowfax.in'},
+ {name:'Anna Roy',code:'SF16407',phone:'6363726152',email:'anna.roy@shadowfax.in',loc:'Bangalore HQ',mgr:'anup.pandey1@shadowfax.in'},
+ {name:'Raj Singh',code:'SF15046',phone:'8726466216',email:'raj.singh1@shadowfax.in',loc:'NCR Bamnoli DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Anupam Sharma',code:'SF13153',phone:'8960267035',email:'anupam.sharma@shadowfax.in',loc:'Lucknow DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Saikat Ghosh',code:'SF12654',phone:'8597503303',email:'saikat.ghosh@shadowfax.in',loc:'Kolkata DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Shyam Kumar Raj',code:'SF15086',phone:'9534174275',email:'shyamkumar.raj@shadowfax.in',loc:'Bangalore DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Isham Dawood Thoulathbatcha',code:'SF13021',phone:'8098440612',email:'isham.dawood@shadowfax.in',loc:'Chennai DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Gaurav Khati',code:'SF14966',phone:'8445430413',email:'gaurav.khati@shadowfax.in',loc:'Bilaspur DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Dharmraj Kumar',code:'SF13286',phone:'9267907661',email:'dharmraj.kumar@shadowfax.in',loc:'Surat DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Hitesh Kumar',code:'SF16336',phone:'7600855615',email:'paswan.hiteshkumar@shadowfax.in',loc:'Ahmedabad DC',mgr:'sachin.r1@shadowfax.in'},
+ {name:'Shaheen Sarakavas',code:'995920',phone:'9538553139',email:'shaheenlsarakavas123@gmail.com',loc:'Bangalore RO',mgr:'indrajeet.chouhan@shadowfax.in'},
+ {name:'Rizwan Ahmed Sharieff',code:'967505',phone:'9742775213',email:'rizwansharieff3@gmail.com',loc:'RO',mgr:'indrajeet.chouhan@shadowfax.in'},
+ {name:'Babli Kumari',code:'965349',phone:'9279084230',email:'bablikumari3693@gmail.com',loc:'Bangalore RO',mgr:'indrajeet.chouhan@shadowfax.in'}
+];
+let TT_CLOSED=new Set();
+
+const ttKey=e=>String(e||'').trim().toLowerCase();
+function ttInitials(n){
+  const p=String(n||'').trim().split(/\s+/).filter(Boolean);
+  return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toUpperCase();
+}
+function ttChildren(email){
+  const k=ttKey(email);
+  return TEAM.filter(p=>ttKey(p.mgr)===k);
+}
+function ttCard(p,mgrName,pal,kidCount,rootCls){
+  const hay=[p.name,p.code,p.phone,p.email,p.loc,mgrName].join(' ').toLowerCase();
+  const row=(k,v)=>`<div><span class="k">${k}</span><span class="v" title="${rmEsc(v)}">: ${rmEsc(v)}</span></div>`;
+  return `<div class="tt-card ${rootCls||''} tt-p${pal}" data-email="${rmEsc(p.email)}"
+      data-hay="${rmEsc(hay)}" title="Click to copy ${rmEsc(p.email)}">
+      <div class="tt-hd">
+        <span class="tt-av">${rmEsc(ttInitials(p.name))}</span>
+        <span class="tt-nm">${rmEsc(p.name)}</span>
+        ${kidCount?`<button class="tt-kids" data-toggle="${rmEsc(p.email)}">${kidCount}</button>`:''}
+      </div>
+      <div class="tt-rows">
+        ${row('SF Code',p.code||'—')}
+        ${row('Location',p.loc||'—')}
+        ${row('Email',p.email)}
+        ${row('Reporting Manager',mgrName||'N/A')}
+      </div>
+    </div>`;
+}
+function ttRender(){
+  const host=$('#ttTree'); if(!host)return;
+  const directs=ttChildren(TEAM_ROOT.email);
+  const known=new Set([ttKey(TEAM_ROOT.email),...TEAM.map(p=>ttKey(p.email))]);
+  const orphans=TEAM.filter(p=>!known.has(ttKey(p.mgr)));
+
+  const cols=directs.map((d,i)=>{
+    const kids=ttChildren(d.email);
+    const closed=TT_CLOSED.has(ttKey(d.email))?' tt-closed':'';
+    return `<div class="tt-col${closed}">`+
+      ttCard(d,TEAM_ROOT.name,i%5,kids.length)+
+      kids.map(k=>`<div class="tt-kid">${ttCard(k,d.name,i%5,ttChildren(k.email).length)}</div>`).join('')+
+    `</div>`;
+  }).join('');
+
+  host.innerHTML=
+    `<div class="tt-top">${ttCard(TEAM_ROOT,'N/A',0,directs.length,'tt-root-card')}</div>`+
+    (directs.length?`<div class="tt-link"></div><div class="tt-cols" style="--n:${directs.length}">${cols}</div>`:'')+
+    (orphans.length?`<div class="tt-cols" style="--n:${orphans.length};margin-top:22px;padding-top:0">`+
+      orphans.map((o,i)=>`<div class="tt-col" style="--n:1">${
+        ttCard(o,o.mgr+' — not in the sheet',(i+2)%5,ttChildren(o.email).length)}</div>`).join('')+
+      `</div>`:'');
+
+  host.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const k=ttKey(b.dataset.toggle);
+    TT_CLOSED.has(k)?TT_CLOSED.delete(k):TT_CLOSED.add(k);
+    ttRender(); ttSearch();
+  });
+  host.querySelectorAll('.tt-card').forEach(c=>c.onclick=()=>{
+    const em=c.dataset.email||'';
+    if(navigator.clipboard)navigator.clipboard.writeText(em);
+    const sub=$('#ttSub');
+    if(sub){sub.textContent='Copied '+em;
+      setTimeout(()=>{sub.textContent='reporting structure · click a card to copy the email';},2200);}
+  });
+  const sub=$('#ttSub');
+  if(sub)sub.textContent='reporting structure · '+fmtN(TEAM.length+1)+' people · click a card to copy the email';
+}
+function ttSearch(){
+  const q=(($('#ttSearch')&&$('#ttSearch').value)||'').trim().toLowerCase();
+  const cards=$$('#ttTree .tt-card');
+  cards.forEach(c=>{
+    c.classList.remove('tt-hit','tt-dim');
+    if(!q)return;
+    if((c.dataset.hay||'').includes(q))c.classList.add('tt-hit');
+    else c.classList.add('tt-dim');
+  });
+}
+function ttExport(){
+  const rows=[TEAM_ROOT,...TEAM].map(p=>({Name:p.name,SF_code:p.code,Contact:p.phone,
+    Email:p.email,Location:p.loc,Reporting_manager:p.mgr||'—'}));
+  lvExport(rows,'csv','team_tree','team');
+}
+function ttOpenPage(){ ttRender(); ttSearch(); }
+
+/* =============================================================
    TASKS
    -------------------------------------------------------------
    A browser page cannot send email or WhatsApp by itself — there is
@@ -6880,7 +7084,7 @@ const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true, tasks:true, wa:'919180203317'},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, wa:'917019052918'},
-  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, wa:'916363726152'},
+  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, analytics:true, wa:'916363726152'},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, wa:'917879065834'},
   'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918597503303'},
   'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918960267035'},
@@ -6931,6 +7135,18 @@ function applyAdminAccess(u){
   /* Root Cause & What-If is admin-only too */
   const rc=document.querySelector('.nav button[data-page="rootcause"]');
   if(rc)rc.style.display=isAdmin?'':'none';
+  /* Pendency Analytics and Value-at-Risk: admin plus anyone flagged analytics */
+  const canAnalytics=isAdmin||(u&&u.analytics);
+  ['pendency','value'].forEach(pg=>{
+    const b=document.querySelector('.nav button[data-page="'+pg+'"]');
+    if(b)b.style.display=canAnalytics?'':'none';
+    if(!canAnalytics){
+      const sec=document.getElementById('page-'+pg);
+      if(sec&&sec.classList.contains('active')&&typeof navTo==='function'){
+        try{navTo('overview');}catch(e){}
+      }
+    }
+  });
   /* if a non-admin lands there via a stale #rootcause hash, send them home */
   if(!isAdmin){
     const pg=document.getElementById('page-rootcause');
@@ -7860,6 +8076,7 @@ const PAGE_META={
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
   tasks:{t:'Tasks',c:'Assign work, then send it by email and WhatsApp'},
+  team:{t:'Team Tree',c:'Who reports to whom, with contact details'},
   remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
@@ -7895,6 +8112,7 @@ function navTo(page){
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
   if(page==='tasks')tkOpenPage();
+  if(page==='team')ttOpenPage();
   if(page==='lhrecovery')gsOnLHRPage();
   if(page==='projection')pjOnPage();
   closeSidebar();
@@ -7966,6 +8184,16 @@ function wireControls(){
   $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
   $('#lhrPendCsv').onclick=()=>lvExport(lhrPendingExport(),'csv','lh_pending_for_recovery','pending');
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
+
+  /* team tree */
+  $('#ttSearch').oninput=ttSearch;
+  $('#ttCsv').onclick=ttExport;
+  $('#ttExpand').onclick=()=>{TT_CLOSED=new Set();ttRender();ttSearch();};
+  $('#ttCollapse').onclick=()=>{
+    TT_CLOSED=new Set(ttChildren(TEAM_ROOT.email)
+      .filter(d=>ttChildren(d.email).length).map(d=>ttKey(d.email)));
+    ttRender();ttSearch();
+  };
 
   /* tasks */
   $('#tkAssign').onclick=tkAssign;
