@@ -519,7 +519,8 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar,body.projection-page .filterbar,
-body.tasks-page .filterbar,body.team-page .filterbar{display:none}
+body.tasks-page .filterbar,body.team-page .filterbar,
+body.reference-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
 .lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
 /* Recovery Amount · roomier rows, month in ink, total in indigo */
@@ -1093,6 +1094,26 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .lhr-diag code{background:#fff;border-radius:4px;padding:1px 6px;
   font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11px;}
 
+/* ---- Activity Tracker ---- */
+.rf-card{margin-top:12px;padding:15px 17px;}
+.rf-tools{margin-top:10px;}
+#rfSearch{width:320px;max-width:100%;padding:8px 11px;border:1px solid var(--line);
+  border-radius:9px;font-size:12.5px;font-family:inherit;outline:none;}
+#rfSearch:focus{border-color:var(--pine);}
+.rf-wrap{max-height:560px;margin-top:10px;}
+#rfTbl thead th{background:#F1F3FB;color:var(--pine);font-size:10.5px;font-weight:700;
+  text-align:left;white-space:nowrap;padding:11px 9px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:3;cursor:pointer;user-select:none;}
+#rfTbl thead th:hover{background:#E7E9F5;}
+#rfTbl thead th .arr{opacity:.55;font-size:9px;margin-left:3px;}
+#rfTbl tbody td{padding:8px 9px;font-size:11.5px;border-bottom:1px solid var(--line);
+  white-space:nowrap;}
+#rfTbl tbody td.num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;}
+#rfTbl tbody tr:hover td{background:#F8F9FE;}
+#rfSync{width:auto;min-width:0;height:30px;padding:0 14px;font-size:10px;font-weight:800;
+  letter-spacing:.02em;white-space:nowrap;}
+
 /* ---- Team Tree ----
    Column layout from the reference: the root on top, a bus feeding each
    direct report, and every branch running straight down its own column. */
@@ -1520,6 +1541,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
     </div>
     <nav class="nav">
       <button data-page="team"><span class="ic">🌳</span>Team Tree</button>
+      <button data-page="reference"><span class="ic">📄</span>Activity Tracker</button>
       <button data-page="overview" class="active"><span class="ic">🏠</span>Executive Overview</button>
       <button data-page="pendency"><span class="ic">📦</span>Pendency Analytics</button>
       <button data-page="value"><span class="ic">💰</span>Value-at-Risk</button>
@@ -2307,6 +2329,38 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
         </div>
       </div>
       <div id="docBody"></div>
+    </section>
+
+    <!-- ============ PAGE: REFERENCE SHEET ============ -->
+    <section class="page" id="page-reference">
+      <div class="card lhr-src" id="rfSrcBar">
+        <span class="lhr-src-dot" id="rfSrcDot"></span>
+        <div class="lhr-src-txt">
+          <b>Live source</b>
+          <span id="rfSrcSub">activity tracker workbook</span>
+        </div>
+        <span class="pill" id="rfSyncLbl">not synced yet</span>
+        <button class="tool" id="rfSync">REFRESH NOW</button>
+      </div>
+      <div class="lhr-src-err" id="rfSrcErr"></div>
+
+      <div class="card rf-card">
+        <div class="card-head">
+          <div><h3 id="rfTitle">Activity Tracker</h3>
+            <span class="sub">whatever the sheet holds · click a header to sort</span></div>
+          <div class="card-tools">
+            <span class="pill mv-lane-count" id="rfCount">—</span>
+            <button class="tool" id="rfCsv">CSV</button>
+          </div>
+        </div>
+        <div class="rf-tools"><input id="rfSearch" placeholder="Search any column…"></div>
+        <div class="lv-mini-wrap rf-wrap">
+          <table class="lv-mini" id="rfTbl">
+            <thead><tr id="rfHead"></tr></thead>
+            <tbody id="rfBody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ============ PAGE: TEAM TREE ============ -->
@@ -6080,6 +6134,120 @@ function gsStartAuto(){
   },GS_AUTO_MS);
 }
 /* =============================================================
+   ACTIVITY TRACKER
+   -------------------------------------------------------------
+   A live view of a second workbook. Nothing about its shape is
+   assumed: whatever columns the sheet has are what the table
+   shows, so the sheet can be reorganised without touching this
+   file. Same sharing requirement as the others — the workbook
+   must be "Anyone with the link · Viewer" or Google hands back a
+   sign-in page instead of CSV.
+============================================================= */
+const RF_ID='1pcdm8AkVMArppqgDfQ0AboBx96Jm25uAl8oFwd-kmNk';
+const RF_GID='0';
+let RF_ROWS=[], RF_COLS=[], RF_NUM={}, RF_SORT={k:null,dir:1}, RF_BUSY=false, RF_AT=null;
+
+function rfUrls(){
+  const base='https://docs.google.com/spreadsheets/d/'+RF_ID;
+  const cb='&_cb='+Date.now();
+  return [base+'/gviz/tq?tqx=out:csv&headers=1&gid='+encodeURIComponent(RF_GID)+cb,
+          base+'/export?format=csv&gid='+encodeURIComponent(RF_GID)+cb];
+}
+function rfStatus(state,label,err){
+  const dot=$('#rfSrcDot'), lbl=$('#rfSyncLbl'), box=$('#rfSrcErr');
+  if(dot)dot.className='lhr-src-dot '+(state||'');
+  if(lbl&&label!=null)lbl.textContent=label;
+  if(box){ if(err){box.innerHTML=err;box.classList.add('show');} else box.classList.remove('show'); }
+}
+async function rfSync(quiet){
+  if(RF_BUSY)return false;
+  RF_BUSY=true;
+  if(!quiet)rfStatus('busy','reading sheet…',null);
+  let lastErr=null;
+  for(const url of rfUrls()){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
+      const raw=gsParseCSV(text);
+      if(!raw.length)throw new Error('the sheet returned no rows');
+      /* reuse the header repair written for the loss view: a merged title on
+         row 1 would otherwise become Column_2, Column_3 … */
+      const norm=pjNormalise(raw);
+      RF_COLS=norm.cols; RF_ROWS=norm.rows;
+      RF_NUM={};
+      RF_COLS.forEach(c=>{
+        let n=0,t=0;
+        RF_ROWS.forEach(r=>{const v=r[c];if(v!==''&&v!=null){t++;if(!isNaN(pjNum(v)))n++;}});
+        RF_NUM[c]= t>0 && n/t>=0.7;
+      });
+      RF_AT=new Date().toISOString();
+      const tm=new Date(RF_AT).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      rfStatus('ok','synced '+tm+' · '+fmtN(RF_ROWS.length)+' rows',null);
+      rfRender();
+      RF_BUSY=false;
+      return true;
+    }catch(e){ lastErr=e; }
+  }
+  RF_BUSY=false;
+  rfStatus('err',RF_ROWS.length?'sync failed':'not synced yet',
+    'Could not read the activity tracker sheet ('+(lastErr?lastErr.message:'unknown error')+').<br>'+
+    'Open that workbook, choose <b>Share</b> and set <b>General access</b> to '+
+    '<b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.');
+  return false;
+}
+function rfVisible(){
+  const q=(($('#rfSearch')&&$('#rfSearch').value)||'').trim().toLowerCase();
+  let rows=q?RF_ROWS.filter(r=>RF_COLS.some(c=>String(r[c]??'').toLowerCase().includes(q))):RF_ROWS.slice();
+  if(RF_SORT.k){
+    const k=RF_SORT.k,d=RF_SORT.dir,num=RF_NUM[k];
+    rows.sort((a,b)=>{
+      if(num)return ((pjNum(a[k])||0)-(pjNum(b[k])||0))*d;
+      return String(a[k]??'').localeCompare(String(b[k]??''),undefined,{numeric:true})*d;
+    });
+  }
+  return rows;
+}
+function rfRender(){
+  const head=$('#rfHead'), body=$('#rfBody');
+  if(!head||!body)return;
+  if(!RF_COLS.length){
+    head.innerHTML='';
+    body.innerHTML='<tr><td style="text-align:center;padding:26px;color:var(--mut)">'+
+      'Nothing loaded yet — press REFRESH NOW.</td></tr>';
+    return;
+  }
+  head.innerHTML=RF_COLS.map(c=>
+    `<th data-k="${rmEsc(c)}" class="${RF_NUM[c]?'num':''}">${rmEsc(c)}<span class="arr">${
+      RF_SORT.k===c?(RF_SORT.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  head.querySelectorAll('th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    RF_SORT.dir=RF_SORT.k===k?-RF_SORT.dir:(RF_NUM[k]?-1:1);
+    RF_SORT.k=k; rfRender();
+  });
+  const rows=rfVisible();
+  const CAP=2000;
+  body.innerHTML=rows.slice(0,CAP).map(r=>'<tr>'+RF_COLS.map(c=>{
+    const v=r[c];
+    return `<td class="${RF_NUM[c]?'num':''}">${rmEsc(v===''||v==null?'—':v)}</td>`;
+  }).join('')+'</tr>').join('')
+    || `<tr><td colspan="${RF_COLS.length}" style="text-align:center;padding:22px;color:var(--mut)">No rows match that search.</td></tr>`;
+  const cnt=$('#rfCount');
+  if(cnt)cnt.textContent=fmtN(rows.length)+(rows.length!==RF_ROWS.length?' of '+fmtN(RF_ROWS.length):'')+' rows';
+}
+function rfExport(){
+  const rows=rfVisible();
+  if(!rows.length){alert('Nothing to export.');return;}
+  lvExport(rows,'csv','activity_tracker','activity');
+}
+function rfOpenPage(){
+  rfRender();
+  const age=RF_AT?(Date.now()-new Date(RF_AT).getTime()):Infinity;
+  if(age>GS_STALE_MS)rfSync(true);
+}
+
+/* =============================================================
    TEAM TREE
    -------------------------------------------------------------
    Straight from the flowchart sheet. The hierarchy is not stored
@@ -7098,9 +7266,9 @@ const AUTH_USERS={
   'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true, remarks:true},
   'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
   'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
   'm.arivazhagan@shadowfax.in':{pass:'Arivu@123',  name:'arivazhagan',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true}
+  'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -8077,6 +8245,7 @@ const PAGE_META={
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
   tasks:{t:'Tasks',c:'Assign work, then send it by email and WhatsApp'},
   team:{t:'Team Tree',c:'Who reports to whom, with contact details'},
+  reference:{t:'Activity Tracker',c:'Live view of the activity tracker workbook'},
   remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
@@ -8113,6 +8282,7 @@ function navTo(page){
   if(page==='remarks')rmPageOpen();
   if(page==='tasks')tkOpenPage();
   if(page==='team')ttOpenPage();
+  if(page==='reference')rfOpenPage();
   if(page==='lhrecovery')gsOnLHRPage();
   if(page==='projection')pjOnPage();
   closeSidebar();
@@ -8184,6 +8354,11 @@ function wireControls(){
   $('#lhrSummaryCsv').onclick=()=>lvExport(lhrSummaryExport(),'csv','lh_recovery_amount','summary');
   $('#lhrPendCsv').onclick=()=>lvExport(lhrPendingExport(),'csv','lh_pending_for_recovery','pending');
   $('#lhrDetailCsv').onclick=()=>lvExport(lhrDetailExport(),'csv','lh_recovery_detail','detail');
+
+  /* reference sheet */
+  $('#rfSync').onclick=()=>rfSync(false);
+  $('#rfSearch').oninput=rfRender;
+  $('#rfCsv').onclick=rfExport;
 
   /* team tree */
   $('#ttSearch').oninput=ttSearch;
