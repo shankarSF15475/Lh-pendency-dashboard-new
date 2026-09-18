@@ -1096,7 +1096,11 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 
 /* ---- Activity Tracker ---- */
 .rf-card{margin-top:12px;padding:15px 17px;}
-.rf-tools{margin-top:10px;}
+.rf-tools{margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.rf-w{display:flex;gap:5px;align-items:center;font-size:9.5px;font-weight:800;
+  letter-spacing:.05em;color:var(--mut);}
+.rf-wbtn{width:26px;height:26px;font-size:10px;font-weight:800;}
+.rf-wbtn.is-on{background:var(--pine);color:#fff;border-color:var(--pine);}
 #rfSearch{width:320px;max-width:100%;padding:8px 11px;border:1px solid var(--line);
   border-radius:9px;font-size:12.5px;font-family:inherit;outline:none;}
 #rfSearch:focus{border-color:var(--pine);}
@@ -1106,8 +1110,20 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
   position:sticky;top:0;z-index:3;cursor:pointer;user-select:none;}
 #rfTbl thead th:hover{background:#E7E9F5;}
 #rfTbl thead th .arr{opacity:.55;font-size:9px;margin-left:3px;}
-#rfTbl tbody td{padding:8px 9px;font-size:11.5px;border-bottom:1px solid var(--line);
-  white-space:nowrap;}
+/* fixed-width cells that wrap, rather than one endless line per row */
+#rfTbl{table-layout:auto;}
+#rfTbl tbody td{padding:9px 10px;font-size:11.5px;border-bottom:1px solid var(--line);
+  vertical-align:top;white-space:normal;}
+.rf-cell{width:340px;max-width:340px;line-height:1.55;word-break:break-word;
+  overflow-wrap:anywhere;}
+.rf-list{margin:0;padding-left:15px;display:grid;gap:3px;}
+.rf-list li{list-style:disc;color:var(--text);}
+.rf-list li::marker{color:var(--pine);}
+.rf-dash{color:var(--mut);}
+/* a narrow first column: it is usually the date */
+#rfTbl tbody tr td:first-child .rf-cell{width:92px;max-width:92px;font-weight:700;color:var(--ink);}
+#rfTbl.rf-wide .rf-cell{width:460px;max-width:460px;}
+#rfTbl.rf-narrow .rf-cell{width:250px;max-width:250px;}
 #rfTbl tbody td.num{text-align:right;font-family:'Consolas','SF Mono',ui-monospace,monospace;
   font-variant-numeric:tabular-nums;}
 #rfTbl tbody tr:hover td{background:#F8F9FE;}
@@ -2353,7 +2369,14 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
             <button class="tool" id="rfCsv">CSV</button>
           </div>
         </div>
-        <div class="rf-tools"><input id="rfSearch" placeholder="Search any column…"></div>
+        <div class="rf-tools">
+          <input id="rfSearch" placeholder="Search any column…">
+          <span class="rf-w">COLUMN WIDTH
+            <button class="tool rf-wbtn" data-w="narrow">S</button>
+            <button class="tool rf-wbtn is-on" data-w="normal">M</button>
+            <button class="tool rf-wbtn" data-w="wide">L</button>
+          </span>
+        </div>
         <div class="lv-mini-wrap rf-wrap">
           <table class="lv-mini" id="rfTbl">
             <thead><tr id="rfHead"></tr></thead>
@@ -6230,12 +6253,26 @@ function rfRender(){
   const CAP=2000;
   body.innerHTML=rows.slice(0,CAP).map(r=>'<tr>'+RF_COLS.map(c=>{
     const v=r[c];
-    return `<td class="${RF_NUM[c]?'num':''}">${rmEsc(v===''||v==null?'—':v)}</td>`;
+    if(RF_NUM[c])return `<td class="num">${rmEsc(v===''||v==null?'—':v)}</td>`;
+    return `<td><div class="rf-cell">${rfBullets(v)}</div></td>`;
   }).join('')+'</tr>').join('')
     || `<tr><td colspan="${RF_COLS.length}" style="text-align:center;padding:22px;color:var(--mut)">No rows match that search.</td></tr>`;
   const cnt=$('#rfCount');
   if(cnt)cnt.textContent=fmtN(rows.length)+(rows.length!==RF_ROWS.length?' of '+fmtN(RF_ROWS.length):'')+' rows';
 }
+/* The sheet writes an update as several lines in one cell, each prefixed with
+   * or # or -. Keep them as separate bullet lines instead of running them into
+   a single wide row: same content, readable at a glance. */
+function rfBullets(v){
+  const s=String(v==null?'':v).trim();
+  if(!s)return '<span class="rf-dash">—</span>';
+  const lines=s.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const bulletish=lines.length>1||/^[*#\-\u2022]/.test(lines[0]||'');
+  if(!bulletish)return rmEsc(s);
+  return '<ul class="rf-list">'+lines.map(l=>
+    '<li>'+rmEsc(l.replace(/^[*#\-\u2022]+\s*/,''))+'</li>').join('')+'</ul>';
+}
+
 function rfExport(){
   const rows=rfVisible();
   if(!rows.length){alert('Nothing to export.');return;}
@@ -8358,6 +8395,14 @@ function wireControls(){
   /* reference sheet */
   $('#rfSync').onclick=()=>rfSync(false);
   $('#rfSearch').oninput=rfRender;
+  $$('.rf-wbtn').forEach(b=>b.onclick=()=>{
+    $$('.rf-wbtn').forEach(x=>x.classList.remove('is-on'));
+    b.classList.add('is-on');
+    const t=$('#rfTbl');
+    t.classList.remove('rf-wide','rf-narrow');
+    if(b.dataset.w==='wide')t.classList.add('rf-wide');
+    if(b.dataset.w==='narrow')t.classList.add('rf-narrow');
+  });
   $('#rfCsv').onclick=rfExport;
 
   /* team tree */
