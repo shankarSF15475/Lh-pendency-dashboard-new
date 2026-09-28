@@ -1313,6 +1313,23 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .vh-sec{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--pine);margin:14px 0 6px;}
 .vh-more{margin:10px auto 0;display:block;}
 #page-bbd .lv-mini-wrap{max-height:none;}
+#bbdKpis{grid-template-columns:repeat(5,1fr);}
+@media(max-width:1200px){#bbdKpis{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}}
+.bbd-kpi{background:linear-gradient(180deg,var(--kb) 0%,#fff 72%);border-top:4px solid var(--kc);}
+.bbd-kpi .lab{color:var(--kc);font-weight:800;}
+.bbd-kpi .val{color:var(--kc);font-size:23px;}
+.bbd-kpi-tot{background:linear-gradient(135deg,#4338CA 0%,#6366F1 100%);border-top-color:#312E81;}
+.bbd-kpi-tot .lab,.bbd-kpi-tot .val,.bbd-kpi-tot .sub,.bbd-kpi-tot .bk-l,.bbd-kpi-tot .bk-v{color:#fff!important;}
+.bbd-kpi-tot .dot{background:#fff!important;}
+.bbd-kpi-tot .bk-bar{background:rgba(255,255,255,.25);}
+.bk-share{margin-left:auto;font-size:10px;font-weight:800;color:var(--kc);background:#fff;border:1px solid var(--kc);border-radius:999px;padding:1px 7px;letter-spacing:0;}
+.bk-bar{display:flex;height:6px;border-radius:999px;overflow:hidden;background:#E2E8F0;margin-top:10px;}
+.bk-bar i{display:block;height:100%;}
+.bk-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-top:8px;}
+.bk-b{display:flex;align-items:center;gap:5px;font-size:10.5px;}
+.bk-d{width:7px;height:7px;border-radius:2px;flex:none;}
+.bk-l{color:var(--mut);font-weight:600;}
+.bk-v{margin-left:auto;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
 #page-bbd #vhSection .lv-mini-wrap{max-height:78vh;}
 .mv-pivot tbody tr.bbd-zone-row td{background:#FFF4D6!important;color:#1E293B!important;font-weight:800;font-size:12px;border-top:1px solid #F0DDA8;border-bottom:2px solid #E9CF8A;}
 .bbd-zone-n{font-weight:600;color:var(--mut);font-size:11px;}
@@ -1663,7 +1680,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <div class="card lv-sec" style="margin-top:14px">
         <div class="card-head">
           <div><h3>Vehicles in Transit · Pending Load</h3>
-            <span class="sub" id="vhSub">One row per vehicle and trip. Click a row to see its route, manifests and AWBs.</span></div>
+            <span class="sub" id="vhSub">One row per vehicle and trip · National, Zonal, Intracity, Tertiary (LM - LM) only · in-transit ageing 6–30 days. Click a row to see its route, MM lanes and AWBs.</span></div>
           <div class="card-tools">
             <span class="pill mv-lane-count" id="vhCount">—</span>
             <button class="tool" id="vhCsv">CSV</button>
@@ -7143,7 +7160,7 @@ function pjBuildFilter(){
   btn.onclick=e=>{e.stopPropagation();
     const open=sel.classList.contains('open');
     $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));
-    if(!open)sel.classList.add('open');}; 
+    if(!open)sel.classList.add('open');};
   $('#pjMoveAll').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=true);sync();};
   $('#pjMoveNone').onclick=()=>{panel.querySelectorAll('input').forEach(c=>c.checked=false);sync();};
   $('#pjMoveClear').onclick=()=>{
@@ -7287,10 +7304,10 @@ const ucSorted=a=>[...new Set(a)].filter(x=>x&&x!=='Unknown').sort((x,y)=>String
    so "Intracity FMRTS" and "Intracity DC FMRTS" are NOT Intracity.
 ============================================================= */
 const BBD_TYPES=[
-  {k:'national',    label:'National',           clr:'#2B6CB0'},
-  {k:'tertiarylmlm',label:'Tertiary (LM - LM)', clr:'#6B46C1'},
-  {k:'intracity',   label:'Intracity',          clr:'#2C7A7B'},
-  {k:'zonal',       label:'Zonal',              clr:'#DD6B20'}
+  {k:'national',    label:'National',           clr:'#2563EB', bg:'#EFF6FF'},
+  {k:'tertiarylmlm',label:'Tertiary (LM - LM)', clr:'#7C3AED', bg:'#F5F3FF'},
+  {k:'intracity',   label:'Intracity',          clr:'#0D9488', bg:'#F0FDFA'},
+  {k:'zonal',       label:'Zonal',              clr:'#D97706', bg:'#FFFBEB'}
 ];
 const BBD_KEYS=new Set(BBD_TYPES.map(t=>t.k));
 const BBD_BANDS=[
@@ -7374,14 +7391,24 @@ function renderBBD(){
     if(BBD_METRIC!=='man')parts.push(fmtN(o.tMan.size)+' bags');
     return parts.join(' · ');
   };
-  const tot=bbdCell(all,null), crit=bbdCell(all,'16-30');
-  const cards=[{lab:'Value · 6–30 DAYS',clr:'var(--pine)',v:bbdFmt(tot),s:sub(all)+' · '+fmtN(allLanes.size)+' lanes'}]
-    .concat(BBD_TYPES.map(t=>{const P=per[t.k];
-      return {lab:t.label.toUpperCase(),clr:t.clr,v:bbdFmt(bbdCell(P.acc,null)),s:sub(P.acc)+' · '+fmtN(P.laneSet.size)+' lanes'};}))
-    .concat([{lab:'16–30 DAYS (OLDEST)',clr:'#EF4444',v:bbdFmt(crit),s:pct(crit,tot)+' of scope · '+fmtN(all.awb['16-30'])+' AWBs'}]);
-  $('#bbdKpis').innerHTML=cards.map(c=>`<div class="kpi" title="${rmEsc(c.lab+' — '+c.s)}">
-    <div class="lab"><span class="dot" style="background:${c.clr}"></span>${c.lab}</div>
-    <div class="val">${c.v}</div><div class="sub">${rmEsc(c.s)}</div></div>`).join('');
+  /* total = National + Tertiary + Intracity (exact) + Zonal, 6–30 days; each card split day-band-wise */
+  const BAND_CLR={'6-7':'#EAB308','8-10':'#F97316','11-15':'#EA580C','16-30':'#DC2626'};
+  const tot=bbdCell(all,null);
+  const cards=[{lab:'BBD SCOPE · 6–30 DAYS',clr:'#4338CA',bg:'#EEF2FF',acc:all,v:bbdFmt(tot),
+      s:sub(all)+' · '+fmtN(allLanes.size)+' lanes',share:''}]
+    .concat(BBD_TYPES.map(t=>{const P=per[t.k],v=bbdCell(P.acc,null);
+      return {lab:t.label.toUpperCase(),clr:t.clr,bg:t.bg,acc:P.acc,v:bbdFmt(v),
+        s:sub(P.acc)+' · '+fmtN(P.laneSet.size)+' lanes',share:pct(v,tot)+' of total'};}));
+  const bandsHtml=acc=>{
+    const T=bbdCell(acc,null)||0;
+    const bar=BBD_BANDS.map(b=>{const v=bbdCell(acc,b.label);return v&&T?`<i style="width:${(v/T*100).toFixed(2)}%;background:${BAND_CLR[b.label]}" title="${b.label} days: ${bbdFmt(v)}"></i>`:'';}).join('');
+    const rows=BBD_BANDS.map(b=>{const v=bbdCell(acc,b.label);
+      return `<div class="bk-b"><span class="bk-d" style="background:${BAND_CLR[b.label]}"></span><span class="bk-l">${b.label}d</span><span class="bk-v">${v?bbdFmt(v):'—'}</span></div>`;}).join('');
+    return `<div class="bk-bar">${bar}</div><div class="bk-grid">${rows}</div>`;
+  };
+  $('#bbdKpis').innerHTML=cards.map((c,i)=>`<div class="kpi bbd-kpi${i===0?' bbd-kpi-tot':''}" style="--kc:${c.clr};--kb:${c.bg}" title="${rmEsc(c.lab+' — '+c.s)}">
+    <div class="lab"><span class="dot" style="background:${c.clr}"></span>${c.lab}${c.share?`<span class="bk-share">${c.share}</span>`:''}</div>
+    <div class="val">${c.v}</div><div class="sub">${rmEsc(c.s)}</div>${bandsHtml(c.acc)}</div>`).join('');
 
   /* ---- the four tables ---- */
   const unit=BBD_METRIC==='awb'?'AWBs':BBD_METRIC==='man'?'Manifests':'Value';
@@ -7515,12 +7542,17 @@ function vhRouteInline(g){
   return `<span class="vh-route" title="${rmEsc(R.map(n=>n.name).join(' → '))}">`+
     show.map((x,j)=>(j?'<span class="a">→</span>':'')+(x.gap?`<span class="n">+${x.gap} stops</span>`:`<span class="${cls(x.i)}">${rmEsc(x.n.name)}</span>`)).join('')+'</span>';
 }
+function vhInScope(r){
+  const a=+r.intransit_ageing||0;
+  return a>=6&&a<=30&&BBD_KEYS.has(hovNorm(r.movement_type));
+}
 function vhBuildFilters(){
   const rerun=()=>{VH_LIMIT=100;renderVehicles();};
-  ucMcsel($('#vhFMove'),'Movement Type',ucSorted(RAW.map(r=>r.movement_type)),VH_SEL.move,rerun);
-  ucMcsel($('#vhFProc'),'Process Type',[LOSS_BAG,LOSS_SHIP,LOSS_NONE].filter(t=>RAW.some(r=>mvLossType(r)===t)),VH_SEL.proc,rerun);
-  ucMcsel($('#vhFAge'),'Intransit Ageing',VH_AGE.filter(b=>RAW.some(r=>vhAgeBand(+r.intransit_ageing||0)===b)),VH_SEL.age,rerun);
-  ucMcsel($('#vhFVendor'),'Vendor',ucSorted(RAW.map(r=>r.vendor_name)),VH_SEL.vendor,rerun);
+  const IN=RAW.filter(vhInScope);
+  ucMcsel($('#vhFMove'),'Movement Type',ucSorted(IN.map(r=>r.movement_type)),VH_SEL.move,rerun);
+  ucMcsel($('#vhFProc'),'Process Type',[LOSS_BAG,LOSS_SHIP,LOSS_NONE].filter(t=>IN.some(r=>mvLossType(r)===t)),VH_SEL.proc,rerun);
+  ucMcsel($('#vhFAge'),'Intransit Ageing',VH_AGE.filter(b=>IN.some(r=>vhAgeBand(+r.intransit_ageing||0)===b)),VH_SEL.age,rerun);
+  ucMcsel($('#vhFVendor'),'Vendor',ucSorted(IN.map(r=>r.vendor_name)),VH_SEL.vendor,rerun);
   VH_RAWREF=RAW;
 }
 function vhWire(){
@@ -7574,6 +7606,8 @@ function renderVehicles(){
   const m=new Map(); let noVeh=0;
   const hit=VH_Q?new Set():null;
   for(const r of FILTERED){
+    /* same scope as the BBD Sale tables: National / Tertiary (LM - LM) / Intracity (exact) / Zonal, ageing 6–30 days */
+    if(!vhInScope(r))continue;
     if(VH_SEL.move.size&&!VH_SEL.move.has(r.movement_type))continue;
     if(VH_SEL.vendor.size&&!VH_SEL.vendor.has(r.vendor_name))continue;
     if(VH_SEL.age.size&&!VH_SEL.age.has(vhAgeBand(+r.intransit_ageing||0)))continue;
@@ -7718,7 +7752,6 @@ function vhShowAwb(awb){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
-  'pushkar.verma@shadowfax.in':{pass:'pushkar@123',name:'pushkar verma',isAdmin:true, lhRecovery:true, remarks:true, wa:'917566662451'},
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true, tasks:true, wa:'919180203317'},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, wa:'917019052918'},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, analytics:true, wa:'916363726152'},
@@ -7739,7 +7772,7 @@ const AUTH_USERS={
   'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
   'abhay.singh7@shadowfax.in':   {pass:'Abhay@123',name:'Abhay singh',    isAdmin:false, lhRecovery:true, remarks:true, wa:'918299228059'},
-  };
+};
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
    every user sees the SAME value, not the moment their own browser loaded it. */
