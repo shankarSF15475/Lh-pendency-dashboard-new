@@ -1259,6 +1259,66 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .login-row a:hover{text-decoration:underline;}
 #resetMsg{display:none;font-size:12.5px;margin-top:14px;line-height:1.5;}
 #resetBtn{width:100%;margin-top:22px;padding:13px;border:none;border-radius:10px;color:#fff;font-weight:700;font-size:14.5px;}
+/* ---- BBD Sale + Vehicles pages ---- */
+.tl-btn{border:none;background:transparent;color:var(--mut);font-size:11px;font-weight:800;
+  padding:7px 13px;cursor:pointer;white-space:nowrap;}
+.tl-btn+.tl-btn{border-left:1px solid var(--line);}
+.tl-btn.is-on{background:var(--pine);color:#fff;}
+.bbd-fbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.bbd-fbar .mv-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.bbd-fbar .bbd-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.bbd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:14px;margin-top:14px;}
+@media(max-width:700px){.bbd-grid{grid-template-columns:1fr;}}
+.bbd-grid .card{margin:0;}
+.bbd-note{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.5;}
+.vh-search{padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px;min-width:260px;background:#fff;color:var(--text);}
+.vh-tbl td,.vh-tbl th{white-space:nowrap;}
+.vh-tbl tbody tr.vh-row{cursor:pointer;}
+.vh-tbl tbody tr.vh-row.open td{background:#EEF1F8;}
+.vh-tbl th.sortable{cursor:pointer;user-select:none;}
+.vh-tbl th.sortable:hover{text-decoration:underline;}
+.vh-route{display:inline-flex;align-items:center;gap:4px;flex-wrap:nowrap;font-size:11px;}
+.vh-route .n{padding:2px 7px;border-radius:6px;background:#F1F3FB;color:var(--ink);font-weight:700;}
+.vh-route .n.o{background:#E6F4EA;color:#166534;}
+.vh-route .n.d{background:#FDECEC;color:#991B1B;}
+.vh-route .a{color:var(--mut);}
+.vh-detail>td{background:#FBFBFE!important;padding:14px 16px!important;white-space:normal!important;}
+.vh-strip{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:4px 0 12px;}
+.vh-stop{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 11px;min-width:150px;}
+.vh-stop .r{font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--mut);}
+.vh-stop.o{border-color:#86EFAC;} .vh-stop.o .r{color:#166534;}
+.vh-stop.d{border-color:#FCA5A5;} .vh-stop.d .r{color:#991B1B;}
+.vh-stop .nm{font-size:12.5px;font-weight:800;color:var(--ink);margin:2px 0 3px;}
+.vh-stop .m{font-size:10.5px;color:var(--mut);}
+.vh-arrow{display:flex;align-items:center;padding:0 8px;color:var(--mut);font-size:16px;}
+.vh-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);margin-bottom:10px;}
+.vh-meta b{color:var(--ink);}
+.vh-sub{width:100%;border-collapse:collapse;font-size:11.5px;background:#fff;border:1px solid var(--line);border-radius:8px;}
+.vh-sub th{background:#F1F3FB;color:var(--pine);text-align:left;padding:6px 8px;font-weight:800;font-size:10.5px;}
+.vh-sub td{padding:5px 8px;border-top:1px solid #EEF0F5;}
+.vh-sub td.num,.vh-sub th.num{text-align:right;}
+.vh-sub tr.open>td{background:#FFF8E1;}
+.vh-sub .vh-awbs>td{background:#FAFAFD;padding:8px 10px 10px 26px;}
+.vh-link{color:var(--pine);font-weight:800;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;background:none;border:none;padding:0;font-size:inherit;font-family:inherit;}
+.vh-link:hover{color:#B45309;}
+.vh-modal-back{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:900;display:none;align-items:center;justify-content:center;padding:16px;}
+.vh-modal-back.on{display:flex;}
+.vh-modal{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+.vh-modal-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;}
+.vh-modal-h h3{margin:0;font-size:15px;color:var(--ink);}
+.vh-modal-h button{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;}
+.vh-modal-b{padding:14px 18px 18px;}
+.vh-kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 16px;margin-top:10px;}
+.vh-kv div{font-size:12px;} .vh-kv span{display:block;font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.04em;}
+.vh-sec{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--pine);margin:14px 0 6px;}
+.vh-more{margin:10px auto 0;display:block;}
+#page-bbd .lv-mini-wrap{max-height:none;}
+#page-bbd #vhSection .lv-mini-wrap{max-height:78vh;}
+.mv-pivot tbody tr.bbd-zone-row td{background:#FFF4D6!important;color:#1E293B!important;font-weight:800;font-size:12px;border-top:1px solid #F0DDA8;border-bottom:2px solid #E9CF8A;}
+.bbd-zone-n{font-weight:600;color:var(--mut);font-size:11px;}
+.mv-pivot tbody td.bbd-zone-cell{background:#FFFFFF!important;color:#1E293B!important;font-weight:800;text-align:center;vertical-align:middle;border-right:1px solid #E2E8F0;min-width:64px;}
+.mv-pivot tbody tr.bbd-zfirst td{border-top:1px solid #D5DAEA;}
+.bbd-vh-head{margin:22px 0 0;font-size:14px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px;}
 </style>
 </head>
 <body>
@@ -1386,6 +1446,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <button data-page="value"><span class="ic">💰</span>Value-at-Risk</button>
       <button data-page="rootcause"><span class="ic">🧭</span>Root Cause & What-If</button>
       <button data-page="laneview"><span class="ic">🛣️</span>Lane View</button>
+      <button data-page="bbd"><span class="ic">🏆</span>BBD Sale</button>
       <button data-page="manifest"><span class="ic">📋</span>Bag wise View</button>
       <button data-page="projection"><span class="ic">🎯</span>Current Loss vs Target</button>
       <button data-page="investigate"><span class="ic">🔍</span>Raw Data</Data></button>
@@ -1554,6 +1615,72 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
         </div>
       </div>
     </section>
+
+
+    <!-- ============ PAGE: BBD SALE ============ -->
+    <section class="page" id="page-bbd">
+      <div class="card mv-filterbar bbd-fbar">
+        <span class="mv-fb-ttl">FILTERS</span>
+        <div class="mv-filters">
+          <div id="bbdFZone"></div>
+          <div id="bbdFProc"></div>
+          <div id="bbdFDest"></div>
+          <button class="mv-fb-clear" id="bbdClear">✕ Clear all</button>
+        </div>
+        <div class="bbd-right">
+          <div class="mv-mode" id="bbdMetricTabs">
+            <button class="tl-btn" data-m="awb">AWB Count</button>
+            <button class="tl-btn" data-m="man">Manifest Count</button>
+            <button class="tl-btn is-on" data-m="value">₹ Product Value</button>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-grid" id="bbdKpis"></div>
+      <div class="lane-dot-legend" style="margin-top:12px">
+        <span><i class="lane-status-dot lane-dot-yellow"></i>6–7 days</span>
+        <span><i class="lane-status-dot lane-dot-orange"></i>8–10 days</span>
+        <span><i class="lane-status-dot lane-dot-darkorange"></i>11–15 days</span>
+        <span><i class="lane-status-dot lane-dot-red"></i>16–30 days</span>
+        <span style="margin-left:auto">Dot = oldest ageing band on the lane</span>
+      </div>
+      <div class="bbd-grid" id="bbdTables"></div>
+      <div class="bbd-note" id="bbdNote"></div>
+      <!-- Vehicles in transit (merged from the former Vehicles page) -->
+      <div id="vhSection">
+      <div class="bbd-vh-head">🚚 Vehicles in Transit</div>
+      <div class="card mv-filterbar bbd-fbar" style="margin-top:10px">
+        <span class="mv-fb-ttl">FILTERS</span>
+        <div class="mv-filters">
+          <input class="vh-search" id="vhSearch" type="text" placeholder="Search vehicle, trip, lane, manifest or AWB…">
+          <div id="vhFMove"></div>
+          <div id="vhFProc"></div>
+          <div id="vhFAge"></div>
+          <div id="vhFVendor"></div>
+          <button class="mv-fb-clear" id="vhClear">✕ Clear all</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="vhKpis"></div>
+      <div class="card lv-sec" style="margin-top:14px">
+        <div class="card-head">
+          <div><h3>Vehicles in Transit · Pending Load</h3>
+            <span class="sub" id="vhSub">One row per vehicle and trip. Click a row to see its route, manifests and AWBs.</span></div>
+          <div class="card-tools">
+            <span class="pill mv-lane-count" id="vhCount">—</span>
+            <button class="tool" id="vhCsv">CSV</button>
+          </div>
+        </div>
+        <div class="lv-mini-wrap" style="overflow-x:auto;margin-top:6px">
+          <table class="lv-mini mv-pivot vh-tbl" id="vhTbl">
+            <thead><tr id="vhHead"></tr></thead>
+            <tbody id="vhBody"></tbody>
+          </table>
+        </div>
+        <button class="tool vh-more" id="vhMore" style="display:none">Show more</button>
+        <div class="hint">The route is built from the shipments still pending on each vehicle: each AWB's MM_origin → MM_destination is one leg, ordered by when it was put in transit (IT Date/Time). Click a vehicle to drill into its MM origin → MM destination lanes, then the AWBs on each.</div>
+      </div>
+      </div>
+    </section>
+
 
     <!-- ============ PAGE: MANIFEST VS SHIPMENTS ============ -->
     <section class="page" id="page-manifest">
@@ -3129,6 +3256,8 @@ function updateAll(){
   refreshWhatIfEntities();
   renderTable(true);
   renderLaneView();
+  renderBBD();
+  renderVehicles();
   renderManifestView();
   renderHOV();
   renderLHRecovery();
@@ -7121,6 +7250,468 @@ function gsOnLHRPage(){
 </script>
 <script>
 /* =============================================================
+   SHARED — small multi-check dropdown (same look as Bag wise View)
+============================================================= */
+function ucMcsel(host,label,opts,sel,onChange){
+  if(!host)return;
+  /* drop selections that no longer exist in the data */
+  [...sel].forEach(v=>{if(!opts.includes(v))sel.delete(v);});
+  host.className='mv-mcsel';
+  const search=opts.length>12;
+  host.innerHTML=`<button class="mv-mcsel-btn"></button><div class="mv-mcsel-panel">`+
+    (search?`<div class="mv-mcsel-search"><input type="text" placeholder="Search ${rmEsc(label.toLowerCase())}…"></div>`:'')+
+    `<div class="mc-actions"><button data-a="all">All</button><button data-a="none">Clear</button></div>`+
+    (opts.length?opts.map(o=>`<label><input type="checkbox" value="${rmEsc(o)}"${sel.has(o)?' checked':''}><span>${rmEsc(o)}</span></label>`).join('')
+      :'<div class="msel-more">No values found</div>')+`</div>`;
+  const btn=host.querySelector('.mv-mcsel-btn'), panel=host.querySelector('.mv-mcsel-panel');
+  const paint=()=>{btn.classList.toggle('active',sel.size>0);btn.textContent=(sel.size?sel.size+' selected':label)+' ▾';};
+  paint();
+  const sync=()=>{sel.clear();panel.querySelectorAll('input[type=checkbox]:checked').forEach(c=>sel.add(c.value));paint();onChange();};
+  panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=sync);
+  btn.onclick=e=>{e.stopPropagation();const was=host.classList.contains('open');
+    $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));if(!was)host.classList.add('open');};
+  panel.onclick=e=>e.stopPropagation();
+  const sb=panel.querySelector('.mv-mcsel-search input');
+  if(sb)sb.oninput=()=>{const q=sb.value.trim().toLowerCase();
+    panel.querySelectorAll('label').forEach(l=>l.style.display=(!q||l.textContent.toLowerCase().includes(q))?'':'none');};
+  panel.querySelector('[data-a="all"]').onclick=()=>{panel.querySelectorAll('label').forEach(l=>{if(l.style.display!=='none')l.querySelector('input').checked=true;});sync();};
+  panel.querySelector('[data-a="none"]').onclick=()=>{panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);sync();};
+}
+document.addEventListener('click',()=>$$('.mv-mcsel.open').forEach(m=>m.classList.remove('open')));
+const ucSorted=a=>[...new Set(a)].filter(x=>x&&x!=='Unknown').sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+
+/* =============================================================
+   BBD SALE — four top-20 lane tables (National · Tertiary (LM - LM) ·
+   Intracity · Zonal), in-transit ageing 6 to 30 days.
+   movement_type must match exactly (case / spaces / punctuation ignored),
+   so "Intracity FMRTS" and "Intracity DC FMRTS" are NOT Intracity.
+============================================================= */
+const BBD_TYPES=[
+  {k:'national',    label:'National',           clr:'#2B6CB0'},
+  {k:'tertiarylmlm',label:'Tertiary (LM - LM)', clr:'#6B46C1'},
+  {k:'intracity',   label:'Intracity',          clr:'#2C7A7B'},
+  {k:'zonal',       label:'Zonal',              clr:'#DD6B20'}
+];
+const BBD_KEYS=new Set(BBD_TYPES.map(t=>t.k));
+const BBD_BANDS=[
+  {label:'6-7',  hcls:'age-b', dot:1},
+  {label:'8-10', hcls:'age-c', dot:2},
+  {label:'11-15',hcls:'age-d', dot:3},
+  {label:'16-30',hcls:'age-e', dot:4}
+];
+const BBD_MLBL={awb:'AWB count',man:'Manifest count',value:'Product value'};
+let BBD_METRIC='value', BBD_WIRED=false, BBD_RAWREF=null, BBD_EXPORT={};
+const BBD_SEL={zone:new Set(),proc:new Set(),dest:new Set()};
+const bbdBand=a=>a<=7?'6-7':a<=10?'8-10':a<=15?'11-15':'16-30';
+const bbdFmt=v=>BBD_METRIC==='value'?fmtINR(v):fmtN(v);
+
+function bbdNewAcc(){
+  const o={awb:{},val:{},man:{},tAwb:0,tVal:0,tMan:new Set()};
+  BBD_BANDS.forEach(b=>{o.awb[b.label]=0;o.val[b.label]=0;o.man[b.label]=new Set();});
+  return o;
+}
+function bbdAdd(o,band,r){
+  const v=r.Product_value||0;
+  o.awb[band]++;o.tAwb++;o.val[band]+=v;o.tVal+=v;
+  if(r.Manifest_code){o.man[band].add(r.Manifest_code);o.tMan.add(r.Manifest_code);}
+}
+function bbdCell(o,band){
+  if(BBD_METRIC==='awb')return band?o.awb[band]:o.tAwb;
+  if(BBD_METRIC==='man')return band?o.man[band].size:o.tMan.size;
+  return band?o.val[band]:o.tVal;
+}
+function bbdBuildFilters(){
+  const rerun=()=>renderBBD();
+  ucMcsel($('#bbdFZone'),'Zone',ucSorted(RAW.map(r=>r.Zone)),BBD_SEL.zone,rerun);
+  ucMcsel($('#bbdFProc'),'Process Type',[LOSS_BAG,LOSS_SHIP,LOSS_NONE].filter(t=>RAW.some(r=>mvLossType(r)===t)),BBD_SEL.proc,rerun);
+  ucMcsel($('#bbdFDest'),'MM Destination',ucSorted(RAW.map(r=>r.MM_destination)),BBD_SEL.dest,rerun);
+  BBD_RAWREF=RAW;
+}
+function bbdWire(){
+  $$('#bbdMetricTabs .tl-btn').forEach(b=>b.onclick=()=>{
+    BBD_METRIC=b.dataset.m;
+    $$('#bbdMetricTabs .tl-btn').forEach(x=>x.classList.toggle('is-on',x===b));
+    renderBBD();
+  });
+  $('#bbdClear').onclick=()=>{Object.values(BBD_SEL).forEach(s=>s.clear());bbdBuildFilters();renderBBD();};
+  $('#bbdTables').addEventListener('click',e=>{
+    const b=e.target.closest('[data-csv]');if(!b)return;
+    const rows=BBD_EXPORT[b.dataset.csv]||[];
+    if(!rows.length){alert('No lanes in this table.');return;}
+    lvExport(rows,'csv','bbd_top_lanes_'+b.dataset.csv+'_'+BBD_METRIC,'bbd_top_lanes');
+  });
+  BBD_WIRED=true;
+}
+function renderBBD(){
+  if(!$('#bbdTables'))return;
+  if(!BBD_WIRED)bbdWire();
+  if(BBD_RAWREF!==RAW)bbdBuildFilters();
+
+  const per={};BBD_TYPES.forEach(t=>per[t.k]={lanes:new Map(),acc:bbdNewAcc(),laneSet:new Set()});
+  const all=bbdNewAcc(), allLanes=new Set();
+  const skipped=new Map();
+  for(const r of FILTERED){
+    const a=+r.intransit_ageing||0;
+    if(a<6||a>30)continue;
+    if(BBD_SEL.zone.size&&!BBD_SEL.zone.has(r.Zone))continue;
+    if(BBD_SEL.dest.size&&!BBD_SEL.dest.has(r.MM_destination))continue;
+    if(BBD_SEL.proc.size&&!BBD_SEL.proc.has(mvLossType(r)))continue;
+    const mk=hovNorm(r.movement_type);
+    if(!BBD_KEYS.has(mk)){skipped.set(r.movement_type,(skipped.get(r.movement_type)||0)+1);continue;}
+    const band=bbdBand(a), lane=r['Lane Code']||'Unknown', P=per[mk];
+    let o=P.lanes.get(lane);
+    if(!o){o=bbdNewAcc();o.lane=lane;o.zones={};P.lanes.set(lane,o);}
+    bbdAdd(o,band,r);o.zones[r.Zone]=(o.zones[r.Zone]||0)+1;
+    bbdAdd(P.acc,band,r);P.laneSet.add(lane);
+    bbdAdd(all,band,r);allLanes.add(mk+'|'+lane);
+  }
+
+  /* ---- KPI cards: scope total · one per movement type · 16–30 days ---- */
+  const sub=o=>{
+    const parts=[];
+    if(BBD_METRIC!=='value')parts.push(fmtINR(o.tVal));
+    if(BBD_METRIC!=='awb')parts.push(fmtN(o.tAwb)+' AWBs');
+    if(BBD_METRIC!=='man')parts.push(fmtN(o.tMan.size)+' bags');
+    return parts.join(' · ');
+  };
+  const tot=bbdCell(all,null), crit=bbdCell(all,'16-30');
+  const cards=[{lab:'Value · 6–30 DAYS',clr:'var(--pine)',v:bbdFmt(tot),s:sub(all)+' · '+fmtN(allLanes.size)+' lanes'}]
+    .concat(BBD_TYPES.map(t=>{const P=per[t.k];
+      return {lab:t.label.toUpperCase(),clr:t.clr,v:bbdFmt(bbdCell(P.acc,null)),s:sub(P.acc)+' · '+fmtN(P.laneSet.size)+' lanes'};}))
+    .concat([{lab:'16–30 DAYS (OLDEST)',clr:'#EF4444',v:bbdFmt(crit),s:pct(crit,tot)+' of scope · '+fmtN(all.awb['16-30'])+' AWBs'}]);
+  $('#bbdKpis').innerHTML=cards.map(c=>`<div class="kpi" title="${rmEsc(c.lab+' — '+c.s)}">
+    <div class="lab"><span class="dot" style="background:${c.clr}"></span>${c.lab}</div>
+    <div class="val">${c.v}</div><div class="sub">${rmEsc(c.s)}</div></div>`).join('');
+
+  /* ---- the four tables ---- */
+  const unit=BBD_METRIC==='awb'?'AWBs':BBD_METRIC==='man'?'Manifests':'Value';
+  $('#bbdTables').innerHTML=BBD_TYPES.map(t=>{
+    const P=per[t.k];
+    const lanes=[...P.lanes.values()];
+    const top=lanes.sort((a,b)=>bbdCell(b,null)-bbdCell(a,null)).slice(0,20);
+    const zoneOf=o=>o._z||(o._z=Object.entries(o.zones).sort((a,b)=>b[1]-a[1])[0][0]);
+    /* group the top 20 by zone (North, South, West, East, then any other), each zone large → small */
+    const ZORD=['North','South','West','East'];
+    const zRank=z=>{const i=ZORD.indexOf(z);return i<0?ZORD.length:i;};
+    const zGroups=new Map();
+    top.forEach(o=>{const z=zoneOf(o);(zGroups.get(z)||zGroups.set(z,[]).get(z)).push(o);});
+    const zList=[...zGroups.entries()].sort((a,b)=>zRank(a[0])-zRank(b[0])||a[0].localeCompare(b[0]));
+    zList.forEach(([,l])=>l.sort((a,b)=>bbdCell(b,null)-bbdCell(a,null)));
+    const arr=zList.flatMap(([,l])=>l);
+    const dot=o=>{for(let i=BBD_BANDS.length-1;i>=0;i--){const b=BBD_BANDS[i];
+      if(o.awb[b.label]>0)return `<span class="lane-status-dot ${LANE_DOT_CLS[b.dot]}" title="Oldest band: ${b.label} days"></span>`;}return '';};
+    const ftOf=(list,b)=>{
+      if(BBD_METRIC==='man'){const s=new Set();list.forEach(o=>(b?o.man[b]:o.tMan).forEach(x=>s.add(x)));return s.size;}
+      return list.reduce((a,o)=>a+bbdCell(o,b),0);
+    };
+    const ft=b=>ftOf(arr,b);
+    BBD_EXPORT[t.k]=arr.map(o=>{
+      const row={Movement_type:t.label,Lane_Code:o.lane,Zone:zoneOf(o)};
+      BBD_BANDS.forEach(b=>row[b.label+' days ('+unit+')']=Math.round(bbdCell(o,b.label)));
+      row['Total ('+unit+')']=Math.round(bbdCell(o,null));
+      return row;
+    });
+    const laneRow=(o,i,l)=>
+      `<tr class="mv-lane-row${i===0?' bbd-zfirst':''}" style="cursor:default">`+
+      (i===0?`<td class="bbd-zone-cell" rowspan="${l.length}">${rmEsc(zoneOf(o))}</td>`:'')+
+      `<td>${dot(o)}${rmEsc(o.lane)}</td>`+
+      BBD_BANDS.map(b=>{const v=bbdCell(o,b.label);return `<td class="num">${v?bbdFmt(v):''}</td>`;}).join('')+
+      `<td class="num tot-col">${bbdFmt(bbdCell(o,null))}</td></tr>`;
+    const zoneRow=(z,l)=>
+      `<tr class="bbd-zone-row"><td colspan="2">${rmEsc(z)} Total <span class="bbd-zone-n">· ${l.length} lane${l.length===1?'':'s'}</span></td>`+
+      BBD_BANDS.map(b=>{const v=ftOf(l,b.label);return `<td class="num">${v?bbdFmt(v):''}</td>`;}).join('')+
+      `<td class="num">${bbdFmt(ftOf(l,null))}</td></tr>`;
+    const body=arr.length?zList.map(([z,l])=>l.map(laneRow).join('')+zoneRow(z,l)).join('')
+      :`<tr><td colspan="${BBD_BANDS.length+3}" style="text-align:center;padding:20px;color:var(--mut)">No ${rmEsc(t.label)} lanes aged 6–30 days in the current filters.</td></tr>`;
+    const foot=arr.length?`<tr><td colspan="2">Grand Total · top ${arr.length}</td>`+
+      BBD_BANDS.map(b=>`<td class="num">${bbdFmt(ft(b.label))}</td>`).join('')+`<td class="num">${bbdFmt(ft(null))}</td></tr>`:'';
+    return `<div class="card lv-sec">
+      <div class="card-head">
+        <div><h3><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.clr};margin-right:6px"></span>${rmEsc(t.label)} · Top 20 Lanes</h3>
+          <span class="sub">${BBD_MLBL[BBD_METRIC]} by Lane Code × ageing band · by zone (North, South, West, East) · lanes ranked high → low within each zone</span></div>
+        <div class="card-tools"><span class="pill mv-lane-count">top ${arr.length} of ${fmtN(lanes.length)}</span>
+          <button class="tool" data-csv="${t.k}">CSV</button></div>
+      </div>
+      <div class="lv-mini-wrap" style="overflow-x:auto">
+        <table class="lv-mini mv-pivot"><thead><tr>
+          <th style="text-align:center">Zone</th><th style="text-align:left">Lane code</th>
+          ${BBD_BANDS.map(b=>`<th class="num ${b.hcls}">${b.label} days</th>`).join('')}
+          <th class="num tot-col">Total</th></tr></thead>
+          <tbody>${body}</tbody><tfoot>${foot}</tfoot></table>
+      </div></div>`;
+  }).join('');
+
+  const sk=[...skipped.entries()].sort((a,b)=>b[1]-a[1]);
+  $('#bbdNote').innerHTML='Scope: in-transit ageing 6 to 30 days, global filters applied. Manifest counts are distinct; a bag spread across bands counts once in each band but once in Total. '+
+    (sk.length?'<br>Other movement types aged 6–30 days, not counted here: '+sk.slice(0,8).map(([k,n])=>'<b>'+rmEsc(k)+'</b> ('+fmtN(n)+' AWBs)').join(', ')+(sk.length>8?', …':'')+'.':'');
+}
+
+/* =============================================================
+   VEHICLES — pending load per vehicle × trip, with route
+   (origin → touch points → destination) and drill-down
+   vehicle → manifests → AWBs → AWB detail.
+============================================================= */
+const VH_SEL={move:new Set(),proc:new Set(),age:new Set(),vendor:new Set()};
+const VH_AGE=['0-5 days','6-7 days','8-10 days','11-15 days','16-30 days','30+ days'];
+const vhAgeBand=a=>a<=5?VH_AGE[0]:a<=7?VH_AGE[1]:a<=10?VH_AGE[2]:a<=15?VH_AGE[3]:a<=30?VH_AGE[4]:VH_AGE[5];
+let VH_Q='', VH_SORT={k:'val',dir:-1}, VH_LIMIT=100, VH_OPEN=null, VH_OPEN_MAN=null,
+    VH_GROUPS=[], VH_BYKEY=new Map(), VH_WIRED=false, VH_RAWREF=null, VH_QT=null;
+const VH_COLS=[
+  {k:'veh',  label:'Vehicle no.',  txt:1},
+  {k:'trip', label:'Trip code',    txt:1},
+  {k:'vendor',label:'Vendor',      txt:1},
+  {k:'route',label:'Route · origin → touch points → destination', nos:1},
+  {k:'lanes',label:'Lanes'},
+  {k:'man',  label:'Manifests'},
+  {k:'awb',  label:'AWBs'},
+  {k:'val',  label:'Value'},
+  {k:'age',  label:'Max ageing'}
+];
+/* "dd-mm-yyyy" + "hh:mm:ss" → sortable "yyyymmddhhmmss" */
+function vhTs(r){
+  const d=String(r['IT Date']||''), m=d.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  const t=String(r['IT Time']||'').replace(/\D/g,'').padEnd(6,'0').slice(0,6);
+  return m?m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0')+t:(d?'9'+d:'');
+}
+const vhOk=v=>v&&v!=='Unknown';
+/* every leg is the shipment's MM origin → MM destination */
+function vhLeg(r){
+  return [r.MM_origin||'Unknown',r.MM_destination||'Unknown'];
+}
+/* order the stops: bags loaded earliest first, then follow each leg */
+function vhRoute(rows){
+  const nodes=new Map(), edges=new Map();
+  const node=n=>{let o=nodes.get(n);if(!o){o={name:n,loadM:new Set(),dropM:new Set(),loadA:0,dropA:0,ts:'~'};nodes.set(n,o);}return o;};
+  for(const r of rows){
+    const [f,t]=vhLeg(r); if(!vhOk(f)&&!vhOk(t))continue;
+    const F=node(f||'Unknown'), T=node(t||'Unknown'), ts=vhTs(r)||'~';
+    F.loadA++;T.dropA++;
+    if(r.Manifest_code){F.loadM.add(r.Manifest_code);T.dropM.add(r.Manifest_code);}
+    if(ts<F.ts)F.ts=ts;
+    if(F.name!==T.name){const k=F.name+'\u0001'+T.name;if(!edges.has(k))edges.set(k,[F.name,T.name]);}
+  }
+  const indeg=new Map([...nodes.keys()].map(n=>[n,0])), out=new Map();
+  for(const [f,t] of edges.values()){indeg.set(t,indeg.get(t)+1);(out.get(f)||out.set(f,[]).get(f)).push(t);}
+  const byTime=(a,b)=>{const A=nodes.get(a),B=nodes.get(b);return A.ts<B.ts?-1:A.ts>B.ts?1:a.localeCompare(b);};
+  const order=[], done=new Set();
+  let ready=[...nodes.keys()].filter(n=>indeg.get(n)===0).sort(byTime);
+  while(order.length<nodes.size){
+    if(!ready.length){ /* a loop: take the earliest remaining stop */
+      ready=[...nodes.keys()].filter(n=>!done.has(n)).sort(byTime).slice(0,1);
+    }
+    const n=ready.shift(); if(done.has(n))continue;
+    done.add(n);order.push(n);
+    (out.get(n)||[]).forEach(t=>{indeg.set(t,indeg.get(t)-1);if(indeg.get(t)<=0&&!done.has(t))ready.push(t);});
+    ready.sort(byTime);
+  }
+  return order.map(n=>nodes.get(n));
+}
+function vhRouteInline(g){
+  if(!g.route)g.route=vhRoute(g.rows);
+  const R=g.route; if(!R.length)return '<span class="a">—</span>';
+  const cls=i=>i===0?'n o':i===R.length-1?'n d':'n';
+  let show=R.map((n,i)=>({n,i}));
+  if(R.length>5)show=[show[0],show[1],{gap:R.length-4},show[R.length-2],show[R.length-1]];
+  return `<span class="vh-route" title="${rmEsc(R.map(n=>n.name).join(' → '))}">`+
+    show.map((x,j)=>(j?'<span class="a">→</span>':'')+(x.gap?`<span class="n">+${x.gap} stops</span>`:`<span class="${cls(x.i)}">${rmEsc(x.n.name)}</span>`)).join('')+'</span>';
+}
+function vhBuildFilters(){
+  const rerun=()=>{VH_LIMIT=100;renderVehicles();};
+  ucMcsel($('#vhFMove'),'Movement Type',ucSorted(RAW.map(r=>r.movement_type)),VH_SEL.move,rerun);
+  ucMcsel($('#vhFProc'),'Process Type',[LOSS_BAG,LOSS_SHIP,LOSS_NONE].filter(t=>RAW.some(r=>mvLossType(r)===t)),VH_SEL.proc,rerun);
+  ucMcsel($('#vhFAge'),'Intransit Ageing',VH_AGE.filter(b=>RAW.some(r=>vhAgeBand(+r.intransit_ageing||0)===b)),VH_SEL.age,rerun);
+  ucMcsel($('#vhFVendor'),'Vendor',ucSorted(RAW.map(r=>r.vendor_name)),VH_SEL.vendor,rerun);
+  VH_RAWREF=RAW;
+}
+function vhWire(){
+  $('#vhSearch').oninput=e=>{clearTimeout(VH_QT);VH_QT=setTimeout(()=>{VH_Q=e.target.value.trim().toLowerCase();VH_LIMIT=100;renderVehicles();},250);};
+  $('#vhClear').onclick=()=>{Object.values(VH_SEL).forEach(s=>s.clear());VH_Q='';$('#vhSearch').value='';VH_LIMIT=100;vhBuildFilters();renderVehicles();};
+  $('#vhMore').onclick=()=>{VH_LIMIT+=100;vhRenderTable();};
+  $('#vhCsv').onclick=()=>{
+    if(!VH_GROUPS.length){alert('No vehicles in the current filters.');return;}
+    lvExport(VH_GROUPS.map(g=>{if(!g.route)g.route=vhRoute(g.rows);return {
+      Vehicle:g.veh,Trip:g.trip,Vendor:g.vendor,
+      Origin:g.route[0]?g.route[0].name:'',
+      Touch_points:g.route.slice(1,-1).map(n=>n.name).join(' > '),
+      Destination:g.route.length>1?g.route[g.route.length-1].name:'',
+      Lanes:[...g.laneSet].join(', '),Manifests:g.manSet.size,AWBs:g.awb,Value:Math.round(g.val),Max_ageing:g.age};}),
+      'csv','vehicles_pending_load','vehicles');
+  };
+  $('#vhHead').onclick=e=>{
+    const th=e.target.closest('th[data-k]');if(!th)return;
+    const c=VH_COLS.find(x=>x.k===th.dataset.k);
+    VH_SORT=VH_SORT.k===c.k?{k:c.k,dir:-VH_SORT.dir}:{k:c.k,dir:c.txt?1:-1};
+    vhSortGroups();vhRenderTable();
+  };
+  $('#vhBody').onclick=e=>{
+    const a=e.target.closest('[data-act]');
+    if(a){e.stopPropagation();
+      if(a.dataset.act==='man'){VH_OPEN_MAN=VH_OPEN_MAN===a.dataset.v?null:a.dataset.v;vhRenderTable();}
+      else if(a.dataset.act==='awb')vhShowAwb(a.dataset.v);
+      return;}
+    const tr=e.target.closest('tr.vh-row');if(!tr)return;
+    VH_OPEN=VH_OPEN===tr.dataset.key?null:tr.dataset.key;VH_OPEN_MAN=null;vhRenderTable();
+  };
+  if(!$('#vhModal')){
+    document.body.insertAdjacentHTML('beforeend',
+      `<div class="vh-modal-back" id="vhModal"><div class="vh-modal"><div class="vh-modal-h"><h3 id="vhModalT"></h3><button id="vhModalX">✕ Close</button></div><div class="vh-modal-b" id="vhModalB"></div></div></div>`);
+    $('#vhModal').onclick=e=>{if(e.target.id==='vhModal')$('#vhModal').classList.remove('on');};
+    $('#vhModalX').onclick=()=>$('#vhModal').classList.remove('on');
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#vhModal').classList.remove('on');});
+  }
+  VH_WIRED=true;
+}
+function vhSortGroups(){
+  const k=VH_SORT.k,d=VH_SORT.dir;
+  const val=g=>k==='lanes'?g.laneSet.size:k==='man'?g.manSet.size:g[k];
+  VH_GROUPS.sort((a,b)=>{const x=val(a),y=val(b);
+    return (typeof x==='string'?String(x).localeCompare(String(y),undefined,{numeric:true}):(x-y))*d;});
+}
+function renderVehicles(){
+  if(!$('#vhBody'))return;
+  if(!VH_WIRED)vhWire();
+  if(VH_RAWREF!==RAW)vhBuildFilters();
+  const m=new Map(); let noVeh=0;
+  const hit=VH_Q?new Set():null;
+  for(const r of FILTERED){
+    if(VH_SEL.move.size&&!VH_SEL.move.has(r.movement_type))continue;
+    if(VH_SEL.vendor.size&&!VH_SEL.vendor.has(r.vendor_name))continue;
+    if(VH_SEL.age.size&&!VH_SEL.age.has(vhAgeBand(+r.intransit_ageing||0)))continue;
+    if(VH_SEL.proc.size&&!VH_SEL.proc.has(mvLossType(r)))continue;
+    if(!r.vehicle_number){noVeh++;continue;}
+    const key=r.vehicle_number+'|'+(r.trip_code||'');
+    let g=m.get(key);
+    if(!g){g={key,veh:r.vehicle_number,trip:r.trip_code||'—',vendors:{},rows:[],awb:0,val:0,age:0,manSet:new Set(),laneSet:new Set(),route:null};m.set(key,g);}
+    g.rows.push(r);g.awb++;g.val+=r.Product_value||0;
+    const a=+r.intransit_ageing||0;if(a>g.age)g.age=a;
+    if(r.Manifest_code)g.manSet.add(r.Manifest_code);
+    g.laneSet.add(r['Lane Code']);
+    g.vendors[r.vendor_name]=(g.vendors[r.vendor_name]||0)+1;
+    if(hit&&!hit.has(key)&&(
+      r.vehicle_number.toLowerCase().includes(VH_Q)||(r.trip_code||'').toLowerCase().includes(VH_Q)||
+      String(r['Lane Code']).toLowerCase().includes(VH_Q)||(r.Manifest_code||'').toLowerCase().includes(VH_Q)||
+      (r.Awb_number||'').toLowerCase().includes(VH_Q)))hit.add(key);
+  }
+  VH_GROUPS=[...m.values()].filter(g=>!hit||hit.has(g.key));
+  VH_GROUPS.forEach(g=>{g.vendor=Object.entries(g.vendors).sort((a,b)=>b[1]-a[1])[0][0];});
+  VH_BYKEY=new Map(VH_GROUPS.map(g=>[g.key,g]));
+  if(VH_OPEN&&!VH_BYKEY.has(VH_OPEN)){VH_OPEN=null;VH_OPEN_MAN=null;}
+  vhSortGroups();
+
+  /* KPIs */
+  const vehs=new Set(),mans=new Set(),lanes=new Set();let awb=0,val=0;
+  VH_GROUPS.forEach(g=>{vehs.add(g.veh);g.manSet.forEach(x=>mans.add(x));g.laneSet.forEach(x=>lanes.add(x));awb+=g.awb;val+=g.val;});
+  const cards=[
+    {lab:'VEHICLES',clr:'var(--pine)',v:fmtN(vehs.size),s:fmtN(VH_GROUPS.length)+' vehicle trips'},
+    {lab:'VALUE ON BOARD',clr:'#E53E3E',v:fmtINR(val),s:'Sum of Product_value pending'},
+    {lab:'AWBS ON BOARD',clr:'#DD6B20',v:fmtN(awb),s:(vehs.size?fmtN(Math.round(awb/vehs.size)):0)+' per vehicle on average'},
+    {lab:'MANIFESTS',clr:'#2B6CB0',v:fmtN(mans.size),s:'distinct bags on these vehicles'},
+    {lab:'LANES',clr:'#6B46C1',v:fmtN(lanes.size),s:'distinct Lane Codes covered'},
+    {lab:'NO VEHICLE TAGGED',clr:'#94A3B8',v:fmtN(noVeh),s:'AWBs with a blank vehicle_number (left out)'}
+  ];
+  $('#vhKpis').innerHTML=cards.map(c=>`<div class="kpi"><div class="lab"><span class="dot" style="background:${c.clr}"></span>${c.lab}</div>
+    <div class="val">${c.v}</div><div class="sub">${rmEsc(c.s)}</div></div>`).join('');
+  $('#vhCount').textContent=fmtN(VH_GROUPS.length)+' vehicle trips';
+  vhRenderTable();
+}
+function vhRenderTable(){
+  const arrow=k=>VH_SORT.k===k?(VH_SORT.dir<0?' ▼':' ▲'):'';
+  $('#vhHead').innerHTML=VH_COLS.map(c=>`<th class="${c.nos?'':'sortable '}${c.txt||c.nos?'':'num'}"${c.nos?'':` data-k="${c.k}"`} style="${c.txt||c.nos?'text-align:left':''}">${c.label}${arrow(c.k)}</th>`).join('');
+  const show=VH_GROUPS.slice(0,VH_LIMIT);
+  $('#vhBody').innerHTML=show.length?show.map(g=>{
+    const open=VH_OPEN===g.key;
+    return `<tr class="vh-row mv-lane-row${open?' open':''}" data-key="${rmEsc(g.key)}">
+      <td><b>${open?'▾':'▸'} ${rmEsc(g.veh)}</b></td><td class="mono">${rmEsc(g.trip)}</td><td>${rmEsc(g.vendor)}</td>
+      <td>${vhRouteInline(g)}</td>
+      <td class="num">${fmtN(g.laneSet.size)}</td><td class="num">${fmtN(g.manSet.size)}</td>
+      <td class="num">${fmtN(g.awb)}</td><td class="num tot-col">${fmtINR(g.val)}</td><td class="num">${g.age} d</td></tr>`+
+      (open?`<tr class="vh-detail"><td colspan="${VH_COLS.length}">${vhDetail(g)}</td></tr>`:'');
+  }).join(''):`<tr><td colspan="${VH_COLS.length}" style="text-align:center;padding:20px;color:var(--mut)">No vehicles match the current filters.</td></tr>`;
+  const more=$('#vhMore');
+  more.style.display=VH_GROUPS.length>VH_LIMIT?'block':'none';
+  more.textContent='Show more ('+fmtN(Math.min(VH_LIMIT,VH_GROUPS.length))+' of '+fmtN(VH_GROUPS.length)+' shown)';
+}
+const vhPl=(n,w)=>fmtN(n)+' '+w+(n===1?'':'s');
+function vhDetail(g){
+  if(!g.route)g.route=vhRoute(g.rows);
+  const R=g.route;
+  const strip=R.map((n,i)=>{
+    const role=R.length===1?'ORIGIN':i===0?'ORIGIN':i===R.length-1?'DESTINATION':'TOUCH POINT '+i;
+    const cls=i===0?' o':i===R.length-1&&R.length>1?' d':'';
+    const bits=[];
+    if(n.loadM.size||n.loadA)bits.push('⬆ loads '+vhPl(n.loadM.size,'bag')+' · '+vhPl(n.loadA,'AWB'));
+    if(n.dropM.size||n.dropA)bits.push('⬇ drops '+vhPl(n.dropM.size,'bag')+' · '+vhPl(n.dropA,'AWB'));
+    return (i?'<div class="vh-arrow">→</div>':'')+`<div class="vh-stop${cls}"><div class="r">${role}</div><div class="nm">${rmEsc(n.name)}</div><div class="m">${bits.join('<br>')}</div></div>`;
+  }).join('');
+  /* MM lanes (MM origin → MM destination) on this vehicle trip */
+  const mm=new Map();
+  for(const r of g.rows){
+    const [f,t]=vhLeg(r), k=f+' → '+t;
+    let o=mm.get(k);
+    if(!o){o={code:k,from:f,to:t,lanes:new Set(),mans:new Set(),procs:new Set(),ts:'~',it:'',rows:[],val:0,age:0};mm.set(k,o);}
+    o.rows.push(r);o.val+=r.Product_value||0;o.lanes.add(r['Lane Code']);
+    if(r.Manifest_code)o.mans.add(r.Manifest_code);
+    o.procs.add(mvLossType(r));
+    const ts=vhTs(r);if(ts&&ts<o.ts){o.ts=ts;o.it=((r['IT Date']||'')+' '+(r['IT Time']||'')).trim();}
+    const a=+r.intransit_ageing||0;if(a>o.age)o.age=a;
+  }
+  const mans=[...mm.values()].sort((a,b)=>b.val-a.val);
+  const seals=[...new Set(g.rows.map(r=>r.seal_number).filter(Boolean))];
+  const meta=`<div class="vh-meta"><span>Vehicle <b>${rmEsc(g.veh)}</b></span><span>Trip <b>${rmEsc(g.trip)}</b></span>
+    <span>Vendor <b>${rmEsc(g.vendor)}</b></span><span>Lanes <b>${[...g.laneSet].map(rmEsc).join(', ')}</b></span>
+    ${seals.length?`<span>Seal <b>${seals.slice(0,4).map(rmEsc).join(', ')}${seals.length>4?' …':''}</b></span>`:''}</div>`;
+  const mrows=mans.map(o=>{
+    const open=VH_OPEN_MAN===o.code;
+    const awbTbl=open?`<tr class="vh-awbs"><td colspan="9"><table class="vh-sub"><thead><tr>
+        <th>AWB</th><th>Manifest</th><th>Manifest status</th><th>Client</th><th>Movement type</th><th>POD</th><th>HOV</th><th>Flag</th><th class="num">Ageing</th><th class="num">Value</th></tr></thead><tbody>`+
+      o.rows.slice().sort((a,b)=>(b.Product_value||0)-(a.Product_value||0)).map(r=>`<tr>
+        <td><button class="vh-link" data-act="awb" data-v="${rmEsc(r.Awb_number)}">${rmEsc(r.Awb_number)}</button></td>
+        <td class="mono">${rmEsc(r.Manifest_code||'—')}</td><td>${rmEsc(r.Manifest_status)}</td>
+        <td>${rmEsc(r.Client)}</td><td>${rmEsc(r.movement_type)}</td>
+        <td>${rmEsc(r['POD Name'])}</td><td>${rmEsc(r.HOV_flag)}</td><td>${rmEsc(r.flag)}</td>
+        <td class="num">${r.intransit_ageing} d</td><td class="num">${fmtINR(r.Product_value)}</td></tr>`).join('')+
+      `</tbody></table></td></tr>`:'';
+    return `<tr class="${open?'open':''}">
+      <td><button class="vh-link" data-act="man" data-v="${rmEsc(o.code)}">${open?'▾':'▸'} ${rmEsc(o.from)} → ${rmEsc(o.to)}</button></td>
+      <td>${[...o.lanes].map(rmEsc).join(', ')}</td><td>${[...o.procs].map(rmEsc).join(', ')}</td><td>${rmEsc(o.it||'—')}</td>
+      <td class="num">${fmtN(o.mans.size)}</td>
+      <td class="num"><button class="vh-link" data-act="man" data-v="${rmEsc(o.code)}">${fmtN(o.rows.length)}</button></td>
+      <td class="num">${fmtINR(o.val)}</td><td class="num">${o.age} d</td></tr>`+awbTbl;
+  }).join('');
+  return `<div class="vh-sec">ROUTE (MM ORIGIN → MM DESTINATION) · ${R.length} STOP${R.length===1?'':'S'}</div><div class="vh-strip">${strip||'<span class="hint">No MM origin / destination on these rows.</span>'}</div>
+    ${meta}
+    <div class="vh-sec">MM LANES ON THIS VEHICLE · ${fmtN(mans.length)} (click a lane or its AWB count to see the AWBs)</div>
+    <table class="vh-sub"><thead><tr><th>MM origin → MM destination</th><th>Lane code</th><th>Process type</th>
+      <th>First in-transit at</th><th class="num">Manifests</th><th class="num">AWBs</th><th class="num">Value</th><th class="num">Max ageing</th></tr></thead>
+      <tbody>${mrows}</tbody></table>`;
+}
+function vhShowAwb(awb){
+  const r=FILTERED.find(x=>x.Awb_number===awb)||RAW.find(x=>x.Awb_number===awb);
+  if(!r)return;
+  const g=VH_BYKEY.get(r.vehicle_number+'|'+(r.trip_code||''));
+  const R=g?(g.route||(g.route=vhRoute(g.rows))):[];
+  const [lf,lt]=vhLeg(r);
+  const kv=(k,v)=>`<div><span>${k}</span>${rmEsc(v==null||v===''?'—':v)}</div>`;
+  const tripRoute=R.length?`<div class="vh-route" style="flex-wrap:wrap;row-gap:6px">`+R.map((n,i)=>
+    (i?'<span class="a">→</span>':'')+`<span class="n${n.name===lf?' o':n.name===lt?' d':''}">${rmEsc(n.name)}</span>`).join('')+
+    `</div><div class="hint" style="margin-top:6px">Green = this AWB's MM origin · red = its MM destination.</div>`:'<div class="hint">No route on this vehicle.</div>';
+  $('#vhModalT').textContent='AWB '+awb;
+  $('#vhModalB').innerHTML=
+    `<div class="vh-sec">JOURNEY</div>
+     <div class="vh-kv">${kv('MM origin',r.MM_origin)}${kv('MM destination',r.MM_destination)}
+       ${kv('Lane code',r['Lane Code'])}${kv('Lane type',r['Lane Type'])}${kv('Movement type',r.movement_type)}${kv('Zone',r.Zone)}</div>
+     <div class="vh-sec">VEHICLE ${rmEsc(r.vehicle_number||'—')} · TRIP ${rmEsc(r.trip_code||'—')} · FULL ROUTE</div>${tripRoute}
+     <div class="vh-sec">SHIPMENT</div>
+     <div class="vh-kv">${kv('Product value',fmtINR(r.Product_value))}${kv('In-transit ageing',r.intransit_ageing+' days')}
+       ${kv('Client',r.Client)}${kv('Flag',r.flag)}${kv('HOV',r.HOV_flag)}${kv('Volumetric',r.Volumetric_flag)}${kv('POD name',r['POD Name'])}
+       ${kv('Manifest',r.Manifest_code)}${kv('Manifest status',r.Manifest_status)}${kv('Process type',mvLossType(r))}
+       ${kv('In-transit date / time',(r['IT Date']||'')+' '+(r['IT Time']||''))}${kv('Seal number',r.seal_number)}
+       ${kv('MM code',r.MM_code)}${kv('Vendor',r.vendor_name)}${kv('Misroute location',r.misroute_location)}</div>`;
+  $('#vhModal').classList.add('on');
+}
+</script>
+<script>
+/* =============================================================
    LOGIN · UPLOAD · NAV · BOOT
 ============================================================= */
 
@@ -7146,7 +7737,7 @@ const AUTH_USERS={
   'm.arivazhagan@shadowfax.in':{pass:'Arivu@123',  name:'arivazhagan',    isAdmin:false,  lhRecovery:false, remarks:true},
   'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh',    isAdmin:false,  lhRecovery:false, remarks:true,Wa:'918299228059'},
+  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918299228059'},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -8114,6 +8705,8 @@ const PAGE_META={
   value:{t:'Value-at-Risk',c:'Where the money is stuck — vendors, HOV, ABC, PODs'},
   rootcause:{t:'Root Cause & What-If',c:'Diagnose slow lanes and simulate recovery'},
   laneview:{t:'Lane View',c:'Top lanes, lane-type rollups and AWB-level detail'},
+  bbd:{t:'BBD Sale',c:'Top 20 lanes · National, Tertiary, Intracity, Zonal · in-transit ageing 6–30 days'},
+  vehicles:{t:'Vehicles',c:'Pending load per vehicle · route touch points · manifest and AWB drill-down'},
   manifest:{t:'Bag wise View',c:'Lane→manifest pivots and shipment-level detail'},
   projection:{t:'Current Loss vs Target',c:'LH loss view against the loss target'},
   investigate:{t:'Base Data',c:'Searchable AWB-level base table'},
