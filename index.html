@@ -1679,7 +1679,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <span class="bbd-dt-ctx" id="bbdDtCtx">All BBD scope</span>
           <span class="pill" id="bbdDtCount">0 rows</span>
           <span class="pill" id="bbdDtVal">₹0</span>
-          <input class="vh-search" id="bbdDtSearch" type="text" placeholder="Search manifest, lane, trip or vehicle…" style="min-width:240px">
+          <input class="vh-search" id="bbdDtSearch" type="text" placeholder="Search manifest, MM origin / destination, lane, trip or vehicle…" style="min-width:300px">
           <button class="mv-fb-clear" id="bbdDtReset">✕ Show all BBD scope</button>
           <div style="margin-left:auto;display:flex;gap:6px"><button class="tool" id="bbdDtCsv">CSV</button></div>
         </div>
@@ -7417,7 +7417,8 @@ const BBD_DT_PG=50;
 const BBD_DT_COLS=[
   {k:'Manifest_code',label:'Manifest Code',cls:'mono'},
   {k:'Manifest_status',label:'Manifest Status'},
-  {k:'Lane Code',label:'Lane Code'},
+  {k:'MM_origin',label:'MM Origin'},
+  {k:'MM_destination',label:'MM Destination'},
   {k:'Ageing bucket',label:'Ageing Bucket'},
   {k:'intransit_ageing',label:'In-transit',num:1},
   {k:'ShipmentInManifest',label:'AWB Created',num:1},
@@ -7442,7 +7443,7 @@ function bbdRenderDetail(){
     if(D.types&&!D.types.has(hovNorm(r.movement_type)))return false;
     if(D.lanes&&!D.lanes.has(r['Lane Code']||'Unknown'))return false;
     if(D.band&&bbdBand(+r.intransit_ageing||0)!==D.band)return false;
-    if(q&&![r.Manifest_code,r['Lane Code'],r.trip_code,r.vehicle_number,r.Manifest_status].some(v=>String(v||'').toLowerCase().includes(q)))return false;
+    if(q&&![r.Manifest_code,r['Lane Code'],r.MM_origin,r.MM_destination,r.trip_code,r.vehicle_number,r.Manifest_status].some(v=>String(v||'').toLowerCase().includes(q)))return false;
     return true;
   });
   const S=BBD_DT_SORT, col=BBD_DT_COLS.find(c=>c.k===S.k);
@@ -7480,7 +7481,7 @@ function bbdDtWire(){
   $('#bbdDtCsv').onclick=()=>{
     if(!BBD_DT_ROWS.length){alert('No rows to export.');return;}
     lvExport(BBD_DT_ROWS.map(r=>({Selection:BBD_DT.label,Movement_type:r.movement_type,Zone:r.Zone,Manifest_code:r.Manifest_code,Manifest_status:r.Manifest_status,
-      Lane_Code:r['Lane Code'],Ageing_bucket:r['Ageing bucket'],Intransit_ageing:r.intransit_ageing,AWB_created:r.ShipmentInManifest,
+      Lane_Code:r['Lane Code'],MM_origin:r.MM_origin,MM_destination:r.MM_destination,Ageing_bucket:r['Ageing bucket'],Intransit_ageing:r.intransit_ageing,AWB_created:r.ShipmentInManifest,
       Present:r.CurrentShipmentInManifest,Product_value:r.Product_value,Trip_code:r.trip_code,Vehicle_number:r.vehicle_number,Awb_number:r.Awb_number})),
       'csv','bbd_drill_through','bbd_drill_through');
   };
