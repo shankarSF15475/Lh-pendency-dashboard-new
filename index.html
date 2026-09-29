@@ -1313,6 +1313,35 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .vh-sec{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--pine);margin:14px 0 6px;}
 .vh-more{margin:10px auto 0;display:block;}
 #page-bbd .lv-mini-wrap{max-height:none;}
+.rmrep-btn{white-space:nowrap;display:inline-flex!important;align-items:center;width:auto!important;border-color:#F59E0B!important;color:#92400E!important;background:#FFFBEB!important;font-weight:800;}
+.rmrep-btn b{display:inline-block;min-width:22px;margin-left:4px;padding:1px 7px;border-radius:999px;background:#F59E0B;color:#fff;font-size:11px;text-align:center;}
+.rmrep-btn:hover{background:#FEF3C7!important;}
+#rmRepModal .vh-modal{max-width:min(1180px,96vw);width:96vw;}
+#rmRepModal .vh-modal-b{overflow-x:hidden;}
+.rmrep-tbl{table-layout:fixed;}
+.rmrep-tbl th,.rmrep-tbl td{white-space:normal;word-break:break-word;}
+.rmrep-tbl col.c-n{width:44px}.rmrep-tbl col.c-t{width:auto}.rmrep-tbl col.c-c{width:84px}
+.rmrep-tbl col.c-l{width:66px}.rmrep-tbl col.c-p{width:15%}.rmrep-tbl col.c-d{width:96px}
+.rmrep-tbl th,.rmrep-det th{white-space:nowrap!important;}
+.rmrep-tbl td:nth-child(6),.rmrep-tbl td:nth-child(7),.rmrep-det td:nth-child(2){white-space:nowrap!important;}
+.rmrep-det table{table-layout:fixed;}
+.rmrep-det th,.rmrep-det td{white-space:normal;word-break:break-word;}
+.rmrep-det col.d-l{width:auto}.rmrep-det col.d-d{width:96px}.rmrep-det col.d-v{width:150px}
+.rmrep-det col.d-b{width:18%}.rmrep-det col.d-r{width:150px}
+.rmrep-sum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+.rmrep-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+.rmrep-tbl th{background:#F1F3FB;color:var(--pine);text-align:left;padding:8px 10px;font-size:11px;position:sticky;top:0;z-index:1;}
+.rmrep-tbl th.num,.rmrep-tbl td.num{text-align:right;}
+.rmrep-tbl td{padding:8px 10px;border-bottom:1px solid #EEF1F6;vertical-align:top;}
+.rmrep-tbl tr.rmrep-g{cursor:pointer;}
+.rmrep-tbl tr.rmrep-g:hover td{background:#FFFBEB;}
+.rmrep-tbl tr.rmrep-g.open td{background:#FEF3C7;}
+.rmrep-cnt{display:inline-block;min-width:30px;padding:2px 9px;border-radius:999px;background:#FEE2E2;color:#B91C1C;font-weight:800;text-align:center;}
+.rmrep-det>td{background:#FAFAFD;padding:6px 10px 12px 34px!important;}
+.rmrep-det table{width:100%;border-collapse:collapse;font-size:12px;}
+.rmrep-det th{background:#155E75;color:#fff;text-align:left;padding:6px 9px;font-size:11px;}
+.rmrep-det td{padding:6px 9px;border-bottom:1px solid #E2E8F0;}
+.rmrep-det tr:nth-child(even) td{background:#EAF6FB;}
 #bbdKpis{grid-template-columns:repeat(5,1fr);}
 #bbdKpis .bbd-kpi{cursor:pointer;transition:transform .12s,box-shadow .12s;}
 #bbdKpis .bbd-kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,23,42,.12);}
@@ -2476,6 +2505,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <div><h3>Feedback Manifest Lanes</h3>
             <span class="sub">every follow-up remark added from the lane pivot in Bag wise View · newest date first · filter by lane and date, edit or delete here</span></div>
           <div class="card-tools">
+            <button class="tool rmrep-btn" id="rmPgRepeat" title="Remarks written more than once — click to see where, when and by whom">🔁 Repeated remarks <b id="rmPgRepeatN">0</b></button>
             <button class="tool" id="rmPgRefresh">Refresh</button>
             <button class="tool" id="rmPgCsv" title="Downloads only the rows matching the filters above">CSV</button>
           </div>
@@ -5730,8 +5760,79 @@ function rmPgFmtAt(at){
     hour:'2-digit',minute:'2-digit',hour12:true}):'—';
 }
 
+
+/* =============================================================
+   REPEATED REMARKS — the same remark text written more than once
+   (case, spacing and trailing punctuation ignored), across the
+   remarks currently matching the page filters.
+============================================================= */
+let RM_REP_OPEN=null, RM_REP_GROUPS=[];
+const rmRepKey=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').replace(/[\s.,;:!]+$/,'').trim();
+function rmRepGroups(){
+  const m=new Map();
+  for(const r of rmPageRows(false)){
+    const k=rmRepKey(r.text); if(!k)continue;
+    let g=m.get(k); if(!g){g={key:k,text:String(r.text||'').trim(),rows:[]};m.set(k,g);}
+    g.rows.push(r);
+  }
+  return [...m.values()].filter(g=>g.rows.length>1).map(g=>{
+    g.rows.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.at||'').localeCompare(String(b.at||'')));
+    g.lanes=[...new Set(g.rows.map(r=>r.lane))];
+    g.people=[...new Set(g.rows.map(r=>r.byName||r.by||'—'))];
+    g.first=g.rows[0].date||''; g.last=g.rows[g.rows.length-1].date||'';
+    return g;
+  }).sort((a,b)=>b.rows.length-a.rows.length||String(b.last).localeCompare(String(a.last)));
+}
+function rmRepUpdateBtn(){
+  const n=$('#rmPgRepeatN'); if(!n)return;
+  RM_REP_GROUPS=rmRepGroups();
+  n.textContent=fmtN(RM_REP_GROUPS.length);
+  if($('#rmRepModal')&&$('#rmRepModal').classList.contains('on'))rmRepRender();
+}
+function rmRepRender(){
+  const G=RM_REP_GROUPS, totals=rmLaneTotals();
+  const rep=G.reduce((a,g)=>a+g.rows.length,0);
+  $('#rmRepB').innerHTML=`<div class="rmrep-sum">
+      <span class="pill">${fmtN(G.length)} repeated remark${G.length===1?'':'s'}</span>
+      <span class="pill">${fmtN(rep)} entries in total</span>
+      <span class="hint" style="margin:0">Uses the filters on the page · click a remark to see each lane, date and person</span>
+      <button class="tool" id="rmRepCsv" style="margin-left:auto">CSV</button></div>`+
+    (G.length?`<table class="rmrep-tbl"><colgroup><col class="c-n"><col class="c-t"><col class="c-c"><col class="c-l"><col class="c-p"><col class="c-d"><col class="c-d"></colgroup><thead><tr><th>#</th><th>Repeated remark</th><th class="num">Times</th>
+      <th class="num">Lanes</th><th>Added by</th><th>First date</th><th>Last date</th></tr></thead><tbody>`+
+    G.map((g,i)=>{const open=RM_REP_OPEN===g.key;
+      return `<tr class="rmrep-g${open?' open':''}" data-k="${rmEsc(g.key)}"><td>${open?'▾':'▸'} ${i+1}</td>
+        <td>${rmEsc(g.text)}</td><td class="num"><span class="rmrep-cnt">${g.rows.length}</span></td>
+        <td class="num">${fmtN(g.lanes.length)}</td><td>${g.people.map(rmEsc).join(', ')}</td>
+        <td>${rmFmtDate(g.first)}</td><td>${rmFmtDate(g.last)}</td></tr>`+
+      (open?`<tr class="rmrep-det"><td colspan="7"><table><colgroup><col class="d-l"><col class="d-d"><col class="d-v"><col class="d-b"><col class="d-r"></colgroup><thead><tr><th>Lane Code</th><th>Date</th><th class="num">Lane pending value</th><th>Added by</th><th>Recorded at</th></tr></thead><tbody>`+
+        g.rows.map(r=>`<tr><td>${rmEsc(r.lane)}</td><td>${rmFmtDate(r.date)}</td>
+          <td class="num">${totals.has(r.lane)?fmtINR(totals.get(r.lane)):'—'}</td>
+          <td>${rmEsc(r.byName||r.by||'—')}</td><td>${rmPgFmtAt(r.at)}</td></tr>`).join('')+
+        `</tbody></table></td></tr>`:'');}).join('')+`</tbody></table>`
+    :`<div class="hint" style="padding:24px;text-align:center">No remark has been repeated within the current filters.</div>`);
+  $('#rmRepB').querySelectorAll('tr.rmrep-g').forEach(tr=>tr.onclick=()=>{RM_REP_OPEN=RM_REP_OPEN===tr.dataset.k?null:tr.dataset.k;rmRepRender();});
+  const c=$('#rmRepCsv'); if(c)c.onclick=()=>{
+    if(!G.length){alert('No repeated remarks to export.');return;}
+    lvExport(G.flatMap(g=>g.rows.map(r=>({Remark:String(g.text).replace(/\r?\n/g,' '),Times_repeated:g.rows.length,
+      Lane_Code:r.lane,Date:r.date||'',Lane_pending_value:totals.has(r.lane)?Math.round(totals.get(r.lane)):'',
+      Added_by:r.byName||r.by||'',Recorded_at:r.at||''}))),'csv','repeated_remarks','remarks');
+  };
+}
+function rmRepOpen(){
+  if(!$('#rmRepModal')){
+    document.body.insertAdjacentHTML('beforeend',
+      `<div class="vh-modal-back" id="rmRepModal"><div class="vh-modal"><div class="vh-modal-h"><h3>🔁 Repeated remarks</h3><button id="rmRepX">✕ Close</button></div><div class="vh-modal-b" id="rmRepB"></div></div></div>`);
+    $('#rmRepModal').onclick=e=>{if(e.target.id==='rmRepModal')$('#rmRepModal').classList.remove('on');};
+    $('#rmRepX').onclick=()=>$('#rmRepModal').classList.remove('on');
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#rmRepModal'))$('#rmRepModal').classList.remove('on');});
+  }
+  RM_REP_GROUPS=rmRepGroups();
+  rmRepRender();
+  $('#rmRepModal').classList.add('on');
+}
 function rmPageRender(){
   const body=$('#rmPgBody'); if(!body)return;
+  const rb=$('#rmPgRepeat'); if(rb&&!rb.onclick)rb.onclick=rmRepOpen;
   const allowed=canRemark();
   const ro=$('#rmPgReadonly');
   if(ro)ro.style.display=allowed?'none':'';
@@ -5777,6 +5878,7 @@ function rmPageRender(){
            :'No remarks yet. Add one from the Remarks column on the lane pivot in Bag wise View.'}</td></tr>`;
 
   $('#rmPgCount').textContent=fmtN(rows.length)+' remark'+(rows.length===1?'':'s');
+  rmRepUpdateBtn();
   body.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{RM_EDIT=b.dataset.edit;rmPageRender();
     const t=$('#rmEditText'); if(t)t.focus();});
   body.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{RM_EDIT=null;rmPageRender();});
