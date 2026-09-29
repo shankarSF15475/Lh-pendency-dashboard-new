@@ -1314,6 +1314,15 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .vh-more{margin:10px auto 0;display:block;}
 #page-bbd .lv-mini-wrap{max-height:none;}
 #bbdKpis{grid-template-columns:repeat(5,1fr);}
+#bbdKpis .bbd-kpi{cursor:pointer;transition:transform .12s,box-shadow .12s;}
+#bbdKpis .bbd-kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,23,42,.12);}
+#bbdTables [data-dk]{cursor:pointer;}
+#bbdTables td[data-dk]:hover{background:#FEF3C7!important;color:#92400E!important;text-decoration:underline dotted;text-underline-offset:2px;}
+#bbdTables h3[data-dk]:hover{color:var(--pine);text-decoration:underline dotted;text-underline-offset:3px;}
+#bbdTables td.bbd-dt-on{background:#FDE68A!important;box-shadow:inset 0 0 0 2px #F59E0B;}
+.bbd-dt-ctx{font-size:11.5px;font-weight:800;color:#92400E;background:#FEF3C7;border:1px solid #FCD34D;border-radius:999px;padding:3px 11px;}
+#bbdDetCard{margin-top:14px;scroll-margin-top:90px;}
+#bbdDetCard .lv-tbl thead th{cursor:pointer;}
 @media(max-width:1200px){#bbdKpis{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}}
 .bbd-kpi{background:linear-gradient(180deg,var(--kb) 0%,#fff 72%);border-top:4px solid var(--kc);}
 .bbd-kpi .lab{color:var(--kc);font-weight:800;}
@@ -1662,6 +1671,26 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       </div>
       <div class="bbd-grid" id="bbdTables"></div>
       <div class="bbd-note" id="bbdNote"></div>
+
+      <!-- Drill-through for any number clicked in the four tables -->
+      <div class="card lv-detail" id="bbdDetCard">
+        <div class="lv-toolbar">
+          <span class="ttl" style="font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em">BBD DRILL-THROUGH — SHIPMENT LEVEL</span>
+          <span class="bbd-dt-ctx" id="bbdDtCtx">All BBD scope</span>
+          <span class="pill" id="bbdDtCount">0 rows</span>
+          <span class="pill" id="bbdDtVal">₹0</span>
+          <input class="vh-search" id="bbdDtSearch" type="text" placeholder="Search manifest, lane, trip or vehicle…" style="min-width:240px">
+          <button class="mv-fb-clear" id="bbdDtReset">✕ Show all BBD scope</button>
+          <div style="margin-left:auto;display:flex;gap:6px"><button class="tool" id="bbdDtCsv">CSV</button></div>
+        </div>
+        <div class="hint" style="margin-top:6px">Click any number, lane, zone, Zone Total, Grand Total, table title or KPI card above to see the shipments behind it. Headers sort.</div>
+        <div class="lv-tbl-wrap">
+          <table class="lv-tbl"><thead><tr id="bbdDtHead"></tr></thead><tbody id="bbdDtBody"></tbody></table>
+        </div>
+        <div class="pager">
+          <button id="bbdDtPrev">← Prev</button><span id="bbdDtPg">Page 1</span><button id="bbdDtNext">Next →</button>
+        </div>
+      </div>
       <!-- Vehicles in transit (merged from the former Vehicles page) -->
       <div id="vhSection">
       <div class="bbd-vh-head">🚚 Vehicles in Transit</div>
@@ -7351,13 +7380,115 @@ function bbdWire(){
     renderBBD();
   });
   $('#bbdClear').onclick=()=>{Object.values(BBD_SEL).forEach(s=>s.clear());bbdBuildFilters();renderBBD();};
+  bbdDtWire();
   $('#bbdTables').addEventListener('click',e=>{
+    const d=e.target.closest('[data-dk]');
+    if(d){
+      const k=d.dataset.dk,t=BBD_TYPES.find(x=>x.k===k),D=BBD_DRILL[k]||{top:[],zones:{}},sc=d.dataset.dsc,band=d.dataset.db||null;
+      const bl=band?band+' days':'6–30 days';
+      let lanes=null,label=t.label;
+      if(sc==='lane'){const ln=D.top[+d.dataset.di];lanes=new Set([ln]);label+=' · '+ln;}
+      else if(sc==='zone'){const z=d.dataset.dz;lanes=new Set(D.zones[z]||[]);label+=' · '+z+' Total (top-20 lanes)';}
+      else if(sc==='top'){lanes=new Set(D.top);label+=' · Grand Total (top '+D.top.length+' lanes)';}
+      else label+=' · all lanes';
+      bbdDtSet({types:new Set([k]),lanes,band,label:label+' · '+bl},d);
+      return;
+    }
     const b=e.target.closest('[data-csv]');if(!b)return;
     const rows=BBD_EXPORT[b.dataset.csv]||[];
     if(!rows.length){alert('No lanes in this table.');return;}
     lvExport(rows,'csv','bbd_top_lanes_'+b.dataset.csv+'_'+BBD_METRIC,'bbd_top_lanes');
   });
   BBD_WIRED=true;
+}
+/* one row passes BBD scope: ageing 6–30, BBD filters, one of the four exact movement types */
+function bbdInScope(r){
+  const a=+r.intransit_ageing||0;
+  if(a<6||a>30)return false;
+  if(BBD_SEL.zone.size&&!BBD_SEL.zone.has(r.Zone))return false;
+  if(BBD_SEL.dest.size&&!BBD_SEL.dest.has(r.MM_destination))return false;
+  if(BBD_SEL.proc.size&&!BBD_SEL.proc.has(mvLossType(r)))return false;
+  return BBD_KEYS.has(hovNorm(r.movement_type));
+}
+/* ---- drill-through state: which movement types / lanes / band the user clicked ---- */
+let BBD_DT={types:null,lanes:null,band:null,label:'All BBD scope',cell:null}, BBD_DT_ROWS=[], BBD_DT_PAGE=1,
+    BBD_DT_SORT={k:'Product_value',dir:-1}, BBD_DT_Q='', BBD_DRILL={};
+const BBD_DT_PG=50;
+const BBD_DT_COLS=[
+  {k:'Manifest_code',label:'Manifest Code',cls:'mono'},
+  {k:'Manifest_status',label:'Manifest Status'},
+  {k:'Lane Code',label:'Lane Code'},
+  {k:'Ageing bucket',label:'Ageing Bucket'},
+  {k:'intransit_ageing',label:'In-transit',num:1},
+  {k:'ShipmentInManifest',label:'AWB Created',num:1},
+  {k:'CurrentShipmentInManifest',label:'Present',num:1},
+  {k:'Product_value',label:'Value ₹',num:1},
+  {k:'trip_code',label:'Trip Code',cls:'mono'},
+  {k:'vehicle_number',label:'Vehicle Number',cls:'mono'}
+];
+const bbdNum=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));return isFinite(n)?n:null;};
+function bbdDtSet(d,cellEl){
+  BBD_DT=d;BBD_DT_PAGE=1;
+  $$('#bbdTables .bbd-dt-on').forEach(x=>x.classList.remove('bbd-dt-on'));
+  if(cellEl&&cellEl.tagName==='TD')cellEl.classList.add('bbd-dt-on');
+  bbdRenderDetail();
+  $('#bbdDetCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function bbdRenderDetail(){
+  if(!$('#bbdDtBody'))return;
+  const D=BBD_DT, q=BBD_DT_Q;
+  let rows=FILTERED.filter(r=>{
+    if(!bbdInScope(r))return false;
+    if(D.types&&!D.types.has(hovNorm(r.movement_type)))return false;
+    if(D.lanes&&!D.lanes.has(r['Lane Code']||'Unknown'))return false;
+    if(D.band&&bbdBand(+r.intransit_ageing||0)!==D.band)return false;
+    if(q&&![r.Manifest_code,r['Lane Code'],r.trip_code,r.vehicle_number,r.Manifest_status].some(v=>String(v||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  const S=BBD_DT_SORT, col=BBD_DT_COLS.find(c=>c.k===S.k);
+  rows.sort((a,b)=>{
+    if(col&&col.num){const x=bbdNum(a[S.k]),y=bbdNum(b[S.k]);return ((x==null?-Infinity:x)-(y==null?-Infinity:y))*S.dir;}
+    return String(a[S.k]||'').localeCompare(String(b[S.k]||''),undefined,{numeric:true})*S.dir;
+  });
+  BBD_DT_ROWS=rows;
+  const pages=Math.max(1,Math.ceil(rows.length/BBD_DT_PG));
+  if(BBD_DT_PAGE>pages)BBD_DT_PAGE=pages;
+  $('#bbdDtHead').innerHTML=BBD_DT_COLS.map(c=>`<th class="${c.num?'num':''}" data-k="${c.k}">${c.label}<span class="arr">${S.k===c.k?(S.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  const slice=rows.slice((BBD_DT_PAGE-1)*BBD_DT_PG,BBD_DT_PAGE*BBD_DT_PG);
+  $('#bbdDtBody').innerHTML=slice.map(r=>'<tr>'+BBD_DT_COLS.map(c=>{
+    const v=r[c.k];
+    if(c.k==='Product_value')return `<td class="num">${fmtN(v||0)}</td>`;
+    if(c.k==='intransit_ageing')return `<td class="num">${v==null||v===''?'—':v+' d'}</td>`;
+    if(c.num){const n=bbdNum(v);return `<td class="num">${n==null?'—':fmtN(n)}</td>`;}
+    if(c.k==='Ageing bucket'){const cl=ABKT_CLS[v]||'';return `<td>${v?`<span class="badge ${cl==='aged-red'?'b-crit':cl==='aged-ora'?'b-rev':'b-fwd'}">${rmEsc(v)}</span>`:'—'}</td>`;}
+    return `<td class="${c.cls||''}">${v?rmEsc(v):'—'}</td>`;
+  }).join('')+'</tr>').join('')||
+    `<tr><td colspan="${BBD_DT_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No shipments behind this selection.</td></tr>`;
+  $('#bbdDtCtx').textContent=D.label;
+  $('#bbdDtCount').textContent=fmtN(rows.length)+' AWBs · '+fmtN(new Set(rows.map(r=>r.Manifest_code).filter(Boolean)).size)+' manifests';
+  $('#bbdDtVal').textContent=fmtINR(rows.reduce((a,r)=>a+(r.Product_value||0),0));
+  $('#bbdDtPg').textContent='Page '+BBD_DT_PAGE+' / '+pages;
+  $('#bbdDtPrev').disabled=BBD_DT_PAGE<=1;$('#bbdDtNext').disabled=BBD_DT_PAGE>=pages;
+}
+function bbdDtWire(){
+  $('#bbdDtHead').onclick=e=>{const th=e.target.closest('th[data-k]');if(!th)return;const c=BBD_DT_COLS.find(x=>x.k===th.dataset.k);
+    BBD_DT_SORT=BBD_DT_SORT.k===c.k?{k:c.k,dir:-BBD_DT_SORT.dir}:{k:c.k,dir:c.num?-1:1};bbdRenderDetail();};
+  $('#bbdDtPrev').onclick=()=>{BBD_DT_PAGE--;bbdRenderDetail();};
+  $('#bbdDtNext').onclick=()=>{BBD_DT_PAGE++;bbdRenderDetail();};
+  let qt=null;$('#bbdDtSearch').oninput=e=>{clearTimeout(qt);qt=setTimeout(()=>{BBD_DT_Q=e.target.value.trim().toLowerCase();BBD_DT_PAGE=1;bbdRenderDetail();},250);};
+  $('#bbdDtReset').onclick=()=>{BBD_DT_Q='';$('#bbdDtSearch').value='';bbdDtSet({types:null,lanes:null,band:null,label:'All BBD scope'});};
+  $('#bbdDtCsv').onclick=()=>{
+    if(!BBD_DT_ROWS.length){alert('No rows to export.');return;}
+    lvExport(BBD_DT_ROWS.map(r=>({Selection:BBD_DT.label,Movement_type:r.movement_type,Zone:r.Zone,Manifest_code:r.Manifest_code,Manifest_status:r.Manifest_status,
+      Lane_Code:r['Lane Code'],Ageing_bucket:r['Ageing bucket'],Intransit_ageing:r.intransit_ageing,AWB_created:r.ShipmentInManifest,
+      Present:r.CurrentShipmentInManifest,Product_value:r.Product_value,Trip_code:r.trip_code,Vehicle_number:r.vehicle_number,Awb_number:r.Awb_number})),
+      'csv','bbd_drill_through','bbd_drill_through');
+  };
+  $('#bbdKpis').addEventListener('click',e=>{
+    const c=e.target.closest('.bbd-kpi[data-dk]');if(!c)return;
+    const k=c.dataset.dk,t=BBD_TYPES.find(x=>x.k===k);
+    bbdDtSet(k==='all'?{types:null,lanes:null,band:null,label:'All BBD scope'}:{types:new Set([k]),lanes:null,band:null,label:t.label+' · all lanes · 6–30 days'});
+  });
 }
 function renderBBD(){
   if(!$('#bbdTables'))return;
@@ -7406,7 +7537,7 @@ function renderBBD(){
       return `<div class="bk-b"><span class="bk-d" style="background:${BAND_CLR[b.label]}"></span><span class="bk-l">${b.label}d</span><span class="bk-v">${v?bbdFmt(v):'—'}</span></div>`;}).join('');
     return `<div class="bk-bar">${bar}</div><div class="bk-grid">${rows}</div>`;
   };
-  $('#bbdKpis').innerHTML=cards.map((c,i)=>`<div class="kpi bbd-kpi${i===0?' bbd-kpi-tot':''}" style="--kc:${c.clr};--kb:${c.bg}" title="${rmEsc(c.lab+' — '+c.s)}">
+  $('#bbdKpis').innerHTML=cards.map((c,i)=>`<div class="kpi bbd-kpi${i===0?' bbd-kpi-tot':''}" data-dk="${i===0?'all':BBD_TYPES[i-1].k}" style="--kc:${c.clr};--kb:${c.bg}" title="${rmEsc(c.lab+' — '+c.s)} · click to drill through">
     <div class="lab"><span class="dot" style="background:${c.clr}"></span>${c.lab}${c.share?`<span class="bk-share">${c.share}</span>`:''}</div>
     <div class="val">${c.v}</div><div class="sub">${rmEsc(c.s)}</div>${bandsHtml(c.acc)}</div>`).join('');
 
@@ -7425,6 +7556,8 @@ function renderBBD(){
     const zList=[...zGroups.entries()].sort((a,b)=>zRank(a[0])-zRank(b[0])||a[0].localeCompare(b[0]));
     zList.forEach(([,l])=>l.sort((a,b)=>bbdCell(b,null)-bbdCell(a,null)));
     const arr=zList.flatMap(([,l])=>l);
+    BBD_DRILL[t.k]={top:arr.map(o=>o.lane),zones:Object.fromEntries(zList.map(([z,l])=>[z,l.map(o=>o.lane)]))};
+    const dA=(sc,extra,band)=>` data-dk="${t.k}" data-dsc="${sc}"${extra}${band?` data-db="${band}"`:''}`;
     const dot=o=>{for(let i=BBD_BANDS.length-1;i>=0;i--){const b=BBD_BANDS[i];
       if(o.awb[b.label]>0)return `<span class="lane-status-dot ${LANE_DOT_CLS[b.dot]}" title="Oldest band: ${b.label} days"></span>`;}return '';};
     const ftOf=(list,b)=>{
@@ -7438,23 +7571,23 @@ function renderBBD(){
       row['Total ('+unit+')']=Math.round(bbdCell(o,null));
       return row;
     });
-    const laneRow=(o,i,l)=>
-      `<tr class="mv-lane-row${i===0?' bbd-zfirst':''}" style="cursor:default">`+
-      (i===0?`<td class="bbd-zone-cell" rowspan="${l.length}">${rmEsc(zoneOf(o))}</td>`:'')+
-      `<td>${dot(o)}${rmEsc(o.lane)}</td>`+
-      BBD_BANDS.map(b=>{const v=bbdCell(o,b.label);return `<td class="num">${v?bbdFmt(v):''}</td>`;}).join('')+
-      `<td class="num tot-col">${bbdFmt(bbdCell(o,null))}</td></tr>`;
+    const laneRow=(o,i,l)=>{const li=arr.indexOf(o),la=` data-di="${li}"`,za=` data-dz="${rmEsc(zoneOf(o))}"`;
+      return `<tr class="mv-lane-row${i===0?' bbd-zfirst':''}" style="cursor:default">`+
+      (i===0?`<td class="bbd-zone-cell"${dA('zone',za)} rowspan="${l.length}" title="Drill: all ${rmEsc(zoneOf(o))} lanes">${rmEsc(zoneOf(o))}</td>`:'')+
+      `<td${dA('lane',la)} title="Drill: every band on this lane">${dot(o)}${rmEsc(o.lane)}</td>`+
+      BBD_BANDS.map(b=>{const v=bbdCell(o,b.label);return v?`<td class="num"${dA('lane',la,b.label)}>${bbdFmt(v)}</td>`:'<td class="num"></td>';}).join('')+
+      `<td class="num tot-col"${dA('lane',la)}>${bbdFmt(bbdCell(o,null))}</td></tr>`;};
     const zoneRow=(z,l)=>
-      `<tr class="bbd-zone-row"><td colspan="2">${rmEsc(z)} Total <span class="bbd-zone-n">· ${l.length} lane${l.length===1?'':'s'}</span></td>`+
-      BBD_BANDS.map(b=>{const v=ftOf(l,b.label);return `<td class="num">${v?bbdFmt(v):''}</td>`;}).join('')+
-      `<td class="num">${bbdFmt(ftOf(l,null))}</td></tr>`;
+      `<tr class="bbd-zone-row"><td colspan="2"${dA('zone',` data-dz="${rmEsc(z)}"`)}>${rmEsc(z)} Total <span class="bbd-zone-n">· ${l.length} lane${l.length===1?'':'s'}</span></td>`+
+      BBD_BANDS.map(b=>{const v=ftOf(l,b.label);return v?`<td class="num"${dA('zone',` data-dz="${rmEsc(z)}"`,b.label)}>${bbdFmt(v)}</td>`:'<td class="num"></td>';}).join('')+
+      `<td class="num"${dA('zone',` data-dz="${rmEsc(z)}"`)}>${bbdFmt(ftOf(l,null))}</td></tr>`;
     const body=arr.length?zList.map(([z,l])=>l.map(laneRow).join('')+zoneRow(z,l)).join('')
       :`<tr><td colspan="${BBD_BANDS.length+3}" style="text-align:center;padding:20px;color:var(--mut)">No ${rmEsc(t.label)} lanes aged 6–30 days in the current filters.</td></tr>`;
-    const foot=arr.length?`<tr><td colspan="2">Grand Total · top ${arr.length}</td>`+
-      BBD_BANDS.map(b=>`<td class="num">${bbdFmt(ft(b.label))}</td>`).join('')+`<td class="num">${bbdFmt(ft(null))}</td></tr>`:'';
+    const foot=arr.length?`<tr><td colspan="2"${dA('top','')}>Grand Total · top ${arr.length}</td>`+
+      BBD_BANDS.map(b=>`<td class="num"${dA('top','',b.label)}>${bbdFmt(ft(b.label))}</td>`).join('')+`<td class="num"${dA('top','')}>${bbdFmt(ft(null))}</td></tr>`:'';
     return `<div class="card lv-sec">
       <div class="card-head">
-        <div><h3><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.clr};margin-right:6px"></span>${rmEsc(t.label)} · Top 20 Lanes</h3>
+        <div><h3${dA('type','')} title="Drill: every ${rmEsc(t.label)} shipment in scope"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.clr};margin-right:6px"></span>${rmEsc(t.label)} · Top 20 Lanes</h3>
           <span class="sub">${BBD_MLBL[BBD_METRIC]} by Lane Code × ageing band · by zone (North, South, West, East) · lanes ranked high → low within each zone</span></div>
         <div class="card-tools"><span class="pill mv-lane-count">top ${arr.length} of ${fmtN(lanes.length)}</span>
           <button class="tool" data-csv="${t.k}">CSV</button></div>
@@ -7468,6 +7601,7 @@ function renderBBD(){
       </div></div>`;
   }).join('');
 
+  bbdRenderDetail();
   const sk=[...skipped.entries()].sort((a,b)=>b[1]-a[1]);
   $('#bbdNote').innerHTML='Scope: in-transit ageing 6 to 30 days, global filters applied. Manifest counts are distinct; a bag spread across bands counts once in each band but once in Total. '+
     (sk.length?'<br>Other movement types aged 6–30 days, not counted here: '+sk.slice(0,8).map(([k,n])=>'<b>'+rmEsc(k)+'</b> ('+fmtN(n)+' AWBs)').join(', ')+(sk.length>8?', …':'')+'.':'');
@@ -7744,7 +7878,7 @@ function vhShowAwb(awb){
   $('#vhModal').classList.add('on');
 }
 </script>
-<script>  
+<script>
 /* =============================================================
    LOGIN · UPLOAD · NAV · BOOT
 ============================================================= */
@@ -7752,7 +7886,7 @@ function vhShowAwb(awb){
 /* ---- credential gate (front-end demo only; move to real auth for production) ---- */
 const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
-  'pushkar.verma@shadowfax.in':{pass:'pushkar@123',name:'pushkar verma',isAdmin:true, lhRecovery:true, remarks:true, wa:'917566662451'},
+  'pushkar.verma@shadowfax.in':{pass:'pushkar@123',name:'pushkar verma',isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'917566662451'},
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:false, lhRecovery:true, remarks:true, remarksManage:true, tasks:true, wa:'919180203317'},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, wa:'917019052918'},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, analytics:true, wa:'916363726152'},
@@ -7772,7 +7906,7 @@ const AUTH_USERS={
   'm.arivazhagan@shadowfax.in':{pass:'Arivu@123',  name:'arivazhagan',    isAdmin:false,  lhRecovery:false, remarks:true},
   'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'abhay.singh7@shadowfax.in':   {pass:'Abhay@123',name:'Abhay singh',    isAdmin:false, lhRecovery:true, remarks:true, wa:'918299228059'},
+  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh',    isAdmin:false,  lhRecovery:true, remarks:true, tasks:true, wa:'918299228059'},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
