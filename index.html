@@ -1842,6 +1842,24 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvHovMcsel">
+            <button class="mv-mcsel-btn" id="mvHovBtn">HOV ▾</button>
+            <div class="mv-mcsel-panel" id="mvHovPanel">
+              <div class="mc-actions">
+                <button id="mvHovAll">All</button>
+                <button id="mvHovNone">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="mv-mcsel" id="mvErrMcsel">
+            <button class="mv-mcsel-btn" id="mvErrBtn">Error Scan Flag ▾</button>
+            <div class="mv-mcsel-panel" id="mvErrPanel">
+              <div class="mc-actions">
+                <button id="mvErrAll">All</button>
+                <button id="mvErrNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <button class="mv-fb-clear" id="mvClearAllFilters">✕ Clear all</button>
         </div>
       </div>
@@ -3699,7 +3717,11 @@ let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
     mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvMoveSel=new Set(),
-    mvDestSel=new Set(), mvLossSel=new Set(), mvExpandedLane=null;
+    mvDestSel=new Set(), mvLossSel=new Set(), mvHovSel=new Set(), mvErrSel=new Set(),
+    mvExpandedLane=null;
+/* error_scan_flag is often blank; give blanks a pickable label */
+const MV_BLANK='(blank)';
+const mvErrOf=r=>r.error_scan_flag||MV_BLANK;
 
 /* one manifest = one row (dedupe by Manifest_code, keeping max ageing + summed value) */
 function mvBuildManifestRows(data){
@@ -3901,11 +3923,26 @@ function mvBuildHeaders(){
     all:'mvClientAll',none:'mvClientNone',label:'Client',opts:clOpts,
     set:s=>{mvClientSel=s;}});
 
+  /* 10. HOV ← HOV_flag (blank rows were already read as Non-HOV) */
+  const hvOpts=[...new Set(RAW.map(r=>r.HOV_flag))].filter(Boolean)
+    .sort((a,b)=>String(a).localeCompare(String(b)));
+  const mcHV=buildMcsel({panel:'mvHovPanel',btn:'mvHovBtn',mcsel:'mvHovMcsel',
+    all:'mvHovAll',none:'mvHovNone',label:'HOV',opts:hvOpts,
+    set:s=>{mvHovSel=s;}});
+
+  /* 11. Error Scan Flag ← error_scan_flag (blank listed as "(blank)") */
+  const esOpts=[...new Set(RAW.map(mvErrOf))]
+    .sort((a,b)=>(a===MV_BLANK)-(b===MV_BLANK)||String(a).localeCompare(String(b)));
+  const mcES=buildMcsel({panel:'mvErrPanel',btn:'mvErrBtn',mcsel:'mvErrMcsel',
+    all:'mvErrAll',none:'mvErrNone',label:'Error Scan Flag',opts:esOpts,
+    set:s=>{mvErrSel=s;}});
+
   $('#mvClearAllFilters').onclick=()=>{
-    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcLS,mcDS,mcCL].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcLS,mcDS,mcCL,mcHV,mcES].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
     mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
     mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();
     mvMoveSel=new Set();mvDestSel=new Set();mvLossSel=new Set();
+    mvHovSel=new Set();mvErrSel=new Set();
     mcZN.btn.classList.remove('active');mcZN.btn.textContent='Zone ▾';
     mcMV.btn.classList.remove('active');mcMV.btn.textContent='Movement ▾';
     mcLT.btn.classList.remove('active');mcLT.btn.textContent='Lane Type ▾';
@@ -3915,6 +3952,8 @@ function mvBuildHeaders(){
     mcLS.btn.classList.remove('active');mcLS.btn.textContent='Process Type ▾';
     mcDS.btn.classList.remove('active');mcDS.btn.textContent='MM Destination ▾';
     mcCL.btn.classList.remove('active');mcCL.btn.textContent='Client ▾';
+    mcHV.btn.classList.remove('active');mcHV.btn.textContent='HOV ▾';
+    mcES.btn.classList.remove('active');mcES.btn.textContent='Error Scan Flag ▾';
     mvRerender();
   };
 
@@ -3958,6 +3997,8 @@ function mvScopeRows(){
   if(mvLaneCodeSel.size) d=d.filter(r=>mvLaneCodeSel.has(r['Lane Code']));
   if(mvDestSel.size)     d=d.filter(r=>mvDestSel.has(r.MM_destination));
   if(mvLossSel.size)     d=d.filter(r=>mvLossSel.has(mvLossType(r)));
+  if(mvHovSel.size)      d=d.filter(r=>mvHovSel.has(r.HOV_flag));
+  if(mvErrSel.size)      d=d.filter(r=>mvErrSel.has(mvErrOf(r)));
   return d;
 }
 
