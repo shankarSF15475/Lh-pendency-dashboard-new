@@ -3609,8 +3609,9 @@ const MV_DETAIL_COLS=[
   {k:'Manifest_code', label:'Manifest',   type:'text', cls:'mono'},
   {k:'Lane Code',     label:'Lane Code',  type:'text'},
   {k:'Lane Type',     label:'Lane Type',  type:'cat'},
-  {k:'Manifest_origin',      label:'Origin',      type:'text'},
-  {k:'Manifest_Destination', label:'Destination', type:'text'},
+  /* Origin / Destination show the shipment's MM_origin / MM_destination */
+  {k:'MM_origin',            label:'Origin',      type:'text'},
+  {k:'MM_destination',       label:'Destination', type:'text'},
   {k:'Manifest_status',      label:'Status',      type:'cat'},
   {k:'Ageing bucket',        label:'Ageing Bkt',  type:'cat'},
   /* manifest-level shipment counts: how many were created on the bag and how
@@ -3732,7 +3733,7 @@ function mvBuildManifestRows(data){
     if(!o){o={Manifest_code:code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
       movement_type:r.movement_type,
       Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
-      MM_destination:r.MM_destination,
+      MM_origin:r.MM_origin,MM_destination:r.MM_destination,
       Manifest_status:r.Manifest_status,intransit_ageing:r.intransit_ageing,
       ShipmentInManifest:r.ShipmentInManifest,CurrentShipmentInManifest:r.CurrentShipmentInManifest,
       'Ageing bucket':r['Ageing bucket']||'',
@@ -4055,7 +4056,7 @@ function mvFilterDetailBy(opts){
     else {delete mvColF[k];btn.textContent='All ▾';btn.classList.remove('on');}
   };
   setText('Lane Code', opts.lane||'');
-  setText('Manifest_Destination', opts.dest||'');
+  setText('MM_destination', opts.dest||'');
   setCat('Ageing bucket', '');
   const band=ITB.find(b=>b.label===opts.bucket);
   setCatMany('intransit_ageing_bucket', band?band.keys:[]);
@@ -4612,7 +4613,7 @@ function mvDetailExport(){
   const cap=80000;
   if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
   return mvDetailRows.slice(0,cap).map(r=>({Manifest:r.Manifest_code,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],
-    Origin:r.Manifest_origin,Destination:r.Manifest_Destination,Status:r.Manifest_status,
+    Origin:r.MM_origin,Destination:r.MM_destination,Status:r.Manifest_status,
     Ageing_bucket:r['Ageing bucket'],Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
     Product_value:r.Product_value,Trip_code:r.trip_code}));
 }
@@ -5371,7 +5372,7 @@ const DOC_SECTIONS=[
   logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code, lane type, Name (the Added by column) and date range\nlane type is looked up from the shipment file, so a lane no longer in today\u0027s data cannot be filtered by type\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
   note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
-  fields:'<code>Manifest_code</code> and its lane, origin, destination, status, ageing, value',
+  fields:'<code>Manifest_code</code> and its lane, <code>MM_origin</code>, <code>MM_destination</code>, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
 ]},
 
