@@ -3900,6 +3900,8 @@ function mvBuildHeaders(){
      the Movement Type Matrix. Distinct from movement_type. */
   const mvOpts=[...new Set(RAW.map(r=>r.Movement))].filter(x=>x&&x!=='—')
     .sort((a,b)=>String(a).localeCompare(String(b)));
+  /* extra pick: Feeder Connection lanes (their Movement reads DC to DC) */
+  if(RAW.some(r=>r.movement_type===FEEDER_MOVE)&&!mvOpts.includes(FEEDER_MOVE))mvOpts.push(FEEDER_MOVE);
   const mcMV=buildMcsel({panel:'mvMovePanel',btn:'mvMoveBtn',mcsel:'mvMoveMcsel',
     all:'mvMoveAll',none:'mvMoveNone',label:'Movement',opts:mvOpts,
     set:s=>{mvMoveSel=s;}});
@@ -4028,7 +4030,7 @@ function mvLossType(r){
 function mvScopeRows(){
   let d=FILTERED;
   if(mvZoneSel.size)     d=d.filter(r=>mvZoneSel.has(r.Zone));
-  if(mvMoveSel.size)     d=d.filter(r=>mvMoveSel.has(r.Movement));
+  if(mvMoveSel.size)     d=d.filter(r=>mvMoveSel.has(r.Movement)||(r.movement_type===FEEDER_MOVE&&mvMoveSel.has(FEEDER_MOVE)));
   if(mvLaneTypeSel.size) d=d.filter(r=>mvLaneTypeSel.has(r['Lane Type']));
   if(mvAgeingSel.size)   d=d.filter(r=>mvAgeingSel.has(r['Ageing bucket']));
   if(mvItBktSel.size)    d=d.filter(r=>mvItBktSel.has(r.intransit_ageing_bucket));
