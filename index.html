@@ -1833,6 +1833,15 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
               </div>
             </div>
           </div>
+          <div class="mv-mcsel" id="mvDestTypeMcsel">
+            <button class="mv-mcsel-btn" id="mvDestTypeBtn">Dest Type ▾</button>
+            <div class="mv-mcsel-panel" id="mvDestTypePanel">
+              <div class="mc-actions">
+                <button id="mvDestTypeAll">All</button>
+                <button id="mvDestTypeNone">Clear</button>
+              </div>
+            </div>
+          </div>
           <div class="mv-mcsel" id="mvClientMcsel">
             <button class="mv-mcsel-btn" id="mvClientBtn">Client ▾</button>
             <div class="mv-mcsel-panel" id="mvClientPanel">
@@ -2721,12 +2730,28 @@ function resolveMoveKey(sampleRow){
     k?'':'(not found — Movement Type Matrix will show all rows with a blank movement label)');
 }
 
+/* ---- Feeder Connection lanes ------------------------------------------------
+   These DC-to-DC shuttle lanes are reported under Movement = "Feeder Connection"
+   whatever the sheet's Movement column says (Client, DC to DC, Large ...).
+   Matching ignores case and the spacing around the dash. Add new lanes here. */
+const FEEDER_MOVE='Feeder Connection';
+const FEEDER_LANES=[
+  'Bangalore XD DC - Bangalore DC','OneAMD DC - Ahmedabad DC','OneSRT DC - Surat DC',
+  'Surat DC - OneSRT DC','NCR Bamnoli DC - NCR Tauru DC','NCR Tauru DC - OneNCR DC',
+  'NCR Tauru DC - NCR Bilaspur DC','NCR Bilaspur DC - OneNCR DC','NCR Bilaspur DC - NCR Tauru DC',
+  'NCR Bamnoli DC - NCR Bilaspur DC','NCR Bamnoli DC - OneNCR DC','Hyderabad REV DC - Hyderabad DC',
+  'OneNCR DC - NCR Bamnoli DC','OneNCR DC - NCR Tauru DC','NCR Tauru DC - NCR Bamnoli DC',
+  'Bangalore DC - Bangalore XD DC','Kolkata 2 DC - Kolkata DC'];
+const laneKey=v=>String(v||'').toLowerCase().replace(/\s*[-–—]\s*/g,' - ').replace(/\s+/g,' ').trim();
+const FEEDER_SET=new Set(FEEDER_LANES.map(laneKey));
+const isFeederLane=lane=>FEEDER_SET.has(laneKey(lane));
+
 function normalize(r){
   const age=+r['intransit_ageing']||0;
   let fl=s(r.flag).toLowerCase();
   fl = fl.includes('rev')?'Reverse':'Forward';
   return {Zone:s(r.Zone)||'Unknown',movement_type:s(r.movement_type)||'Unknown',
-    Movement:s(r[MOVE_KEY])||'',
+    Movement:isFeederLane(r['Lane Code'])?FEEDER_MOVE:(s(r[MOVE_KEY])||''),
     Awb_number:s(r.Awb_number),MM_origin:s(r.MM_origin)||'Unknown',MM_origin_type:s(r.MM_origin_type)||'Unknown',
     MM_destination:s(r.MM_destination)||'Unknown',MM_destination_type:s(r.MM_destination_type)||'Unknown',
     Product_value:+r.Product_value||0,flag:fl,'Lane Code':s(r['Lane Code'])||'Unknown',
@@ -3612,6 +3637,7 @@ const MV_DETAIL_COLS=[
   /* Origin / Destination show the shipment's MM_origin / MM_destination */
   {k:'MM_origin',            label:'Origin',      type:'text'},
   {k:'MM_destination',       label:'Destination', type:'text'},
+  {k:'MM_destination_type',  label:'Dest Type',   type:'cat'},
   {k:'Manifest_status',      label:'Status',      type:'cat'},
   {k:'Ageing bucket',        label:'Ageing Bkt',  type:'cat'},
   /* manifest-level shipment counts: how many were created on the bag and how
@@ -3718,7 +3744,7 @@ let mvPage=1; const MV_PAGE=25;
 let mvBuilt=false, mvDetailRows=[], mvLaneExport=[], mvTypeExport=[];
 let mvAgeingSel=new Set(), mvItBktSel=new Set(), mvLaneTypeSel=new Set(), mvClientSel=new Set(),
     mvLaneCodeSel=new Set(), mvZoneSel=new Set(), mvMoveSel=new Set(),
-    mvDestSel=new Set(), mvLossSel=new Set(), mvHovSel=new Set(), mvErrSel=new Set(),
+    mvDestSel=new Set(), mvDestTypeSel=new Set(), mvLossSel=new Set(), mvHovSel=new Set(), mvErrSel=new Set(),
     mvExpandedLane=null;
 /* error_scan_flag is often blank; give blanks a pickable label */
 const MV_BLANK='(blank)';
@@ -3733,7 +3759,7 @@ function mvBuildManifestRows(data){
     if(!o){o={Manifest_code:code,'Lane Code':r['Lane Code'],'Lane Type':r['Lane Type'],
       movement_type:r.movement_type,
       Manifest_origin:r.Manifest_origin,Manifest_Destination:r.Manifest_Destination,
-      MM_origin:r.MM_origin,MM_destination:r.MM_destination,
+      MM_origin:r.MM_origin,MM_destination:r.MM_destination,MM_destination_type:r.MM_destination_type,
       Manifest_status:r.Manifest_status,intransit_ageing:r.intransit_ageing,
       ShipmentInManifest:r.ShipmentInManifest,CurrentShipmentInManifest:r.CurrentShipmentInManifest,
       'Ageing bucket':r['Ageing bucket']||'',
@@ -3917,6 +3943,13 @@ function mvBuildHeaders(){
     all:'mvDestAll',none:'mvDestNone',label:'MM Destination',opts:dstOpts,
     set:s=>{mvDestSel=s;}});
 
+  /* 8b. Dest Type ← MM_destination_type (same column as the global Dest Type filter) */
+  const dtOpts=[...new Set(RAW.map(r=>r.MM_destination_type))].filter(x=>x&&x!=='Unknown')
+    .sort((a,b)=>String(a).localeCompare(String(b)));
+  const mcDT=buildMcsel({panel:'mvDestTypePanel',btn:'mvDestTypeBtn',mcsel:'mvDestTypeMcsel',
+    all:'mvDestTypeAll',none:'mvDestTypeNone',label:'Dest Type',opts:dtOpts,
+    set:s=>{mvDestTypeSel=s;}});
+
   /* 9. Client */
   const clOpts=[...new Set(RAW.map(r=>r.Client))].filter(x=>x&&x!=='Unknown')
     .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
@@ -3939,10 +3972,10 @@ function mvBuildHeaders(){
     set:s=>{mvErrSel=s;}});
 
   $('#mvClearAllFilters').onclick=()=>{
-    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcLS,mcDS,mcCL,mcHV,mcES].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
+    [mcZN,mcMV,mcLT,mcAB,mcIT,mcLC,mcLS,mcDS,mcDT,mcCL,mcHV,mcES].forEach(m=>{m.panel.querySelectorAll('input').forEach(c=>c.checked=false);});
     mvLaneTypeSel=new Set();mvAgeingSel=new Set();mvItBktSel=new Set();
     mvClientSel=new Set();mvLaneCodeSel=new Set();mvZoneSel=new Set();
-    mvMoveSel=new Set();mvDestSel=new Set();mvLossSel=new Set();
+    mvMoveSel=new Set();mvDestSel=new Set();mvDestTypeSel=new Set();mvLossSel=new Set();
     mvHovSel=new Set();mvErrSel=new Set();
     mcZN.btn.classList.remove('active');mcZN.btn.textContent='Zone ▾';
     mcMV.btn.classList.remove('active');mcMV.btn.textContent='Movement ▾';
@@ -3952,6 +3985,7 @@ function mvBuildHeaders(){
     mcLC.btn.classList.remove('active');mcLC.btn.textContent='Lane Code ▾';
     mcLS.btn.classList.remove('active');mcLS.btn.textContent='Process Type ▾';
     mcDS.btn.classList.remove('active');mcDS.btn.textContent='MM Destination ▾';
+    mcDT.btn.classList.remove('active');mcDT.btn.textContent='Dest Type ▾';
     mcCL.btn.classList.remove('active');mcCL.btn.textContent='Client ▾';
     mcHV.btn.classList.remove('active');mcHV.btn.textContent='HOV ▾';
     mcES.btn.classList.remove('active');mcES.btn.textContent='Error Scan Flag ▾';
@@ -3997,6 +4031,7 @@ function mvScopeRows(){
   if(mvClientSel.size)   d=d.filter(r=>mvClientSel.has(r.Client));
   if(mvLaneCodeSel.size) d=d.filter(r=>mvLaneCodeSel.has(r['Lane Code']));
   if(mvDestSel.size)     d=d.filter(r=>mvDestSel.has(r.MM_destination));
+  if(mvDestTypeSel.size) d=d.filter(r=>mvDestTypeSel.has(r.MM_destination_type));
   if(mvLossSel.size)     d=d.filter(r=>mvLossSel.has(mvLossType(r)));
   if(mvHovSel.size)      d=d.filter(r=>mvHovSel.has(r.HOV_flag));
   if(mvErrSel.size)      d=d.filter(r=>mvErrSel.has(mvErrOf(r)));
@@ -4613,7 +4648,7 @@ function mvDetailExport(){
   const cap=80000;
   if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
   return mvDetailRows.slice(0,cap).map(r=>({Manifest:r.Manifest_code,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],
-    Origin:r.MM_origin,Destination:r.MM_destination,Status:r.Manifest_status,
+    Origin:r.MM_origin,Destination:r.MM_destination,Dest_type:r.MM_destination_type,Status:r.Manifest_status,
     Ageing_bucket:r['Ageing bucket'],Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
     Product_value:r.Product_value,Trip_code:r.trip_code}));
 }
@@ -5372,7 +5407,7 @@ const DOC_SECTIONS=[
   logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code, lane type, Name (the Added by column) and date range\nlane type is looked up from the shipment file, so a lane no longer in today\u0027s data cannot be filtered by type\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
   note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
-  fields:'<code>Manifest_code</code> and its lane, <code>MM_origin</code>, <code>MM_destination</code>, status, ageing, value',
+  fields:'<code>Manifest_code</code> and its lane, <code>MM_origin</code>, <code>MM_destination</code>, <code>MM_destination_type</code>, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
 ]},
 
