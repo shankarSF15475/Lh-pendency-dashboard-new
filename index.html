@@ -2731,10 +2731,13 @@ function resolveMoveKey(sampleRow){
 }
 
 /* ---- Feeder Connection lanes ------------------------------------------------
-   These DC-to-DC shuttle lanes are reported under Movement = "Feeder Connection"
-   whatever the sheet's Movement column says (Client, DC to DC, Large ...).
+   These DC-to-DC shuttle lanes are reported under movement_type = "Feeder Connection"
+   whatever the sheet's movement_type says (e.g. Intracity), so they split out
+   from Intracity everywhere movement_type is used.
    Matching ignores case and the spacing around the dash. Add new lanes here. */
 const FEEDER_MOVE='Feeder Connection';
+/* in the dashboard only, these lanes' Movement column reads DC to DC (the sheet says DC to LM) */
+const FEEDER_MOVEMENT='DC to DC';
 const FEEDER_LANES=[
   'Bangalore XD DC - Bangalore DC','OneAMD DC - Ahmedabad DC','OneSRT DC - Surat DC',
   'Surat DC - OneSRT DC','NCR Bamnoli DC - NCR Tauru DC','NCR Tauru DC - OneNCR DC',
@@ -2750,8 +2753,9 @@ function normalize(r){
   const age=+r['intransit_ageing']||0;
   let fl=s(r.flag).toLowerCase();
   fl = fl.includes('rev')?'Reverse':'Forward';
-  return {Zone:s(r.Zone)||'Unknown',movement_type:s(r.movement_type)||'Unknown',
-    Movement:isFeederLane(r['Lane Code'])?FEEDER_MOVE:(s(r[MOVE_KEY])||''),
+  return {Zone:s(r.Zone)||'Unknown',
+    movement_type:isFeederLane(r['Lane Code'])?FEEDER_MOVE:(s(r.movement_type)||'Unknown'),
+    Movement:isFeederLane(r['Lane Code'])?FEEDER_MOVEMENT:(s(r[MOVE_KEY])||''),
     Awb_number:s(r.Awb_number),MM_origin:s(r.MM_origin)||'Unknown',MM_origin_type:s(r.MM_origin_type)||'Unknown',
     MM_destination:s(r.MM_destination)||'Unknown',MM_destination_type:s(r.MM_destination_type)||'Unknown',
     Product_value:+r.Product_value||0,flag:fl,'Lane Code':s(r['Lane Code'])||'Unknown',
