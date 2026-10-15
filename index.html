@@ -1977,7 +1977,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <span class="ttl" style="font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em">MANIFEST DETAIL — SHIPMENT LEVEL</span>
           <span class="pill" id="mvDetailCount">0 rows</span>
           <button id="mvReset">✕ Clear column filters</button>
-          <span class="hint" style="margin:0">Text = contains · Ageing Bucket &amp; Lane Type = multi-select (AND) · Created, Present and Value sort but do not filter</span>
+          <span class="hint" style="margin:0">Text = contains · Ageing Day, Dest Type &amp; Lane Type = multi-select (AND) · Created, Present and Value sort but do not filter</span>
           <div style="margin-left:auto;display:flex;gap:6px">
             <button class="tool" id="mvDetCsv">CSV</button>
           </div>
@@ -3643,7 +3643,11 @@ const MV_DETAIL_COLS=[
   {k:'MM_destination',       label:'Destination', type:'text'},
   {k:'MM_destination_type',  label:'Dest Type',   type:'cat'},
   {k:'Manifest_status',      label:'Status',      type:'cat'},
-  {k:'Ageing bucket',        label:'Ageing Bkt',  type:'cat'},
+  /* day-wise in-transit ageing (replaces the Bag Creation 'Ageing Bkt' column) */
+  {k:'Day_ageing',           label:'Ageing Day',  type:'cat'},
+  /* one column per ageing day: how many of the manifest's shipments sit in that day */
+  ...['D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+'].map(d=>
+    ({k:'day_'+d, label:d, type:'num', nofilter:true, day:true})),
   /* manifest-level shipment counts: how many were created on the bag and how
      many are still on it */
   {k:'ShipmentInManifest',   label:'Created',     type:'num', nofilter:true},
@@ -3734,6 +3738,30 @@ function itBandOf(r){
   return ITB_OF[itNorm(raw)] || itDateBand(raw) || null;
 }
 
+/* ---- Day-wise ageing for the Manifest Detail table ----
+   intransit_ageing_bucket → D2 · D3 · D4 · D5 · D6 · D7-10 · D11-15 · D16-30 · 30+
+   (7 and 8-10 roll up into D7-10). Excel-damaged 8-10 / 11-15 cells are read back
+   via itDateBand; a blank bucket falls back to the intransit_ageing day count. */
+const DAY_BKTS=['D0-1','D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+'];
+function dayBktOf(raw,days){
+  let n=itNorm(raw);
+  /* Excel-damaged 8-10 / 11-15 cells (dates or 5-digit serials) */
+  if(!/^\d/.test(n)||/^\d{5}/.test(n)||/^\d+-\d+-\d+$/.test(n))n=itDateBand(raw)||n;
+  if(/^[2-6]$/.test(n))return 'D'+n;
+  if(n==='7'||n==='8-10')return 'D7-10';
+  if(n==='11-15')return 'D11-15';
+  if(n==='16-30')return 'D16-30';
+  if(/\+$/.test(n)||(/^\d+$/.test(n)&&+n>30))return '30+';
+  if(/^[01]$/.test(n))return 'D0-1';
+  const d=+days;
+  if(raw===''||raw==null){
+    if(!isFinite(d)||days===''||days==null)return '';
+    if(d<2)return 'D0-1'; if(d<=6)return 'D'+Math.floor(d);
+    if(d<=10)return 'D7-10'; if(d<=15)return 'D11-15'; if(d<=30)return 'D16-30'; return '30+';
+  }
+  return String(raw);
+}
+
 /* natural sort for intransit_ageing_bucket: 2,3,4,5,6,7,8-10,11-15,16-30,30+ */
 function itBktRank(v){
   const s=itNorm(v);
@@ -3770,6 +3798,7 @@ function mvBuildManifestRows(data){
       intransit_ageing_bucket:r.intransit_ageing_bucket||'',
       Product_value:0,trip_code:r.trip_code,_awbs:0};m.set(code,o);}
     o.Product_value+=r.Product_value; o._awbs++;
+    {const dk='day_'+dayBktOf(r.intransit_ageing_bucket,r.intransit_ageing); o[dk]=(o[dk]||0)+1;}
     /* the counts repeat on every row of a bag, but a blank first row must not
        beat a populated later one */
     if(!o.ShipmentInManifest&&r.ShipmentInManifest)o.ShipmentInManifest=r.ShipmentInManifest;
@@ -3778,17 +3807,20 @@ function mvBuildManifestRows(data){
     if(r.intransit_ageing>o.intransit_ageing){
       o.intransit_ageing=r.intransit_ageing;
       if(r['Ageing bucket'])o['Ageing bucket']=r['Ageing bucket'];
+      if(r.intransit_ageing_bucket)o.intransit_ageing_bucket=r.intransit_ageing_bucket;
     }
   }
   const rows=[...m.values()];
   /* fall back to derived bucket only when the source column was blank */
-  rows.forEach(o=>{if(!o['Ageing bucket'])o['Ageing bucket']=ageBktOf(o.intransit_ageing);});
+  rows.forEach(o=>{if(!o['Ageing bucket'])o['Ageing bucket']=ageBktOf(o.intransit_ageing);
+    o.Day_ageing=dayBktOf(o.intransit_ageing_bucket,o.intransit_ageing);});
   return rows;
 }
 
 function mvCatOptions(c,rows){
   const u=[...new Set(rows.map(r=>r[c.k]))].filter(x=>x!=='');
   if(c.k==='Ageing bucket')return ABKT.filter(o=>u.includes(o)).concat(u.filter(x=>!ABKT.includes(x)));
+  if(c.k==='Day_ageing')return DAY_BKTS.filter(o=>u.includes(o)).concat(u.filter(x=>!DAY_BKTS.includes(x)));
   return u.sort((a,b)=>String(a).localeCompare(String(b)));
 }
 
@@ -4100,7 +4132,7 @@ function mvFilterDetailBy(opts){
   setText('MM_destination', opts.dest||'');
   setCat('Ageing bucket', '');
   const band=ITB.find(b=>b.label===opts.bucket);
-  setCatMany('intransit_ageing_bucket', band?band.keys:[]);
+  setCatMany('Day_ageing', band?[...new Set(band.keys.map(k=>dayBktOf(k)))]:[]);
   mvRenderDetail(true);
   const el=document.querySelector('#page-manifest .lv-detail');
   if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
@@ -4152,6 +4184,8 @@ function mvRenderDetail(reset){
     }
     if(c.k==='Product_value')return `<td class="num">${fmtN(v)}</td>`;
     if(c.k==='Ageing bucket'){const cls=ABKT_CLS[v]||'';return `<td><span class="badge ${cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd'}">${v}</span></td>`;}
+    if(c.day){const n=+v||0;return n?`<td class="num" style="font-weight:700;background:rgba(239,68,68,${Math.min(.08+n/40,.45).toFixed(2)})">${fmtN(n)}</td>`:'<td class="num" style="color:var(--mut)">·</td>';}
+    if(c.k==='Day_ageing'){if(!v)return '<td>—</td>';const i=DAY_BKTS.indexOf(v);return `<td><span class="badge ${i>=7?'b-crit':i>=5?'b-rev':'b-fwd'}">${v}</span></td>`;}
     return `<td class="${c.cls||''}">${v||'—'}</td>`;
   }).join('')+'</tr>').join('')
     || `<tr><td colspan="${MV_DETAIL_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No manifests match the filters.</td></tr>`;
@@ -4655,7 +4689,9 @@ function mvDetailExport(){
   if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
   return mvDetailRows.slice(0,cap).map(r=>({Manifest:r.Manifest_code,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],
     Origin:r.MM_origin,Destination:r.MM_destination,Dest_type:r.MM_destination_type,Status:r.Manifest_status,
-    Ageing_bucket:r['Ageing bucket'],Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
+    Ageing_day:r.Day_ageing,
+    ...Object.fromEntries(['D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+'].map(d=>[d,r['day_'+d]||0])),
+    Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
     Product_value:r.Product_value,Trip_code:r.trip_code}));
 }
 </script>
