@@ -3639,9 +3639,11 @@ const MV_DETAIL_COLS=[
   {k:'Lane Code',     label:'Lane Code',  type:'text'},
   {k:'Lane Type',     label:'Lane Type',  type:'cat'},
   /* Origin / Destination show the shipment's MM_origin / MM_destination */
-  {k:'MM_origin',            label:'Origin',      type:'text'},
-  {k:'MM_destination',       label:'Destination', type:'text'},
+  {k:'MM_origin',            label:'MM Origin',      type:'text'},
+  {k:'MM_destination',       label:'MM Destination', type:'text'},
   {k:'MM_destination_type',  label:'Dest Type',   type:'cat'},
+  {k:'Manifest_origin',      label:'Manifest Origin',      type:'text'},
+  {k:'Manifest_Destination', label:'Manifest Destination', type:'text'},
   {k:'Manifest_status',      label:'Status',      type:'cat'},
   /* day-wise in-transit ageing (replaces the Bag Creation 'Ageing Bkt' column) */
   {k:'Day_ageing',           label:'Ageing Day',  type:'cat'},
@@ -3746,7 +3748,7 @@ const DAY_BKTS=['D0-1','D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+']
 function dayBktOf(raw,days){
   let n=itNorm(raw);
   /* Excel-damaged 8-10 / 11-15 cells (dates or 5-digit serials) */
-  if(!/^\d/.test(n)||/^\d{5}/.test(n)||/^\d+-\d+-\d+$/.test(n))n=itDateBand(raw)||n;
+  if(!/^(\d{1,3}|\d{1,2}-\d{1,2}|\d+\+)$/.test(n))n=itDateBand(raw)||n;
   if(/^[2-6]$/.test(n))return 'D'+n;
   if(n==='7'||n==='8-10')return 'D7-10';
   if(n==='11-15')return 'D11-15';
@@ -4688,7 +4690,8 @@ function mvDetailExport(){
   const cap=80000;
   if(mvDetailRows.length>cap)alert('Export capped at '+fmtN(cap)+' rows.');
   return mvDetailRows.slice(0,cap).map(r=>({Manifest:r.Manifest_code,Lane_Code:r['Lane Code'],Lane_Type:r['Lane Type'],
-    Origin:r.MM_origin,Destination:r.MM_destination,Dest_type:r.MM_destination_type,Status:r.Manifest_status,
+    MM_origin:r.MM_origin,MM_destination:r.MM_destination,Dest_type:r.MM_destination_type,
+    Manifest_origin:r.Manifest_origin,Manifest_destination:r.Manifest_Destination,Status:r.Manifest_status,
     Ageing_day:r.Day_ageing,
     ...Object.fromEntries(['D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+'].map(d=>[d,r['day_'+d]||0])),
     Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
@@ -5449,7 +5452,7 @@ const DOC_SECTIONS=[
   logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code, lane type, Name (the Added by column) and date range\nlane type is looked up from the shipment file, so a lane no longer in today\u0027s data cannot be filtered by type\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
   note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
-  fields:'<code>Manifest_code</code> and its lane, <code>MM_origin</code>, <code>MM_destination</code>, <code>MM_destination_type</code>, status, ageing, value',
+  fields:'<code>Manifest_code</code> and its lane, <code>MM_origin</code>, <code>MM_destination</code>, <code>MM_destination_type</code>, <code>Manifest_origin</code>, <code>Manifest_Destination</code>, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
 ]},
 
