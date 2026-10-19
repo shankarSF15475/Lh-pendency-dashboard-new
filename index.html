@@ -9411,10 +9411,23 @@ const LT_TABS={
   rev:{sheet:'Rev Live Manifest Level Summary',label:'Rev'}
 };
 const LT_AUTO_MS=2*60*1000, LT_STALE_MS=60*1000, LT_PAGE=50;
-const LT_REMARK_COL='Remarks', LT_BY_COL='Remark By', LT_AT_COL='Remark Updated At';
+const LT_REMARK_COL='Remarks', LT_BY_COL='Remarks by';
+/* the only columns shown on both tabs, in this order; matched to the sheet's
+   headers by name (case and spaces ignored). Date is the sheet's first column,
+   which has no header. The manifest code stays hidden but is still the key a
+   remark is saved against. */
+const LT_SHOW=[
+  {label:'Date',           pick:cols=>cols[0]},
+  {label:'Node',           re:/^node$/i},
+  {label:'Movement Type',  re:/^movement[\s_]*type$/i},
+  {label:'Closure Status', re:/^closure[\s_]*status/i},
+  {label:'RCA',            re:/^rca$/i},
+  {label:'Remarks',        remark:true},
+  {label:'Remarks By',     by:true}
+];
 let LT={fwd:{rows:[],cols:[]},rev:{rows:[],cols:[]}};
 let LT_TAB='fwd', LT_SYNCED_AT=null, LT_BUSY=false, LT_TIMER=null, LT_PG=1;
-let LT_SORT={k:null,dir:-1};
+let LT_SORT={k:null,dir:-1}, LT_LABELS={};
 const LT_PENDING={};                          // key → remark saved here but not yet seen in the sheet
 
 function ltUrls(sheet){
@@ -9455,7 +9468,6 @@ function ltTable(grid){
     /* drop a trailing Grand Total row, it would double every KPI */
     .filter(o=>!/^(grand\s*)?total$/i.test(String(o[cols[0]]).trim()));
   /* hide columns that are empty in every row (except the remark trio) */
-  cols=cols.filter(c=>[LT_REMARK_COL,LT_BY_COL,LT_AT_COL].includes(c)||rows.some(r=>r[c]!==''));
   return {cols,rows};
 }
 const ltFind=(cols,re,not)=>cols.find(c=>re.test(c)&&!(not&&not.test(c)));
@@ -9465,6 +9477,7 @@ function ltMeta(t){
   return {
     key:ltFind(c,/manifest.*(code|id|no|number)|^manifest$|bag.*(code|id)/i)||ltFind(c,/manifest/i,/status|type|origin|dest/i)||c[0],
     remark:ltFind(c,/remark/i,/by|time|date|updated/i)||LT_REMARK_COL,
+    by:ltFind(c,/remarks?[\s_]*by/i)||LT_BY_COL,
     value:ltFind(c,/value|amount|₹|inr/i),
     ship:ltFind(c,/awb|shipment|ship.*count|pendency|pending|count/i,/value|amount|age|date/i),
     age:ltFind(c,/ageing|aging|age/i,/bucket|bkt|band/i),
@@ -9567,8 +9580,9 @@ function ltKpis(){
 /* ---- table ---- */
 function ltView(){
   const t=LT_TAB,m=ltMeta(t);
-  let cols=LT[t].cols.filter(c=>c!==m.remark&&c!==LT_BY_COL&&c!==LT_AT_COL);
-  cols=cols.concat([m.remark,LT_BY_COL,LT_AT_COL]);
+  const all=LT[t].cols;
+  const cols=LT_SHOW.map(s=>s.remark?m.remark:s.by?m.by:s.pick?s.pick(all):(ltFind(all,s.re)||s.label));
+  LT_LABELS={};LT_SHOW.forEach((s,i)=>LT_LABELS[cols[i]]=s.label);
   const q=($('#ltSearch').value||'').trim().toLowerCase(), rf=$('#ltRemFilter').value;
   let rows=LT[t].rows.filter(r=>{
     const rem=String(LT_PENDING[t+'|'+r[m.key]]??r[m.remark]??'').trim();
@@ -9591,7 +9605,7 @@ function ltRender(resetPage){
   ltKpis();
   const {t,m,cols,rows}=ltView();
   const pages=Math.max(1,Math.ceil(rows.length/LT_PAGE)); if(LT_PG>pages)LT_PG=pages;
-  $('#ltHead').innerHTML=cols.map(c=>`<th data-k="${rmEsc(c)}" class="${c===m.remark?'lt-rm-h':''}">${rmEsc(c)}<span class="arr">${LT_SORT.k===c?(LT_SORT.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  $('#ltHead').innerHTML=cols.map(c=>`<th data-k="${rmEsc(c)}" class="${c===m.remark?'lt-rm-h':''}">${rmEsc(LT_LABELS[c]||c)}<span class="arr">${LT_SORT.k===c?(LT_SORT.dir<0?'▼':'▲'):''}</span></th>`).join('');
   $$('#ltHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;LT_SORT={k,dir:LT_SORT.k===k?-LT_SORT.dir:-1};ltRender(true);});
   const slice=rows.slice((LT_PG-1)*LT_PAGE,LT_PG*LT_PAGE);
   $('#ltBody').innerHTML=slice.map(r=>{
@@ -9617,7 +9631,7 @@ async function ltSaveRemark(inp){
   const t=LT_TAB,m=ltMeta(t),key=inp.dataset.key,remark=inp.value.trim();
   const user=(CURRENT_USER&&(CURRENT_USER.name||CURRENT_USER.id))||'';
   inp.classList.add('saving');
-  const body=JSON.stringify({sheet:LT_TABS[t].sheet,keyCol:m.key,key,remarkCol:m.remark,remark,user});
+  const body=JSON.stringify({sheet:LT_TABS[t].sheet,keyCol:m.key,key,remarkCol:m.remark,byCol:m.by,remark,user});
   try{
     /* text/plain keeps this a "simple" request, so no CORS preflight */
     const res=await fetch(LT_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
@@ -9635,7 +9649,7 @@ async function ltSaveRemark(inp){
 }
 function ltCsv(){
   const {cols,rows}=ltView();
-  lvExport(rows.map(r=>{const o={};cols.forEach(c=>o[c]=r[c]??'');return o;}),'csv',
+  lvExport(rows.map(r=>{const o={};cols.forEach(c=>o[LT_LABELS[c]||c]=r[c]??'');return o;}),'csv',
     'pendency_live_tracker_'+LT_TAB,'livetracker');
 }
 function ltWire(){
