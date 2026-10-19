@@ -434,7 +434,7 @@ body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .fil
 body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar,body.projection-page .filterbar,
 body.tasks-page .filterbar,body.team-page .filterbar,
-body.reference-page .filterbar{display:none}
+body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
 .lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
 /* Recovery Amount · roomier rows, month in ink, total in indigo */
@@ -528,6 +528,33 @@ body.reference-page .filterbar{display:none}
   .hov-stat .v,.lhr-stat .v,.lk-stat .v{font-size:18px}
   .lhr-kpi{min-width:130px}
 }
+/* ===== Pendency Live Tracker ===== */
+#ltSync,#ltOpenSheet{width:auto;min-width:0;height:30px;padding:0 14px;font-size:10px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+#ltCsv{width:auto;padding:0 10px}
+.lt-tabs{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.lt-tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:12.5px;color:var(--mut);cursor:pointer}
+.lt-tab.active{background:var(--pine);border-color:var(--pine);color:#fff}
+.lt-cnt{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:rgba(0,0,0,.08);font-size:11px}
+.lt-tab.active .lt-cnt{background:rgba(255,255,255,.22)}
+.lt-kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.lt-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lt-toolbar input[type=search]{min-width:220px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px}
+.lt-toolbar select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px;background:#fff}
+.lt-tbl-wrap{overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:12px;max-height:620px}
+.lt-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.lt-tbl thead th{position:sticky;top:0;z-index:2;background:var(--ink);color:var(--lime);text-align:left;padding:9px 10px;font-size:11px;letter-spacing:.03em;white-space:nowrap;cursor:pointer;user-select:none}
+.lt-tbl thead th.lt-rm-h{background:#14532D;color:#fff}
+.lt-tbl thead th .arr{margin-left:4px;font-size:9px}
+.lt-tbl tbody td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.lt-tbl tbody tr:hover td{background:#F8FAFC}
+.lt-tbl td.lt-rm{min-width:240px;background:#F0FDF4}
+.lt-rm-in{width:100%;min-width:220px;padding:6px 8px;border:1px solid #BBF7D0;border-radius:6px;font:inherit;font-size:12.5px;background:#fff}
+.lt-rm-in:focus{outline:2px solid #22C55E;border-color:#22C55E}
+.lt-rm-in:disabled{background:transparent;border-color:transparent;color:var(--ink)}
+.lt-rm-in.saving{opacity:.6}
+.lt-rm-in.pending{border-color:#F59E0B;background:#FFFBEB}
+.lt-rm-in.failed{border-color:#EF4444;background:#FEF2F2}
+@media (max-width:700px){.lt-toolbar input[type=search]{min-width:0;flex:1}}
 </style>
 
 <style id="theme-light">
@@ -1503,6 +1530,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <button data-page="projection"><span class="ic">🎯</span>Current Loss vs Target</button>
       <button data-page="investigate"><span class="ic">🔍</span>Raw Data</Data></button>
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
+      <button data-page="livetracker"><span class="ic">📡</span>Pendency Live Tracker</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
@@ -2205,6 +2233,54 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
     </section>
 
     <!-- ============ PAGE: LH RECOVERY ============ -->
+    <section class="page" id="page-livetracker">
+      <!-- ===== live source strip: Google Sheet → Fwd / Rev Live Manifest Level Summary ===== -->
+      <div class="card lhr-src">
+        <span class="lhr-src-dot" id="ltSrcDot"></span>
+        <div class="lhr-src-txt">
+          <b>Live source</b>
+          <span>Google Sheet · Fwd &amp; Rev Live Manifest Level Summary</span>
+        </div>
+        <span class="pill" id="ltSyncLbl">not synced yet</span>
+        <label class="lhr-auto"><input type="checkbox" id="ltAuto" checked> auto-refresh</label>
+        <button class="tool" id="ltSync">REFRESH NOW</button>
+        <a class="tool" id="ltOpenSheet" target="_blank" rel="noopener" style="text-decoration:none">Open sheet ↗</a>
+      </div>
+      <div class="lhr-src-err" id="ltSrcErr"></div>
+
+      <div class="lt-tabs" role="tablist">
+        <button class="lt-tab active" data-lt="fwd" role="tab">Fwd Live Manifest Level Summary <span class="lt-cnt" id="ltCntFwd">0</span></button>
+        <button class="lt-tab" data-lt="rev" role="tab">Rev Live Manifest Level Summary <span class="lt-cnt" id="ltCntRev">0</span></button>
+      </div>
+
+      <div class="kpi-grid lt-kpis" id="ltKpis"></div>
+
+      <div class="card" style="margin-top:12px;padding:16px">
+        <div class="lt-toolbar">
+          <span class="ttl" id="ltTblTitle" style="font-size:12px;font-weight:800;color:var(--pine);letter-spacing:.04em">FWD LIVE MANIFEST LEVEL SUMMARY</span>
+          <span class="pill" id="ltRowCount">0 rows</span>
+          <input id="ltSearch" type="search" placeholder="Search any column…">
+          <select id="ltRemFilter">
+            <option value="">All rows</option>
+            <option value="open">Remark pending</option>
+            <option value="done">Remark added</option>
+          </select>
+          <span class="hint" id="ltWriteHint" style="margin:0"></span>
+          <div style="margin-left:auto"><button class="tool" id="ltCsv">CSV</button></div>
+        </div>
+        <div class="lt-tbl-wrap">
+          <table class="lt-tbl">
+            <thead><tr id="ltHead"></tr></thead>
+            <tbody id="ltBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button id="ltPrev">← Prev</button>
+          <span id="ltPgLbl">Page 1 / 1</span>
+          <button id="ltNext">Next →</button>
+        </div>
+      </div>
+    </section>
     <section class="page" id="page-lhrecovery">
       <!-- ===== live source strip: Google Sheet → CN Working ===== -->
       <div class="card lhr-src" id="lhrSrcBar">
@@ -9132,6 +9208,7 @@ const PAGE_META={
   investigate:{t:'Base Data',c:'Searchable AWB-level base table'},
   hov:{t:'HOV Analytics',c:'HOV, HHOV and error-scan cuts from the Dashboard sheet'},
   lhrecovery:{t:'LH Recovery',c:'Monthly CN recovery and working detail'},
+  livetracker:{t:'Pendency Live Tracker',c:'Fwd & Rev live manifest summary from Google Sheets, with remarks'},
   lock:{t:'Lock Analysis',c:'Seal status, lock mix and per-lane risk'},
   docs:{t:'Documentation',c:'How every KPI, chart and table is calculated'},
   tasks:{t:'Tasks',c:'Assign work, then send it by email and WhatsApp'},
@@ -9175,6 +9252,7 @@ function navTo(page){
   if(page==='team')ttOpenPage();
   if(page==='reference')rfOpenPage();
   if(page==='lhrecovery')gsOnLHRPage();
+  if(page==='livetracker')ltOnPage();
   if(page==='projection')pjOnPage();
   closeSidebar();
 }
@@ -9307,5 +9385,273 @@ function wireControls(){
   $('#lockLaneCsv').onclick=()=>lvExport(lockLaneExport,'csv','lock_by_lane','lane');
 }
 </script>
+<script>
+/* =============================================================
+   PENDENCY LIVE TRACKER
+   -------------------------------------------------------------
+   Two tabs of one Google Sheet, read live and shown as tables:
+     Fwd Live Manifest Level Summary
+     Rev Live Manifest Level Summary
+   READ  — same as LH Recovery: the gviz CSV feed, so the workbook
+           must be shared "Anyone with the link · Viewer". Re-read on
+           page open, every 2 minutes while the tab is visible, and on
+           REFRESH NOW, so edits made in the sheet show up here.
+   WRITE — a browser cannot write to a Google Sheet on its own. Remarks
+           are posted to a small Apps Script web app bound to the sheet
+           (pendency_live_tracker_apps_script.gs). Paste its /exec URL
+           into LT_SCRIPT_URL. It finds the row by the key column and
+           writes Remarks, Remark By and Remark Updated At on that row.
+   Nothing about the columns is assumed: whatever the tab has is what
+   the table shows; KPI cards appear only for columns that exist.
+============================================================= */
+const LT_ID='1KgNwUL3-uz0W36LrGLn2aqqtS_eTrPM72Ca0ZgswFRc';
+const LT_SCRIPT_URL='';                     // Apps Script /exec URL — enables saving remarks
+const LT_TABS={
+  fwd:{sheet:'Fwd Live Manifest Level Summary',label:'Fwd'},
+  rev:{sheet:'Rev Live Manifest Level Summary',label:'Rev'}
+};
+const LT_AUTO_MS=2*60*1000, LT_STALE_MS=60*1000, LT_PAGE=50;
+const LT_REMARK_COL='Remarks', LT_BY_COL='Remark By', LT_AT_COL='Remark Updated At';
+let LT={fwd:{rows:[],cols:[]},rev:{rows:[],cols:[]}};
+let LT_TAB='fwd', LT_SYNCED_AT=null, LT_BUSY=false, LT_TIMER=null, LT_PG=1;
+let LT_SORT={k:null,dir:-1};
+const LT_PENDING={};                          // key → remark saved here but not yet seen in the sheet
+
+function ltUrls(sheet){
+  const base='https://docs.google.com/spreadsheets/d/'+LT_ID;
+  const cb='&_cb='+Date.now();
+  return [base+'/gviz/tq?tqx=out:csv&headers=0&sheet='+encodeURIComponent(sheet)+cb,
+          base+'/export?format=csv&sheet='+encodeURIComponent(sheet)+cb];
+}
+/* summary tabs often carry a title row or two above the real header, so
+   take the first row that is mostly filled and mostly text as the header */
+function ltGrid(text){
+  if(!text)return [];
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const grid=[];let f='',row=[],q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true; else if(c===','){row.push(f);f='';}
+    else if(c==='\n'){row.push(f);f='';grid.push(row);row=[];} else f+=c;}
+  row.push(f);grid.push(row);
+  return grid.filter(r=>r.some(v=>String(v).trim()!==''));
+}
+function ltTable(grid){
+  if(!grid.length)return {cols:[],rows:[]};
+  const width=Math.max(...grid.map(r=>r.length));
+  let h=0;
+  for(let i=0;i<Math.min(grid.length,10);i++){
+    const cells=grid[i].map(v=>String(v).trim());
+    const filled=cells.filter(Boolean);
+    const text=filled.filter(v=>isNaN(+v.replace(/[,₹%]/g,'')));
+    if(filled.length>=Math.max(2,Math.ceil(width*0.5))&&text.length>=filled.length*0.6){h=i;break;}
+  }
+  const seen={};
+  let cols=grid[h].map((c,i)=>{let k=String(c).trim()||('Column_'+(i+1));
+    if(seen[k]!==undefined){seen[k]++;k+='_'+seen[k];}else seen[k]=0;return k;});
+  while(cols.length<width)cols.push('Column_'+(cols.length+1));
+  const rows=grid.slice(h+1).map(r=>{const o={};cols.forEach((c,i)=>o[c]=(r[i]===undefined?'':String(r[i]).trim()));return o;})
+    /* drop a trailing Grand Total row, it would double every KPI */
+    .filter(o=>!/^(grand\s*)?total$/i.test(String(o[cols[0]]).trim()));
+  /* hide columns that are empty in every row (except the remark trio) */
+  cols=cols.filter(c=>[LT_REMARK_COL,LT_BY_COL,LT_AT_COL].includes(c)||rows.some(r=>r[c]!==''));
+  return {cols,rows};
+}
+const ltFind=(cols,re,not)=>cols.find(c=>re.test(c)&&!(not&&not.test(c)));
+const ltNum=v=>{const n=parseFloat(String(v==null?'':v).replace(/[,₹\s]/g,''));return isFinite(n)?n:0;};
+function ltMeta(t){
+  const c=LT[t].cols;
+  return {
+    key:ltFind(c,/manifest.*(code|id|no|number)|^manifest$|bag.*(code|id)/i)||ltFind(c,/manifest/i,/status|type|origin|dest/i)||c[0],
+    remark:ltFind(c,/remark/i,/by|time|date|updated/i)||LT_REMARK_COL,
+    value:ltFind(c,/value|amount|₹|inr/i),
+    ship:ltFind(c,/awb|shipment|ship.*count|pendency|pending|count/i,/value|amount|age|date/i),
+    age:ltFind(c,/ageing|aging|age/i,/bucket|bkt|band/i),
+    bucket:ltFind(c,/ageing.*(bucket|bkt|band)|aging.*(bucket|bkt|band)/i),
+    status:ltFind(c,/status/i),
+    zone:ltFind(c,/zone|region/i)
+  };
+}
+
+function ltStatus(state,label,err){
+  const dot=$('#ltSrcDot'),lbl=$('#ltSyncLbl'),box=$('#ltSrcErr');
+  if(dot)dot.className='lhr-src-dot '+(state||'');
+  if(lbl&&label!=null)lbl.textContent=label;
+  if(box){if(err){box.innerHTML=err;box.classList.add('show');}else box.classList.remove('show');}
+}
+function ltSyncLabel(){
+  if(!LT_SYNCED_AT)return 'not synced yet';
+  const t=new Date(LT_SYNCED_AT).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  return 'synced '+t+' · Fwd '+fmtN(LT.fwd.rows.length)+' · Rev '+fmtN(LT.rev.rows.length);
+}
+async function ltPull(t){
+  let last=null;
+  for(const url of ltUrls(LT_TABS[t].sheet)){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
+      const tb=ltTable(ltGrid(text));
+      if(!tb.rows.length)throw new Error('"'+LT_TABS[t].sheet+'" returned no rows');
+      return tb;
+    }catch(e){last=e;}
+  }
+  throw last||new Error('unknown error');
+}
+async function ltSync(quiet){
+  if(LT_BUSY)return;
+  LT_BUSY=true;
+  if(!quiet)ltStatus('busy','reading sheet…',null);
+  const errs=[];
+  for(const t of Object.keys(LT_TABS)){
+    try{LT[t]=await ltPull(t);}catch(e){errs.push(LT_TABS[t].sheet+': '+e.message);}
+  }
+  LT_BUSY=false;
+  if(errs.length<2)LT_SYNCED_AT=new Date().toISOString();
+  /* a remark shows as pending until the sheet hands it back */
+  for(const t of Object.keys(LT_TABS)){const m=ltMeta(t);
+    LT[t].rows.forEach(r=>{const p=LT_PENDING[t+'|'+r[m.key]];if(p!==undefined&&String(r[m.remark]||'')===p)delete LT_PENDING[t+'|'+r[m.key]];});}
+  ltStatus(errs.length?'err':'ok',ltSyncLabel(),errs.length?
+    'Could not read '+errs.map(rmEsc).join('<br>')+'<br>Open the workbook, choose <b>Share</b> and set <b>General access</b> to <b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.':null);
+  ltRender(false);
+}
+function ltStartAuto(){
+  if(LT_TIMER){clearInterval(LT_TIMER);LT_TIMER=null;}
+  if($('#ltAuto')&&!$('#ltAuto').checked)return;
+  LT_TIMER=setInterval(()=>{
+    if(document.hidden||!CURRENT_USER)return;
+    if(!document.getElementById('page-livetracker').classList.contains('active'))return;
+    if(document.activeElement&&document.activeElement.classList.contains('lt-rm-in'))return; // don't redraw under someone typing
+    ltSync(true);
+  },LT_AUTO_MS);
+}
+function ltOnPage(){
+  if(!LT_SYNCED_AT||Date.now()-new Date(LT_SYNCED_AT).getTime()>LT_STALE_MS)ltSync(false);
+  else ltRender(false);
+  ltStartAuto();
+}
+
+/* ---- KPI cards ---- */
+function ltKpis(){
+  const out=[];
+  const card=(lab,val,sub,clr)=>`<div class="kpi"><div class="lab"><span class="dot" style="background:${clr}"></span>${rmEsc(lab)}</div><div class="val">${val}</div><div class="sub">${sub||''}</div></div>`;
+  const both=['fwd','rev'].map(t=>({t,rows:LT[t].rows,m:ltMeta(t)}));
+  const remDone=(x)=>x.rows.filter(r=>String(r[x.m.remark]||LT_PENDING[x.t+'|'+r[x.m.key]]||'').trim()!=='').length;
+  out.push(card('LIVE MANIFESTS',fmtN(both[0].rows.length+both[1].rows.length),
+    `Fwd <b>${fmtN(both[0].rows.length)}</b> · Rev <b>${fmtN(both[1].rows.length)}</b>`,'#4F46E5'));
+  const cur=both.find(x=>x.t===LT_TAB);
+  if(cur.m.value){
+    const v=x=>x.m.value?x.rows.reduce((s,r)=>s+ltNum(r[x.m.value]),0):0;
+    out.push(card(cur.m.value.toUpperCase(),fmtINR(v(cur)),`${LT_TABS[LT_TAB].label} tab · all rows`,'#DC2626'));
+  }
+  if(cur.m.ship){
+    const n=cur.rows.reduce((s,r)=>s+ltNum(r[cur.m.ship]),0);
+    out.push(card(cur.m.ship.toUpperCase(),fmtN(n),`${LT_TABS[LT_TAB].label} tab · total`,'#0D9488'));
+  }
+  if(cur.m.age){
+    const aged=cur.rows.filter(r=>ltNum(r[cur.m.age])>=7).length;
+    out.push(card('AGED 7+ DAYS',fmtN(aged),`${cur.rows.length?Math.round(aged/cur.rows.length*100):0}% of ${LT_TABS[LT_TAB].label} manifests`,'#EA580C'));
+  }else if(cur.m.bucket){
+    const m=new Map();cur.rows.forEach(r=>{const b=r[cur.m.bucket]||'—';m.set(b,(m.get(b)||0)+1);});
+    const top=[...m.entries()].sort((a,b)=>b[1]-a[1])[0];
+    if(top)out.push(card('TOP AGEING BUCKET',rmEsc(top[0]),`${fmtN(top[1])} manifests`,'#EA580C'));
+  }
+  const d=remDone(cur);
+  out.push(card('REMARKS ADDED',fmtN(d),`${cur.rows.length?Math.round(d/cur.rows.length*100):0}% of ${LT_TABS[LT_TAB].label} manifests`,'#16A34A'));
+  out.push(card('REMARK PENDING',fmtN(cur.rows.length-d),`${LT_TABS[LT_TAB].label} manifests still without a remark`,'#F59E0B'));
+  $('#ltKpis').innerHTML=out.join('');
+}
+
+/* ---- table ---- */
+function ltView(){
+  const t=LT_TAB,m=ltMeta(t);
+  let cols=LT[t].cols.filter(c=>c!==m.remark&&c!==LT_BY_COL&&c!==LT_AT_COL);
+  cols=cols.concat([m.remark,LT_BY_COL,LT_AT_COL]);
+  const q=($('#ltSearch').value||'').trim().toLowerCase(), rf=$('#ltRemFilter').value;
+  let rows=LT[t].rows.filter(r=>{
+    const rem=String(LT_PENDING[t+'|'+r[m.key]]??r[m.remark]??'').trim();
+    if(rf==='open'&&rem)return false; if(rf==='done'&&!rem)return false;
+    if(q&&!cols.some(c=>String(r[c]??'').toLowerCase().includes(q)))return false;
+    return true;});
+  if(LT_SORT.k){const k=LT_SORT.k;
+    const num=rows.every(r=>r[k]===''||!isNaN(ltNum(r[k]))&&/^[\s₹\-\d,.]*$/.test(r[k]));
+    rows=rows.slice().sort((a,b)=>(num?ltNum(a[k])-ltNum(b[k]):String(a[k]).localeCompare(String(b[k]),undefined,{numeric:true}))*LT_SORT.dir);}
+  return {t,m,cols,rows};
+}
+function ltRender(resetPage){
+  if(!document.getElementById('ltKpis'))return;
+  if(resetPage)LT_PG=1;
+  $('#ltCntFwd').textContent=fmtN(LT.fwd.rows.length);
+  $('#ltCntRev').textContent=fmtN(LT.rev.rows.length);
+  $$('.lt-tab').forEach(b=>b.classList.toggle('active',b.dataset.lt===LT_TAB));
+  $('#ltTblTitle').textContent=LT_TABS[LT_TAB].sheet.toUpperCase();
+  $('#ltWriteHint').textContent=LT_SCRIPT_URL?'Type in the Remarks cell and press Enter to save it to the Google Sheet':'Remarks are read-only here until the sheet write-back is connected';
+  ltKpis();
+  const {t,m,cols,rows}=ltView();
+  const pages=Math.max(1,Math.ceil(rows.length/LT_PAGE)); if(LT_PG>pages)LT_PG=pages;
+  $('#ltHead').innerHTML=cols.map(c=>`<th data-k="${rmEsc(c)}" class="${c===m.remark?'lt-rm-h':''}">${rmEsc(c)}<span class="arr">${LT_SORT.k===c?(LT_SORT.dir<0?'▼':'▲'):''}</span></th>`).join('');
+  $$('#ltHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;LT_SORT={k,dir:LT_SORT.k===k?-LT_SORT.dir:-1};ltRender(true);});
+  const slice=rows.slice((LT_PG-1)*LT_PAGE,LT_PG*LT_PAGE);
+  $('#ltBody').innerHTML=slice.map(r=>{
+    const key=r[m.key], pend=LT_PENDING[t+'|'+key];
+    return '<tr>'+cols.map(c=>{
+      if(c===m.remark){
+        const v=pend!==undefined?pend:(r[c]||'');
+        return `<td class="lt-rm"><input class="lt-rm-in${pend!==undefined?' pending':''}" data-key="${rmEsc(key)}" value="${rmEsc(v)}" placeholder="${LT_SCRIPT_URL?'add remark…':'—'}" ${LT_SCRIPT_URL?'':'disabled'} title="${pend!==undefined?'Saved, waiting for the sheet to confirm':''}"></td>`;
+      }
+      return `<td>${rmEsc(r[c]??'')||'<span style="color:var(--mut)">—</span>'}</td>`;
+    }).join('')+'</tr>';
+  }).join('')||`<tr><td colspan="${cols.length||1}" style="text-align:center;padding:24px;color:var(--mut)">${LT_SYNCED_AT?'No rows match.':'Loading the sheet…'}</td></tr>`;
+  $$('#ltBody .lt-rm-in').forEach(inp=>{
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}};
+    inp.onchange=()=>ltSaveRemark(inp);
+  });
+  $('#ltRowCount').textContent=fmtN(rows.length)+' rows';
+  $('#ltPgLbl').textContent='Page '+LT_PG+' / '+pages;
+  $('#ltPrev').disabled=LT_PG<=1;$('#ltNext').disabled=LT_PG>=pages;
+}
+async function ltSaveRemark(inp){
+  if(!LT_SCRIPT_URL)return;
+  const t=LT_TAB,m=ltMeta(t),key=inp.dataset.key,remark=inp.value.trim();
+  const user=(CURRENT_USER&&(CURRENT_USER.name||CURRENT_USER.id))||'';
+  inp.classList.add('saving');
+  const body=JSON.stringify({sheet:LT_TABS[t].sheet,keyCol:m.key,key,remarkCol:m.remark,remark,user});
+  try{
+    /* text/plain keeps this a "simple" request, so no CORS preflight */
+    const res=await fetch(LT_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    const j=await res.json().catch(()=>({ok:true}));
+    if(j&&j.ok===false)throw new Error(j.error||'the sheet refused the update');
+    LT_PENDING[t+'|'+key]=remark;
+    inp.classList.remove('saving');inp.classList.add('pending');
+    try{logEvent('remark',LT_TABS[t].label+' '+key);}catch(e){}
+    setTimeout(()=>ltSync(true),4000);
+  }catch(e){
+    inp.classList.remove('saving');inp.classList.add('failed');
+    alert('Could not save the remark to the Google Sheet: '+e.message);
+  }
+  ltKpis();
+}
+function ltCsv(){
+  const {cols,rows}=ltView();
+  lvExport(rows.map(r=>{const o={};cols.forEach(c=>o[c]=r[c]??'');return o;}),'csv',
+    'pendency_live_tracker_'+LT_TAB,'livetracker');
+}
+function ltWire(){
+  $('#ltOpenSheet').href='https://docs.google.com/spreadsheets/d/'+LT_ID+'/edit';
+  $('#ltSync').onclick=()=>ltSync(false);
+  $('#ltAuto').onchange=ltStartAuto;
+  $$('.lt-tab').forEach(b=>b.onclick=()=>{LT_TAB=b.dataset.lt;LT_SORT={k:null,dir:-1};ltRender(true);});
+  $('#ltSearch').oninput=()=>ltRender(true);
+  $('#ltRemFilter').onchange=()=>ltRender(true);
+  $('#ltPrev').onclick=()=>{LT_PG--;ltRender();};
+  $('#ltNext').onclick=()=>{LT_PG++;ltRender();};
+  $('#ltCsv').onclick=ltCsv;
+}
+document.addEventListener('DOMContentLoaded',ltWire);
+if(document.readyState!=='loading')ltWire();
+</script>
+
 </body>
 </html>
