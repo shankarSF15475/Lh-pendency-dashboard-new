@@ -646,7 +646,15 @@ thead th{background:#F1F3FB;color:var(--pine);}
 /* Activity Log header buttons had no room and collided — give them space */
 #page-activity .card-head{gap:12px;flex-wrap:wrap}
 #page-activity .card-tools{display:flex;gap:8px;flex:none}
-#page-activity .card-tools .tool{white-space:nowrap;padding:6px 12px}
+#page-activity .card-tools .tool,#actNlCsv{width:auto;min-width:0;height:30px;padding:0 14px;font-size:10.5px;font-weight:800;letter-spacing:.05em;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.lv-stat.act-click{cursor:pointer;transition:.15s;border-color:#F0B4A8}
+.lv-stat.act-click:hover{box-shadow:0 0 0 2px #F0B4A8}
+.lv-stat.act-click.on{background:#FFF4F1;box-shadow:0 0 0 2px #D9534F}
+.lv-stat.act-click .v{color:#C0392B}
+.act-nl{display:none;margin-top:12px;border:1px solid #F0B4A8;border-radius:var(--rad);background:#FFFAF8;padding:12px 14px}
+.act-nl.on{display:block}
+.act-nl-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.act-nl-head b{font-size:12px;color:#C0392B;letter-spacing:.04em}
 
 /* ---- In-app loading veil ---- */
 #appLoading{display:none;position:fixed;inset:0;z-index:900;background:rgba(247,248,252,.82);
@@ -2431,11 +2439,22 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <div><h3>Activity Log</h3>
             <span class="sub">sign-ins and downloads across all users · newest first</span></div>
           <div class="card-tools">
-            <button class="tool" id="actRefresh">Refresh</button>
-            <button class="tool" id="actCsv">CSV</button>
+            <button class="tool" id="actRefresh">↻ Refresh</button>
+            <button class="tool" id="actCsv">⤓ CSV</button>
           </div>
         </div>
         <div class="act-cards" id="actCards"></div>
+        <div class="act-nl" id="actNl">
+          <div class="act-nl-head"><b>NOT LOGGED IN</b><span class="pill" id="actNlCount">0 users</span>
+            <span class="hint" style="margin:0">accounts with no sign-in in the loaded log</span>
+            <button class="tool" id="actNlCsv" style="margin-left:auto">⤓ CSV</button></div>
+          <div class="lv-mini-wrap" style="max-height:320px">
+            <table class="lv-mini"><thead><tr>
+              <th style="text-align:left">#</th><th style="text-align:left">Name</th>
+              <th style="text-align:left">Login ID</th><th style="text-align:left">Role</th>
+            </tr></thead><tbody id="actNlBody"></tbody></table>
+          </div>
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px">
           <input id="actUser" placeholder="filter by user…" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px">
           <select id="actAction" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px">
@@ -9032,12 +9051,39 @@ function renderActivity(){
   const dls=ACT_ROWS.filter(r=>r.action==='download').length;
   const logins=ACT_ROWS.filter(r=>r.action==='login').length;
   const lastDl=ACT_ROWS.find(r=>r.action==='download');
+  const nl=actNotLoggedIn();
   $('#actCards').innerHTML=[
     {l:'EVENTS',v:fmtN(ACT_ROWS.length),s:'recorded in Supabase'},
     {l:'USERS SEEN',v:fmtN(users.size),s:'distinct accounts'},
     {l:'SIGN-INS',v:fmtN(logins),s:'total logins'},
-    {l:'DOWNLOADS',v:fmtN(dls),s:lastDl?('last: '+actFmtWhen(lastDl.when)):'none yet'}
-  ].map(c=>`<div class="lv-stat"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+    {l:'DOWNLOADS',v:fmtN(dls),s:lastDl?('last: '+actFmtWhen(lastDl.when)):'none yet'},
+    {l:'NOT LOGGED IN',v:fmtN(nl.length),s:'of '+fmtN(Object.keys(AUTH_USERS).length)+' accounts · click to view',id:'actNlCard'}
+  ].map(c=>`<div class="lv-stat${c.id?' act-click'+(ACT_NL_OPEN?' on':''):''}"${c.id?` id="${c.id}" role="button" tabindex="0" title="Show who has not logged in"`:''}><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="s">${c.s}</div></div>`).join('');
+  const card=$('#actNlCard');
+  if(card){card.onclick=actToggleNl;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();actToggleNl();}};}
+  renderNotLoggedIn(nl);
+}
+/* Accounts in AUTH_USERS with no "login" event in the loaded log (newest 1000 events). */
+let ACT_NL_OPEN=false;
+function actNotLoggedIn(){
+  const seen=new Set(ACT_ROWS.filter(r=>r.action==='login').map(r=>String(r.user).toLowerCase()));
+  return Object.keys(AUTH_USERS).filter(k=>!seen.has(k.toLowerCase()))
+    .map(k=>({id:k,name:AUTH_USERS[k].name||k,role:AUTH_USERS[k].isAdmin?'Admin':'User'}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+function renderNotLoggedIn(list){
+  const box=$('#actNl'); if(!box)return;
+  box.classList.toggle('on',ACT_NL_OPEN);
+  $('#actNlCount').textContent=fmtN(list.length)+(list.length===1?' user':' users');
+  $('#actNlBody').innerHTML=list.map((u,i)=>
+    `<tr><td>${i+1}</td><td><b>${rmEsc(u.name)}</b></td><td class="mono">${rmEsc(u.id)}</td><td>${u.role}</td></tr>`).join('')
+    || `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--mut)">Everyone has logged in.</td></tr>`;
+}
+function actToggleNl(){
+  ACT_NL_OPEN=!ACT_NL_OPEN;
+  const card=$('#actNlCard'); if(card)card.classList.toggle('on',ACT_NL_OPEN);
+  renderNotLoggedIn(actNotLoggedIn());
+  if(ACT_NL_OPEN)$('#actNl').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 async function loadActivity(){
   const body=$('#actBody'); if(!body)return;
@@ -9049,6 +9095,13 @@ function wireActivity(){
   const r=$('#actRefresh'); if(r)r.onclick=loadActivity;
   const u=$('#actUser'); if(u)u.oninput=renderActivity;
   const a=$('#actAction'); if(a)a.onchange=renderActivity;
+  const n=$('#actNlCsv'); if(n)n.onclick=()=>{
+    const list=actNotLoggedIn(); if(!list.length)return;
+    const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+    const csv=[['Name','Login ID','Role'].map(q).join(',')]
+      .concat(list.map(u=>[u.name,u.id,u.role].map(q).join(','))).join('\n');
+    dl(new Blob([csv],{type:'text/csv'}),'not_logged_in.csv');
+  };
   const c=$('#actCsv'); if(c)c.onclick=()=>{
     const rows=actFiltered();
     if(!rows.length)return;
