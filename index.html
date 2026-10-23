@@ -8205,7 +8205,7 @@ function vhShowAwb(awb){
 /* ---- credential gate (front-end demo only; move to real auth for production) ----
    Three levels:
    isMaster:true  master admin: everything, incl. data upload, Pendency Analytics,
-                  Value-at-Risk and Root Cause & What-If
+                  Value-at-Risk, Root Cause & What-If and Lock Analysis
    isAdmin:true   admin: common pages + LH Recovery (lhRecovery:true), Activity Log,
                   edit/delete anyone's remark, assign tasks
    neither        standard user: common pages, own remarks, own tasks */
@@ -8307,12 +8307,17 @@ function applyAdminAccess(u){
       }
     }
   });
-  /* if anyone but the master admin lands there via a stale #rootcause hash, send them home */
+  /* Lock Analysis is master-admin only */
+  const lk=document.querySelector('.nav button[data-page="lock"]');
+  if(lk)lk.style.display=isMaster?'':'none';
+  /* if anyone but the master admin lands on a master-only page via a stale hash, send them home */
   if(!isMaster){
-    const pg=document.getElementById('page-rootcause');
-    if(pg&&pg.classList.contains('active')&&typeof navTo==='function'){
-      try{navTo('overview');}catch(e){}
-    }
+    ['rootcause','lock'].forEach(id=>{
+      const pg=document.getElementById('page-'+id);
+      if(pg&&pg.classList.contains('active')&&typeof navTo==='function'){
+        try{navTo('overview');}catch(e){}
+      }
+    });
   }
   /* upload controls: only the master admin can upload files */
   const uc=$('#uploadControls');
