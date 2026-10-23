@@ -8205,7 +8205,8 @@ function vhShowAwb(awb){
 /* ---- credential gate (front-end demo only; move to real auth for production) ----
    Three levels:
    isMaster:true  master admin: everything, incl. data upload, Pendency Analytics,
-                  Value-at-Risk, Root Cause & What-If and Lock Analysis
+                  Value-at-Risk, Root Cause & What-If, Lock Analysis and
+                  Executive Overview (everyone else lands on Lane View)
    isAdmin:true   admin: common pages + LH Recovery (lhRecovery:true), Activity Log,
                   edit/delete anyone's remark, assign tasks
    neither        standard user: common pages, own remarks, own tasks */
@@ -8303,19 +8304,22 @@ function applyAdminAccess(u){
     if(!canAnalytics){
       const sec=document.getElementById('page-'+pg);
       if(sec&&sec.classList.contains('active')&&typeof navTo==='function'){
-        try{navTo('overview');}catch(e){}
+        try{navTo(homePage());}catch(e){}
       }
     }
   });
-  /* Lock Analysis is master-admin only */
-  const lk=document.querySelector('.nav button[data-page="lock"]');
-  if(lk)lk.style.display=isMaster?'':'none';
-  /* if anyone but the master admin lands on a master-only page via a stale hash, send them home */
+  /* Lock Analysis and Executive Overview are master-admin only */
+  ['lock','overview'].forEach(pg=>{
+    const b=document.querySelector('.nav button[data-page="'+pg+'"]');
+    if(b)b.style.display=isMaster?'':'none';
+  });
+  /* if anyone but the master admin is on a master-only page (the default
+     Executive Overview, or a stale hash), send them to their home page */
   if(!isMaster){
-    ['rootcause','lock'].forEach(id=>{
+    ['rootcause','lock','overview','pendency','value'].forEach(id=>{
       const pg=document.getElementById('page-'+id);
       if(pg&&pg.classList.contains('active')&&typeof navTo==='function'){
-        try{navTo('overview');}catch(e){}
+        try{navTo(homePage());}catch(e){}
       }
     });
   }
@@ -8939,13 +8943,18 @@ function savedPage(){
   if(h)return h;
   try{return sessionStorage.getItem('sfx_page')||null;}catch(e){return null;}
 }
+/* landing page: Executive Overview for the master admin, Lane View for everyone else */
+function homePage(){return (CURRENT_USER&&CURRENT_USER.isMaster)?'overview':'laneview';}
 function restoreLastPage(){
-  const p=savedPage();
-  if(!p){PAGE_RESTORE_PENDING=false;return false;}
-  const btn=document.querySelector('.nav button[data-page="'+p+'"]');
-  /* fall back silently if the page doesn't exist or is role-hidden
-     (e.g. a non-admin refreshing on #activity) */
-  if(!btn||btn.style.display==='none'||typeof navTo!=='function'){PAGE_RESTORE_PENDING=false;return false;}
+  let p=savedPage();
+  let btn=p&&document.querySelector('.nav button[data-page="'+p+'"]');
+  /* no saved page, or it doesn't exist / is role-hidden (e.g. a non-admin
+     refreshing on #activity): go to the user's home page instead */
+  if(!btn||btn.style.display==='none'){
+    p=homePage();
+    btn=document.querySelector('.nav button[data-page="'+p+'"]');
+  }
+  if(!btn||typeof navTo!=='function'){PAGE_RESTORE_PENDING=false;return false;}
   try{
     navTo(p);
     PAGE_RESTORE_PENDING=false;
