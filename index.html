@@ -8202,14 +8202,20 @@ function vhShowAwb(awb){
    LOGIN · UPLOAD · NAV · BOOT
 ============================================================= */
 
-/* ---- credential gate (front-end demo only; move to real auth for production) ---- */
+/* ---- credential gate (front-end demo only; move to real auth for production) ----
+   Three levels:
+   isMaster:true  master admin: everything, incl. data upload, Pendency Analytics,
+                  Value-at-Risk and Root Cause & What-If
+   isAdmin:true   admin: common pages + LH Recovery (lhRecovery:true), Activity Log,
+                  edit/delete anyone's remark, assign tasks
+   neither        standard user: common pages, own remarks, own tasks */
 const AUTH_USERS={
-  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
+  'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isMaster:true, isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
   'pushkar.verma@shadowfax.in':{pass:'pushkar@123',name:'pushkar verma',isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'917566662451'},
-  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true, remarksManage:true, tasks:true, wa:'919180203317'},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:false, lhRecovery:true, remarks:true, wa:'917019052918'},
-  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, analytics:true, wa:'916363726152'},
-   'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:false, lhRecovery:false, remarks:true, analytics:true, wa:'9953227741'},
+  'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'919180203317'},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:true, lhRecovery:true, remarks:true, wa:'917019052918'},
+  'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, wa:'916363726152'},
+   'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:true, lhRecovery:true, remarks:true, wa:'9953227741'},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, wa:'917879065834'},
   'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918597503303'},
   'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918960267035'},
@@ -8220,13 +8226,13 @@ const AUTH_USERS={
   'paswan.hiteshkumar@shadowfax.in':   {pass:'paswan@16336',  name:'Paswan Hitesh Kumar',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'917600855615'},
   'karan.solanki@shadowfax.in':   {pass:'karan@6199',  name:'Karan Solanki',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'917340093387'},
   'shyamkumar.raj@shadowfax.in':   {pass:'shyam@15086',  name:'Shyam Kumar Raj',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'919534174275'},
-  'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:true, remarks:true},
+  'udayraj.chaure@shadowfax.in':{pass:'Uday@123',  name:'Udayraj Chaure',    isAdmin:false,  lhRecovery:false, remarks:true},
   'debasish.das@shadowfax.in':{pass:'debasish@123',  name:'Debasish Das',    isAdmin:false,  lhRecovery:false, remarks:true},
   'alladi.revanth@shadowfax.in':{pass:'alladi@123',  name:'Alladi Revanth',    isAdmin:false,  lhRecovery:false, remarks:true},
   'm.arivazhagan@shadowfax.in':{pass:'Arivu@123',  name:'arivazhagan',    isAdmin:false,  lhRecovery:false, remarks:true},
   'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh',    isAdmin:false,  lhRecovery:true, remarks:true, tasks:true, wa:'918299228059'},
+  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh',    isAdmin:true,  lhRecovery:true, remarks:true, tasks:true, wa:'918299228059'},
   'farjad.ali@shadowfax.in':   {pass:'Farjad@11050',  name:'Farjad ali',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918073991694'},
   'manoj.tanti@shadowfax.in':{pass:'Manoj@123',  name:'Manoj Tanti',    isAdmin:false,  lhRecovery:false, remarks:true},
   'satyam.tomar@shadowfax.in':{pass:'Satyam@123',  name:'Satyam Tomar',    isAdmin:false,  lhRecovery:false, remarks:true},
@@ -8282,15 +8288,15 @@ function applyLHRecoveryAccess(u){
 }
 function applyAdminAccess(u){
   applyLHRecoveryAccess(u);
-  const isAdmin=u&&u.isAdmin;
+  const isAdmin=!!(u&&(u.isAdmin||u.isMaster)), isMaster=!!(u&&u.isMaster);
   /* activity log is an admin-only view */
   const act=document.querySelector('.nav button[data-page="activity"]');
   if(act)act.style.display=isAdmin?'':'none';
-  /* Root Cause & What-If is admin-only too */
+  /* Root Cause & What-If is master-admin only */
   const rc=document.querySelector('.nav button[data-page="rootcause"]');
-  if(rc)rc.style.display=isAdmin?'':'none';
-  /* Pendency Analytics and Value-at-Risk: admin plus anyone flagged analytics */
-  const canAnalytics=isAdmin||(u&&u.analytics);
+  if(rc)rc.style.display=isMaster?'':'none';
+  /* Pendency Analytics and Value-at-Risk: master admin only */
+  const canAnalytics=isMaster;
   ['pendency','value'].forEach(pg=>{
     const b=document.querySelector('.nav button[data-page="'+pg+'"]');
     if(b)b.style.display=canAnalytics?'':'none';
@@ -8301,19 +8307,19 @@ function applyAdminAccess(u){
       }
     }
   });
-  /* if a non-admin lands there via a stale #rootcause hash, send them home */
-  if(!isAdmin){
+  /* if anyone but the master admin lands there via a stale #rootcause hash, send them home */
+  if(!isMaster){
     const pg=document.getElementById('page-rootcause');
     if(pg&&pg.classList.contains('active')&&typeof navTo==='function'){
       try{navTo('overview');}catch(e){}
     }
   }
-  /* upload controls: only admin can upload files */
+  /* upload controls: only the master admin can upload files */
   const uc=$('#uploadControls');
-  if(uc) uc.style.display=isAdmin?'':'none';
+  if(uc) uc.style.display=isMaster?'':'none';
   /* headline changes for non-admin */
   const hl=$('#uploadHeadline'), sub=$('#uploadSub');
-  if(isAdmin){
+  if(isMaster){
     if(hl) hl.innerHTML='Good morning! <span>Upload today\'s pendency file.</span>';
     if(sub) sub.innerHTML='Drop the daily <b>Dashboard.xlsx</b> export (intransit pendency snapshot). Expected columns: Zone, movement_type, Awb_number, MM_origin/destination (+types), Product_value, flag, Lane Code, HOV_flag, intransit_ageing, vendor_name, POD Name, Volumetric_flag, manifest/trip codes.';
   }else{
@@ -8322,7 +8328,7 @@ function applyAdminAccess(u){
   }
   /* New file button: admin only */
   const reUp=$('#reUpload');
-  if(reUp) reUp.style.display=isAdmin?'':'none';
+  if(reUp) reUp.style.display=isMaster?'':'none';
   /* the Supabase refresh button was removed — users get fresh data on login,
      or by refreshing the page */
 }
@@ -8406,7 +8412,7 @@ async function reloadInPlace(){
     if(!ok) await loadFromSupabase(meta);
   }catch(e){
     console.error('reloadInPlace:',e);
-    appVeilError('Could not reload the data: '+e.message,CURRENT_USER&&CURRENT_USER.isAdmin);
+    appVeilError('Could not reload the data: '+e.message,CURRENT_USER&&CURRENT_USER.isMaster);
   }
 }
 function restoreSession(){
@@ -8622,7 +8628,7 @@ async function parseFiles(list){
       try{await idbDel(IDB_KEY_CN);}catch(e){}
     }
     await parseWorkbookBuffer(mainBuf,mainFile.name,cnBuf?{cnBuf,cnName:cnFile.name}:null);
-    if(CURRENT_USER&&CURRENT_USER.isAdmin){
+    if(CURRENT_USER&&CURRENT_USER.isMaster){
       pushToSupabase(mainBuf.slice(0),mainFile.name);
       if(cnBuf)pushCNToSupabase(cnBuf.slice(0),cnFile.name);
     }
@@ -8647,7 +8653,7 @@ function parseFile(file){
       cacheWorkbook(buf.slice(0), file.name);
       await parseWorkbookBuffer(buf, file.name);
       /* Admin: also push to Supabase — use a copy to avoid buffer conflicts */
-      if(CURRENT_USER&&CURRENT_USER.isAdmin){
+      if(CURRENT_USER&&CURRENT_USER.isMaster){
         pushToSupabase(buf.slice(0), file.name);
       }
     }catch(err){
@@ -9068,7 +9074,7 @@ let ACT_NL_OPEN=false;
 function actNotLoggedIn(){
   const seen=new Set(ACT_ROWS.filter(r=>r.action==='login').map(r=>String(r.user).toLowerCase()));
   return Object.keys(AUTH_USERS).filter(k=>!seen.has(k.toLowerCase()))
-    .map(k=>({id:k,name:AUTH_USERS[k].name||k,role:AUTH_USERS[k].isAdmin?'Admin':'User'}))
+    .map(k=>({id:k,name:AUTH_USERS[k].name||k,role:AUTH_USERS[k].isMaster?'Master admin':AUTH_USERS[k].isAdmin?'Admin':'User'}))
     .sort((a,b)=>a.name.localeCompare(b.name));
 }
 function renderNotLoggedIn(list){
@@ -9232,11 +9238,11 @@ async function loadFromSupabase(preMeta){
       /* already inside the dashboard: report inline, offer retry; admins also
          get a path to the upload screen — but only by their own choice */
       appVeilError('⚠ Could not load the latest data: '+err.message+
-        '<br>You can retry'+((CURRENT_USER&&CURRENT_USER.isAdmin)?' or upload Dashboard.xlsx manually.':' — or contact your admin if this persists.'),
-        CURRENT_USER&&CURRENT_USER.isAdmin);
+        '<br>You can retry'+((CURRENT_USER&&CURRENT_USER.isMaster)?' or upload Dashboard.xlsx manually.':' — or contact your admin if this persists.'),
+        CURRENT_USER&&CURRENT_USER.isMaster);
     }else{
       hideParse();
-      if(CURRENT_USER&&CURRENT_USER.isAdmin){
+      if(CURRENT_USER&&CURRENT_USER.isMaster){
         showParse('⚠ Could not load from Supabase: '+err.message+'. Upload Dashboard.xlsx manually above.');
       }else{
         $('#uploadWaitMsg').style.display='block';
