@@ -557,6 +557,88 @@ body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
 .lt-rm-in.pending{border-color:#F59E0B;background:#FFFBEB}
 .lt-rm-in.failed{border-color:#EF4444;background:#FEF2F2}
 @media (max-width:700px){.lt-toolbar input[type=search]{min-width:0;flex:1}}
+/* ===== Overview (dark card layout, no global filters) ===== */
+body.summary-page .filterbar{display:none}
+#page-summary{--ovbg:#14172E;--ovcard:#1C2042;--ovline:#2C3166;--ovink:#ECEEFB;--ovmut:#9AA0C8;
+  background:var(--ovbg);border-radius:18px;padding:18px;margin-top:4px;color:var(--ovink)}
+.ov-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.ov-top h2{margin:0;font-size:17px;font-weight:800;color:var(--ovink);letter-spacing:-.01em}
+.ov-top span{font-size:11.5px;color:var(--ovmut)}
+.ov-kpis{display:grid;grid-template-columns:1.4fr repeat(5,1fr);gap:12px}
+.ov-kpi{all:unset;box-sizing:border-box;cursor:pointer;border-radius:14px;padding:15px 16px;position:relative;overflow:hidden;
+  background:var(--g);color:#fff;min-height:96px;display:flex;flex-direction:column;justify-content:center;transition:.15s;
+  box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.ov-kpi::after{content:'';position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.10)}
+.ov-kpi:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.4)}
+.ov-kpi:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.ov-kpi .l{font-size:11px;font-weight:700;letter-spacing:.03em;opacity:.9}
+.ov-kpi .v{font-size:26px;font-weight:800;margin-top:6px;letter-spacing:-.02em;line-height:1.1}
+.ov-kpi .s{font-size:11px;margin-top:6px;opacity:.88;line-height:1.45}
+.ov-kpi .s b{font-weight:800}
+.ov-row{display:grid;gap:12px;margin-top:12px}
+.ov-row.r3{grid-template-columns:1.25fr 1.6fr 1fr}
+.ov-row.r2{grid-template-columns:1fr}
+.ov-card{background:var(--ovcard);border:1px solid var(--ovline);border-radius:14px;padding:15px 16px;min-width:0}
+.ov-card h3{margin:0;font-size:13px;font-weight:800;color:var(--ovink)}
+.ov-card .sub{display:block;font-size:11px;color:var(--ovmut);margin-top:3px}
+.ov-head{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+.ov-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.ov-seg{display:inline-flex;border:1px solid var(--ovline);border-radius:8px;overflow:hidden;background:#161A38}
+.ov-seg button{border:0;background:transparent;padding:5px 9px;font-size:10.5px;font-weight:700;color:var(--ovmut);cursor:pointer;white-space:nowrap}
+.ov-seg button.on{background:linear-gradient(135deg,#8B5CF6,#D946EF);color:#fff}
+.ov-btn{border:1px solid var(--ovline);background:#161A38;border-radius:8px;height:27px;padding:0 11px;font-size:10.5px;font-weight:800;
+  color:#C9CDF2;cursor:pointer;white-space:nowrap}
+.ov-btn:hover{background:#232859}
+/* insights */
+.ov-ins{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ov-ins li{font-size:12px;line-height:1.5;color:#D5D8F3;padding:8px 10px 8px 12px;border-left:3px solid var(--c,#8B5CF6);
+  background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;cursor:pointer}
+.ov-ins li:hover{background:rgba(255,255,255,.07)}
+.ov-ins li b{color:#fff}
+/* column chart (ageing) */
+.ov-cols{display:flex;align-items:flex-end;gap:8px;height:190px;padding-top:18px;border-bottom:1px solid var(--ovline)}
+.ov-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;min-width:0}
+.ov-col .bar{width:70%;max-width:38px;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,#22D3EE,#6366F1);transition:.15s;min-height:2px}
+.ov-col:hover .bar{filter:brightness(1.25)}
+.ov-col .t{font-size:10px;font-weight:700;color:#C9CDF2;margin-bottom:4px;white-space:nowrap}
+.ov-xl{display:flex;gap:8px;margin-top:6px}.ov-xl span{flex:1;text-align:center;font-size:10.5px;color:var(--ovmut);font-weight:700}
+/* donuts */
+.ov-donuts{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.ov-donut{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ov-donut svg{width:132px;height:132px}
+.ov-donut svg circle.seg{cursor:pointer;transition:.15s}.ov-donut svg circle.seg:hover{stroke-width:20}
+.ov-donut .ttl{font-size:11px;font-weight:800;color:var(--ovmut);letter-spacing:.04em;text-transform:uppercase}
+.ov-leg{display:flex;flex-direction:column;gap:4px;width:100%}
+.ov-leg div{display:flex;align-items:center;gap:6px;font-size:11px;color:#C9CDF2;cursor:pointer}
+.ov-leg i{width:9px;height:9px;border-radius:50%;flex:none}.ov-leg b{margin-left:auto;color:#fff}
+/* horizontal bars (top N chart) */
+.ov-hbars{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto;padding-right:4px}
+.ov-hb{display:grid;grid-template-columns:minmax(90px,240px) 1fr auto;gap:8px;align-items:center;cursor:pointer;font-size:11px}
+.ov-hb .k{color:#C9CDF2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-hb .tr{background:rgba(255,255,255,.05);border-radius:5px;height:14px;overflow:hidden}
+.ov-hb .fl{height:100%;border-radius:5px;background:var(--g)}
+.ov-hb .n{color:#fff;font-weight:700;white-space:nowrap}
+.ov-hb:hover .k{color:#fff}
+/* tables */
+.ov-tw{overflow:auto;max-height:560px;border:1px solid var(--ovline);border-radius:10px}
+.ov-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.ov-tbl th{position:sticky;top:0;background:#252A57;color:#C9CDF2;font-size:10.5px;font-weight:800;padding:8px 9px;text-align:left;white-space:nowrap}
+#page-summary .ov-tbl td{padding:7px 9px;border:0;border-top:1px solid var(--ovline);background:transparent;color:#DDE0F7;white-space:nowrap}
+#page-summary .ov-tbl th{border:0}
+.ov-tbl .num{text-align:right}
+.ov-tbl td.key{white-space:normal;word-break:break-word;max-width:260px}
+#page-summary .ov-tbl tbody tr:hover td{background:rgba(255,255,255,.05)}
+#page-summary .ov-tbl td.dz{cursor:pointer;color:#A5B4FC;text-decoration:underline dotted;text-underline-offset:3px}
+.ov-tbl td.dz:hover{color:#fff}
+#page-summary .ov-tbl tr.tot td{font-weight:800;background:#20244B;border-top:2px solid #3A4080;color:#fff}
+.ov-empty{padding:18px;text-align:center;color:var(--ovmut);font-size:12px}
+#ovModal .vh-modal{max-width:min(1180px,96vw);width:96vw}
+.ov-dr-sum{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:12px;color:var(--mut)}
+.ov-dr-sum b{color:var(--ink)}
+#ovModal .mono{font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:11.5px}
+@media (max-width:1300px){.ov-kpis{grid-template-columns:repeat(3,1fr)}.ov-row.r3{grid-template-columns:1fr 1fr}.ov-row.r3>.ov-card:first-child{grid-column:1/-1}}
+@media (max-width:760px){.ov-kpis{grid-template-columns:1fr 1fr}.ov-row.r3{grid-template-columns:1fr}.ov-row.r2{grid-template-columns:1fr}
+  .ov-donuts{grid-template-columns:1fr 1fr}#page-summary{padding:12px}}
 </style>
 
 <style id="theme-light">
@@ -1531,6 +1613,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <button data-page="team"><span class="ic">🌳</span>Team Tree</button>
       <button data-page="reference"><span class="ic">📄</span>Activity Tracker</button>
       <button data-page="overview" class="active"><span class="ic">🏠</span>Executive Overview</button>
+      <button data-page="summary"><span class="ic">🧾</span>Overview</button>
       <button data-page="pendency"><span class="ic">📦</span>Pendency Analytics</button>
       <button data-page="value"><span class="ic">💰</span>Value-at-Risk</button>
       <button data-page="rootcause"><span class="ic">🧭</span>Root Cause & What-If</button>
@@ -1639,6 +1722,21 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
     </section>
 
     <!-- ============ PAGE: LANE VIEW ============ -->
+    <section class="page" id="page-summary">
+      <div class="ov-top"><h2>Pendency Overview</h2>
+        <span>whole file · global filters are not applied here · click any card, bar or number to see the AWBs behind it</span></div>
+      <div class="ov-kpis" id="ovKpis"></div>
+      <div class="ov-row r3">
+        <div class="ov-card"><div class="ov-head"><div><h3>What the numbers say</h3><span class="sub">auto-generated from today's file · click a line to drill</span></div></div>
+          <ul class="ov-ins" id="ovIns"></ul></div>
+        <div class="ov-card"><div class="ov-head"><div><h3>Pending value by in-transit ageing</h3><span class="sub">₹ value stuck in each ageing band (days) · click a bar to drill</span></div></div>
+          <div id="ovAge"></div></div>
+        <div class="ov-card"><div class="ov-head"><div><h3>Where the value sits</h3><span class="sub">share of ₹ value · click a slice to drill</span></div></div>
+          <div class="ov-donuts" id="ovDonuts"></div></div>
+      </div>
+      <div class="ov-row r2" id="ovGrid"></div>
+    </section>
+
     <section class="page" id="page-laneview">
       <div class="lv-cards" id="lvCards"></div>
 
@@ -8199,6 +8297,204 @@ function vhShowAwb(awb){
 </script>
 <script>
 /* =============================================================
+   OVERVIEW — dark card layout: KPIs, insights, ageing / share charts,
+   Top N lane / vehicle / trip / client. Reads RAW directly: global
+   filters do not apply.
+============================================================= */
+const OV_HV_CUT=4999;
+const ovIsHov=r=>hovNorm(r.HOV_flag)==='hov';
+const ovIsVol=r=>String(r.Volumetric_flag||'').trim().toLowerCase()==='volumetric';
+const ovIsHv=r=>(+r.Product_value||0)>OV_HV_CUT;
+const ovPct=(a,b)=>b?(a/b*100):0;
+const ovFmtP=v=>(v>=10?v.toFixed(0):v.toFixed(1))+'%';
+const ovSumV=rows=>rows.reduce((s,r)=>s+(+r.Product_value||0),0);
+let OV_SRC=null;
+const OV_ST={};
+const OV_DIMS=[
+  {id:'lane',title:'Top Lanes',label:'Lane',key:r=>r['Lane Code'],skip:k=>!k||k==='Unknown',zone:true,g:'linear-gradient(90deg,#8B5CF6,#D946EF)'},
+  {id:'veh', title:'Top Vehicles',label:'Vehicle',key:r=>r.vehicle_number,skip:k=>!k,zone:true,g:'linear-gradient(90deg,#06B6D4,#3B82F6)'},
+  {id:'trip',title:'Top Trips',label:'Trip code',key:r=>r.trip_code,skip:k=>!k,zone:true,g:'linear-gradient(90deg,#10B981,#22D3EE)'},
+  {id:'cli', title:'Top Clients',label:'Client',key:r=>r.Client,skip:k=>!k||k==='Unknown',zone:false,g:'linear-gradient(90deg,#F59E0B,#F43F5E)'}
+];
+OV_DIMS.forEach(d=>OV_ST[d.id]={sort:'v',n:10,view:'table'});
+function ovAcc(k){return {k,n:0,v:0,bs:new Set(),hov:0,vol:0,hv:0,maxAge:0,zs:new Set(),rows:[]};}
+function ovAdd(a,r){const v=+r.Product_value||0,age=+r.intransit_ageing||0;
+  a.n++;a.v+=v;if(age>a.maxAge)a.maxAge=age;if(r.Manifest_code)a.bs.add(r.Manifest_code);
+  if(ovIsHov(r))a.hov++;if(ovIsVol(r))a.vol++;if(ovIsHv(r))a.hv++;if(r.Zone)a.zs.add(r.Zone);a.rows.push(r);}
+function ovTotals(rows){const a=ovAcc('Total');rows.forEach(r=>ovAdd(a,r));return a;}
+function ovGroupBy(rows,keyFn,skip){
+  const m=new Map();
+  for(const r of rows){const k=String(keyFn(r)||'').trim();if(skip&&skip(k))continue;
+    let a=m.get(k);if(!a){a=ovAcc(k);m.set(k,a);}ovAdd(a,r);}
+  return [...m.values()];
+}
+function renderOverview(){
+  const host=$('#ovKpis');if(!host)return;
+  if(!RAW.length){host.innerHTML='<div class="ov-empty">No data loaded yet.</div>';
+    ['#ovIns','#ovAge','#ovDonuts','#ovGrid'].forEach(s=>{const e=$(s);if(e)e.innerHTML='';});OV_SRC=null;return;}
+  if(OV_SRC===RAW)return;            /* already built for this file */
+  OV_SRC=RAW;
+  OV_DIMS.forEach(d=>{d._G=null;});
+  ovRenderKpis();ovRenderInsights();ovRenderAgeing();ovRenderDonuts();OV_DIMS.forEach(ovRenderDim);
+}
+/* ---- KPI tiles: only the value tile keeps a line under the number ---- */
+function ovRenderKpis(){
+  const T=ovTotals(RAW);
+  const hovR=RAW.filter(ovIsHov),volR=RAW.filter(ovIsVol),hvR=RAW.filter(ovIsHv);
+  const K=[
+    {l:'Total Pendency Value',v:fmtINR(T.v),s:`<b>${fmtN(T.n)}</b> AWBs in <b>${fmtN(T.bs.size)}</b> bags`,rows:RAW,t:'All pendency',g:'linear-gradient(135deg,#A855F7,#EC4899)'},
+    {l:'Bags (unique manifests)',v:fmtN(T.bs.size),rows:RAW,t:'All bags',g:'linear-gradient(135deg,#06B6D4,#3B82F6)'},
+    {l:'AWB Count',v:fmtN(T.n),rows:RAW,t:'All AWBs',g:'linear-gradient(135deg,#6366F1,#8B5CF6)'},
+    {l:'HOV Shipments',v:fmtN(hovR.length),rows:hovR,t:'HOV shipments',g:'linear-gradient(135deg,#F43F5E,#FB7185)'},
+    {l:'Volumetric',v:fmtN(volR.length),rows:volR,t:'Volumetric shipments',g:'linear-gradient(135deg,#F59E0B,#F97316)'},
+    {l:'Value > ₹4,999',v:fmtN(hvR.length),rows:hvR,t:'Shipments above ₹4,999',g:'linear-gradient(135deg,#10B981,#14B8A6)'}
+  ];
+  $('#ovKpis').innerHTML=K.map((k,i)=>`<button class="ov-kpi" data-i="${i}" style="--g:${k.g}" title="Click to see the AWBs">
+    <div class="l">${k.l}</div><div class="v">${k.v}</div>${k.s?`<div class="s">${k.s}</div>`:''}</button>`).join('');
+  $$('#ovKpis .ov-kpi').forEach(b=>b.onclick=()=>{const k=K[+b.dataset.i];ovOpenDrill(k.t,k.rows);});
+}
+/* ---- the story: a few plain sentences from the data ---- */
+function ovRenderInsights(){
+  const T=ovTotals(RAW),items=[];
+  const old=RAW.filter(r=>(+r.intransit_ageing||0)>15),ov=ovSumV(old);
+  items.push({c:'#F43F5E',t:`<b>${fmtINR(ov)}</b> (${ovFmtP(ovPct(ov,T.v))} of value) has been in transit for <b>more than 15 days</b> across ${fmtN(old.length)} AWBs.`,rows:old,ttl:'In transit 16+ days'});
+  const lanes=ovGroupBy(RAW,r=>r['Lane Code'],k=>!k||k==='Unknown').sort((a,b)=>b.v-a.v);
+  if(lanes[0]){const t10=lanes.slice(0,10),v10=t10.reduce((s,a)=>s+a.v,0);
+    items.push({c:'#8B5CF6',t:`Top lane <b>${rmEsc(lanes[0].k)}</b> holds <b>${fmtINR(lanes[0].v)}</b>; the top 10 lanes hold <b>${ovFmtP(ovPct(v10,T.v))}</b> of all pending value.`,rows:t10.flatMap(a=>a.rows),ttl:'Top 10 lanes'});}
+  const hov=RAW.filter(ovIsHov),hv=ovSumV(hov);
+  if(hov.length)items.push({c:'#FB7185',t:`Few but expensive: <b>${fmtN(hov.length)}</b> HOV AWBs (${ovFmtP(ovPct(hov.length,T.n))} of count) carry <b>${ovFmtP(ovPct(hv,T.v))}</b> of value.`,rows:hov,ttl:'HOV shipments'});
+  const zones=ovGroupBy(RAW,r=>r.Zone).sort((a,b)=>b.v-a.v);
+  if(zones[0])items.push({c:'#22D3EE',t:`<b>${rmEsc(zones[0].k)}</b> zone carries the most value: <b>${fmtINR(zones[0].v)}</b> (${ovFmtP(ovPct(zones[0].v,T.v))}).`,rows:zones[0].rows,ttl:'Zone '+zones[0].k});
+  const cl=ovGroupBy(RAW,r=>r.Client,k=>!k||k==='Unknown').sort((a,b)=>b.v-a.v);
+  if(cl[0])items.push({c:'#F59E0B',t:`Biggest client exposure is <b>${rmEsc(cl[0].k)}</b> with <b>${fmtINR(cl[0].v)}</b> in ${fmtN(cl[0].n)} AWBs.`,rows:cl[0].rows,ttl:'Client '+cl[0].k});
+  $('#ovIns').innerHTML=items.map((it,i)=>`<li data-i="${i}" style="--c:${it.c}">${it.t}</li>`).join('');
+  $$('#ovIns li').forEach(li=>li.onclick=()=>{const it=items[+li.dataset.i];ovOpenDrill(it.ttl,it.rows);});
+}
+/* ---- ageing columns ---- */
+function ovRenderAgeing(){
+  const G=BUCKETS.map(b=>ovAcc(b));const idx=new Map(BUCKETS.map((b,i)=>[b,i]));
+  RAW.forEach(r=>{const i=idx.get(bucketOf(r.intransit_ageing));if(i!=null)ovAdd(G[i],r);});
+  const mx=Math.max(1,...G.map(a=>a.v));
+  const short=v=>{const a=Math.abs(v);return a>=1e7?'₹'+(v/1e7).toFixed(1)+'Cr':a>=1e5?'₹'+(v/1e5).toFixed(1)+'L':a>=1e3?'₹'+(v/1e3).toFixed(0)+'K':'₹'+Math.round(v);};
+  $('#ovAge').innerHTML=`<div class="ov-cols">${G.map((a,i)=>`<div class="ov-col" data-i="${i}" title="${a.k} days · ${fmtINR(a.v)} · ${fmtN(a.n)} AWBs">
+      <div class="t">${a.v?short(a.v):''}</div><div class="bar" style="height:${(a.v/mx*100).toFixed(1)}%"></div></div>`).join('')}</div>
+    <div class="ov-xl">${G.map(a=>`<span>${a.k}</span>`).join('')}</div>`;
+  $$('#ovAge .ov-col').forEach(c=>c.onclick=()=>{const a=G[+c.dataset.i];ovOpenDrill('Ageing '+a.k+' days',a.rows);});
+}
+/* ---- donuts: forward vs reverse, and by zone ---- */
+const OV_PAL=['#A855F7','#22D3EE','#F43F5E','#F59E0B','#10B981','#3B82F6','#EC4899','#84CC16'];
+function ovDonut(title,groups){
+  const T=groups.reduce((s,a)=>s+a.v,0)||1,R=48,C=2*Math.PI*R;let off=0;
+  const segs=groups.map((a,i)=>{const len=a.v/T*C;const s=`<circle class="seg" data-i="${i}" r="${R}" cx="66" cy="66" fill="none" stroke="${OV_PAL[i%OV_PAL.length]}" stroke-width="16"
+      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 66 66)"><title>${rmEsc(a.k)} · ${fmtINR(a.v)}</title></circle>`;off+=len;return s;}).join('');
+  return `<div class="ov-donut"><div class="ttl">${title}</div><svg viewBox="0 0 132 132"><circle r="${R}" cx="66" cy="66" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="16"/>${segs}</svg>
+    <div class="ov-leg">${groups.map((a,i)=>`<div data-i="${i}"><i style="background:${OV_PAL[i%OV_PAL.length]}"></i>${rmEsc(a.k)}<b>${ovFmtP(ovPct(a.v,T))}</b></div>`).join('')}</div></div>`;
+}
+function ovRenderDonuts(){
+  const fr=ovGroupBy(RAW,r=>r.flag==='Reverse'?'Reverse':'Forward').sort((a,b)=>b.v-a.v);
+  const zn=ovGroupBy(RAW,r=>r.Zone).sort((a,b)=>b.v-a.v);
+  const sets=[fr,zn];
+  $('#ovDonuts').innerHTML=ovDonut('Fwd vs Rev',fr)+ovDonut('By zone',zn);
+  $$('#ovDonuts .ov-donut').forEach((d,di)=>d.querySelectorAll('[data-i]').forEach(el=>el.onclick=()=>{
+    const a=sets[di][+el.dataset.i];ovOpenDrill((di?'Zone ':'')+a.k,a.rows);}));
+}
+/* ---- Top N cards (table or chart) ---- */
+function ovRenderDim(dim){
+  let card=$('#ovCard-'+dim.id);
+  const st=OV_ST[dim.id];
+  if(!card){
+    card=document.createElement('div');card.className='ov-card';card.id='ovCard-'+dim.id;
+    card.innerHTML=`<div class="ov-head"><div><h3 data-ttl></h3><span class="sub" data-sub></span></div>
+      <div class="ov-tools">
+        <div class="ov-seg" data-k="n"><button data-v="10">Top 10</button><button data-v="20">Top 20</button><button data-v="50">Top 50</button></div>
+        <div class="ov-seg" data-k="sort"><button data-v="v">By ₹ Value</button><button data-v="a">By Ageing</button></div>
+        <div class="ov-seg" data-k="view"><button data-v="table">Table</button><button data-v="chart">Chart</button></div>
+        <button class="ov-btn" data-csv>⤓ CSV</button></div></div><div data-body></div>`;
+    $('#ovGrid').appendChild(card);
+    card.querySelectorAll('.ov-seg').forEach(sg=>sg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const k=sg.dataset.k;st[k]=k==='n'?+b.dataset.v:b.dataset.v;ovRenderDim(dim);}));
+    card.querySelector('[data-csv]').onclick=()=>{
+      const m=card._model;if(!m)return;
+      lvExport(m.data.map((d,i)=>Object.assign({Rank:i+1,[dim.label]:d.k},dim.zone?{Zone:[...d.zs].sort().join(' / ')}:{},
+        {AWBs:d.n,Bags:d.bs.size,Value:Math.round(d.v),HOV:d.hov,Volumetric:d.vol,Value_gt_4999:d.hv})),
+        'csv','overview_top'+st.n+'_'+dim.id+'_'+(st.sort==='a'?'ageing':'value'),dim.id);
+    };
+  }
+  card.querySelectorAll('.ov-seg').forEach(sg=>sg.querySelectorAll('button').forEach(b=>
+    b.classList.toggle('on',String(st[sg.dataset.k])===b.dataset.v)));
+  card.querySelector('[data-ttl]').textContent=dim.title.replace('Top','Top '+st.n);
+  card.querySelector('[data-sub]').textContent=st.sort==='a'
+    ?'ranked by oldest shipment (in-transit days), ties by ₹ value · click to drill'
+    :'ranked by pending ₹ value · click to drill';
+  if(!dim._G)dim._G=ovGroupBy(RAW,dim.key,dim.skip);
+  const G=[...dim._G].sort(st.sort==='a'?(a,b)=>b.maxAge-a.maxAge||b.v-a.v:(a,b)=>b.v-a.v);
+  const data=G.slice(0,st.n);
+  const top=ovAcc('Total');data.forEach(d=>d.rows.forEach(r=>ovAdd(top,r)));
+  card._model={data};
+  const body=card.querySelector('[data-body]');
+  if(!data.length){body.innerHTML=`<div class="ov-empty">No ${dim.label.toLowerCase()} values in this file.</div>`;return;}
+  if(st.view==='chart'){
+    const mx=Math.max(1,...data.map(d=>d.v));
+    body.innerHTML=`<div class="ov-hbars">${data.map((d,i)=>`<div class="ov-hb" data-i="${i}" title="${rmEsc(d.k)} · ${fmtINR(d.v)} · ${fmtN(d.n)} AWBs · ${fmtN(d.bs.size)} bags">
+        <span class="k">${i+1}. ${rmEsc(d.k)}</span><span class="tr"><span class="fl" style="display:block;width:${(d.v/mx*100).toFixed(1)}%;--g:${dim.g}"></span></span>
+        <span class="n">${fmtINR(d.v)}</span></div>`).join('')}</div>`;
+    body.querySelectorAll('.ov-hb').forEach(el=>el.onclick=()=>{const d=data[+el.dataset.i];ovOpenDrill(dim.label+' '+d.k,d.rows);});
+    return;
+  }
+  const cols=[
+    {h:'#',f:(d,i)=>i==null?'':i+1},
+    {h:dim.label,cls:'key',f:d=>d===top?'<b>Top '+st.n+' total</b>':`<b>${rmEsc(d.k)}</b>`,dz:d=>d.rows},
+    ...(dim.zone?[{h:'Zone',f:d=>d===top?'':rmEsc([...d.zs].sort().join(', '))}]:[]),
+    {h:'AWBs',num:1,f:d=>fmtN(d.n),dz:d=>d.rows},
+    {h:'Bags',num:1,f:d=>fmtN(d.bs.size),dz:d=>d.rows},
+    {h:'₹ Value',num:1,f:d=>fmtINR(d.v),dz:d=>d.rows},
+    {h:'HOV',num:1,f:d=>fmtN(d.hov),dz:d=>d.rows.filter(ovIsHov),sfx:' · HOV'},
+    {h:'Volumetric',num:1,f:d=>fmtN(d.vol),dz:d=>d.rows.filter(ovIsVol),sfx:' · Volumetric'},
+    {h:'> ₹4,999',num:1,f:d=>fmtN(d.hv),dz:d=>d.rows.filter(ovIsHv),sfx:' · > ₹4,999'}
+  ];
+  const rowHtml=(d,i,tot)=>`<tr${tot?' class="tot"':''}>`+cols.map((c,ci)=>`<td class="${c.num?'num':''}${c.cls?' '+c.cls:''}${c.dz?' dz':''}" data-ci="${ci}" data-ri="${tot?'t':i}">${c.f(d,tot?null:i)}</td>`).join('')+'</tr>';
+  body.innerHTML=`<div class="ov-tw"><table class="ov-tbl"><thead><tr>${cols.map(c=>`<th class="${c.num?'num':''}">${c.h}</th>`).join('')}</tr></thead>
+    <tbody>${data.map((d,i)=>rowHtml(d,i,false)).join('')+rowHtml(top,0,true)}</tbody></table></div>`;
+  body.querySelectorAll('td.dz').forEach(td=>td.onclick=()=>{
+    const c=cols[+td.dataset.ci],d=td.dataset.ri==='t'?top:data[+td.dataset.ri];
+    ovOpenDrill((td.dataset.ri==='t'?dim.title.replace('Top','Top '+st.n)+' (combined)':dim.label+' '+d.k)+(c.sfx||''),c.dz(d));
+  });
+}
+/* drill-through: AWB list behind any card, bar or number */
+let OV_DR=[];
+function ovOpenDrill(title,rows){
+  if(!$('#ovModal')){
+    document.body.insertAdjacentHTML('beforeend',
+      `<div class="vh-modal-back" id="ovModal"><div class="vh-modal"><div class="vh-modal-h"><h3 id="ovModalT"></h3>
+        <button id="ovModalCsv" style="margin-left:auto">⤓ CSV</button><button id="ovModalX" style="margin-left:0">✕ Close</button></div>
+        <div class="vh-modal-b" id="ovModalB"></div></div></div>`);
+    $('#ovModal').onclick=e=>{if(e.target.id==='ovModal')$('#ovModal').classList.remove('on');};
+    $('#ovModalX').onclick=()=>$('#ovModal').classList.remove('on');
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ovModal'))$('#ovModal').classList.remove('on');});
+    $('#ovModalCsv').onclick=()=>lvExport(OV_DR.map(r=>({AWB:r.Awb_number,Lane_Code:r['Lane Code'],Zone:r.Zone,Flow:r.flag,
+      Vehicle:r.vehicle_number,Trip_code:r.trip_code,Client:r.Client,Manifest:r.Manifest_code,Ageing_days:r.intransit_ageing,
+      Bucket:r.bucket,Product_value:r.Product_value,HOV:r.HOV_flag,Volumetric:r.Volumetric_flag})),'csv',
+      'overview_'+($('#ovModalT').textContent||'drill').replace(/[^A-Za-z0-9]+/g,'_').slice(0,60),'awbs');
+  }
+  OV_DR=[...rows].sort((a,b)=>(+b.Product_value||0)-(+a.Product_value||0));
+  const T=ovTotals(OV_DR),cap=500;
+  $('#ovModalT').textContent=title;
+  $('#ovModalB').innerHTML=`<div class="ov-dr-sum"><span><b>${fmtN(T.n)}</b> AWBs</span>·<span><b>${fmtN(T.bs.size)}</b> bags</span>·<span><b>${fmtINR(T.v)}</b></span>
+      ${OV_DR.length>cap?`<span>· showing the ${fmtN(cap)} highest-value AWBs; CSV has all</span>`:''}</div>
+    <div class="lv-mini-wrap" style="max-height:62vh"><table class="lv-mini"><thead><tr>
+      <th style="text-align:left">AWB</th><th style="text-align:left">Lane</th><th style="text-align:left">Vehicle</th><th style="text-align:left">Trip</th>
+      <th style="text-align:left">Client</th><th style="text-align:left">Manifest</th><th class="num">Age (d)</th><th class="num">₹ Value</th>
+      <th style="text-align:left">HOV</th><th style="text-align:left">Volumetric</th></tr></thead><tbody>${
+      OV_DR.slice(0,cap).map(r=>`<tr><td class="mono">${rmEsc(r.Awb_number)}</td><td>${rmEsc(r['Lane Code'])}</td><td>${rmEsc(r.vehicle_number||'—')}</td>
+        <td class="mono">${rmEsc(r.trip_code||'—')}</td><td>${rmEsc(r.Client)}</td><td class="mono">${rmEsc(r.Manifest_code||'—')}</td>
+        <td class="num">${fmtN(r.intransit_ageing)}</td><td class="num">${fmtINR(r.Product_value)}</td><td>${rmEsc(r.HOV_flag)}</td><td>${rmEsc(r.Volumetric_flag)}</td></tr>`).join('')
+      ||'<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--mut)">No AWBs.</td></tr>'}</tbody></table></div>`;
+  $('#ovModal').classList.add('on');
+}
+</script>
+
+<script>
+/* =============================================================
    LOGIN · UPLOAD · NAV · BOOT
 ============================================================= */
 
@@ -9272,6 +9568,7 @@ async function loadFromSupabase(preMeta){
 /* ---- boot: build UI once data is loaded ---- */
 const PAGE_META={
   overview:{t:'Executive Overview',c:'Snapshot of all in-transit pendency'},
+  summary:{t:'Overview',c:'Pendency value, bags, AWBs, HOV, volumetric · Top lanes, vehicles, trips, clients'},
   activity:{t:'Activity Log',c:'Who signed in and what they downloaded'},
   pendency:{t:'Pendency Analytics',c:'Shipment counts, ageing mix, congestion points'},
   value:{t:'Value-at-Risk',c:'Where the money is stuck — vendors, HOV, ABC, PODs'},
@@ -9311,6 +9608,10 @@ function boot(){
   }
   filters={};
   updateAll();
+  /* Overview reads RAW directly — rebuild it for the new file */
+  OV_SRC=null;
+  const ovp=document.getElementById('page-summary');
+  if(ovp&&ovp.classList.contains('active'))renderOverview();
 }
 
 function navTo(page){
@@ -9330,6 +9631,7 @@ function navTo(page){
   if(page==='lhrecovery')gsOnLHRPage();
   if(page==='livetracker')ltOnPage();
   if(page==='projection')pjOnPage();
+  if(page==='summary')renderOverview();
   closeSidebar();
 }
 function openSidebar(){$('#sidebar').classList.add('open');$('#overlay').classList.add('show');}
