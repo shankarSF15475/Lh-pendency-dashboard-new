@@ -8262,6 +8262,7 @@ const AUTH_USERS={
   'janardhan.r@shadowfax.in':{pass:'janardhan@2664',  name:'Janardhan',    isAdmin:false,  lhRecovery:false, remarks:true},
   'arunesh.kumar@shadowfax.in':{pass:'arunesh@123',  name:'Arunesh kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'nikhil.kumar4@shadowfax.in':{pass:'nikhil@123',  name:'Nikhil kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'mohammad.alam@shadowfax.in':{pass:'Alam@54321',  name:'Mohammad Alam',    isAdmin:false,  lhRecovery:false, remarks:true},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
@@ -9468,20 +9469,9 @@ function wireControls(){
      Fwd Live Manifest Level Summary
      Rev Live Manifest Level Summary
      Fwd Live 2 & 30+ Summary
-   READ  — the workbook is now restricted to Shadowfax Technologies, so
-           Google no longer serves it to an anonymous browser request.
-           It is read through the Apps Script web app in LT_SCRIPT_URL
-           (pendency_live_tracker_apps_script.gs), which runs as its
-           owner's Shadowfax account and hands the tab back as JSON:
-             1. fetch()  — works when the web app is deployed with
-                           access "Anyone"
-             2. JSONP    — works when it is deployed "Anyone within
-                           Shadowfax Technologies"; the browser must be
-                           signed in to a Shadowfax Google account
-             3. gviz CSV — the old public feed, still tried last in case
-                           the sheet is ever re-shared by link
-           Re-read on page open, every 2 minutes while visible, and on
-           REFRESH NOW, so edits made in the sheet show up here.
+   READ  — the gviz CSV feed (workbook shared "Anyone with the link ·
+           Viewer"); re-read on page open, every 2 minutes while visible,
+           and on REFRESH NOW, so edits made in the sheet show up here.
    GROUP — the source tabs hold one row per manifest, so the same node
            repeats many times. Rows are collapsed to one per
              Date (first column) + Node + Movement Type
@@ -9498,8 +9488,7 @@ function wireControls(){
            Type in the source tab.
 ============================================================= */
 const LT_ID='1KgNwUL3-uz0W36LrGLn2aqqtS_eTrPM72Ca0ZgswFRc';
-const LT_SCRIPT_URL='';                     // Apps Script /exec URL — REQUIRED now: reads the restricted sheet and saves remarks
-const LT_TOKEN='';                          // must match TOKEN in the Apps Script (leave both blank to skip)
+const LT_SCRIPT_URL='';                     // Apps Script /exec URL — enables saving remarks
 const LT_TABS={
   fwd:{sheet:'Fwd Live Manifest Level Summary',label:'Fwd'},
   rev:{sheet:'Rev Live Manifest Level Summary',label:'Rev'},
@@ -9518,48 +9507,6 @@ function ltUrls(sheet){
   const cb='&_cb='+Date.now();
   return [base+'/gviz/tq?tqx=out:csv&headers=0&sheet='+encodeURIComponent(sheet)+cb,
           base+'/export?format=csv&sheet='+encodeURIComponent(sheet)+cb];
-}
-/* Apps Script URL with query params (token always included) */
-function ltScriptUrl(params){
-  const q=Object.assign({token:LT_TOKEN,_cb:Date.now()},params);
-  return LT_SCRIPT_URL+(LT_SCRIPT_URL.indexOf('?')<0?'?':'&')+
-    Object.keys(q).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(q[k])).join('&');
-}
-/* JSONP: a <script> request carries the viewer's Google sign-in, so it can
-   reach a web app limited to "Anyone within Shadowfax Technologies" where a
-   cross-origin fetch() cannot */
-function ltJsonp(url,ms){
-  return new Promise((resolve,reject)=>{
-    const cb='__lt_'+Date.now().toString(36)+Math.random().toString(36).slice(2);
-    const s=document.createElement('script');let done=false;
-    const clean=()=>{clearTimeout(tm);try{delete window[cb];}catch(e){window[cb]=undefined;}s.remove();};
-    window[cb]=d=>{done=true;clean();resolve(d);};
-    s.onerror=()=>{if(!done){clean();reject(new Error('could not reach the Apps Script'));}};
-    const tm=setTimeout(()=>{if(!done){clean();reject(new Error('no answer from the Apps Script — sign in to your Shadowfax Google account in this browser and retry'));}},ms||25000);
-    s.src=url+'&callback='+cb;
-    document.head.appendChild(s);
-  });
-}
-/* turn the web app's answer into the table shape the page uses */
-function ltFromScript(j){
-  if(!j||j.ok===false)throw new Error((j&&j.error)||'the Apps Script returned nothing');
-  const grid=(j.values||[]).map(r=>r.map(v=>v==null?'':String(v))).filter(r=>r.some(v=>v.trim()!==''));
-  const tb=ltTable(grid);
-  if(!tb.rows.length)throw new Error('no rows');
-  return tb;
-}
-async function ltPullScript(sheet){
-  const url=ltScriptUrl({action:'read',sheet});
-  try{
-    const res=await fetch(url,{cache:'no-store',redirect:'follow'});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const text=await res.text();
-    if(/^\s*</.test(text))throw new Error('sign-in page');
-    return ltFromScript(JSON.parse(text));
-  }catch(e){
-    /* fetch is blocked when the web app is domain-only → JSONP */
-    return ltFromScript(await ltJsonp(url));
-  }
 }
 function ltGrid(text){
   if(!text)return [];
@@ -9653,22 +9600,17 @@ function ltSyncLabel(){
 }
 async function ltPull(t){
   let last=null;
-  if(LT_SCRIPT_URL){
-    try{return await ltPullScript(LT_TABS[t].sheet);}catch(e){last=e;}
-  }
   for(const url of ltUrls(LT_TABS[t].sheet)){
     try{
       const res=await fetch(url,{cache:'no-store'});
       if(!res.ok)throw new Error('HTTP '+res.status);
       const text=await res.text();
-      if(/^\s*</.test(text))throw new Error('the sheet is restricted to Shadowfax, so Google returned a sign-in page');
+      if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
       const tb=ltTable(ltGrid(text));
       if(!tb.rows.length)throw new Error('no rows');
       return tb;
-    }catch(e){if(!last)last=e;}
+    }catch(e){last=e;}
   }
-  if(!LT_SCRIPT_URL&&last&&/failed to fetch|sign-in|restricted/i.test(last.message))
-    last=new Error('the sheet is restricted to Shadowfax and no Apps Script URL is set (LT_SCRIPT_URL)');
   throw last||new Error('unknown error');
 }
 async function ltSync(quiet){
@@ -9685,9 +9627,7 @@ async function ltSync(quiet){
   for(const t of keys){const G=LT[t].grp;if(!G)continue;
     G.rows.forEach(o=>{const k=t+'|'+o._gk;if(LT_PENDING[k]!==undefined&&o._rm.includes(LT_PENDING[k]))delete LT_PENDING[k];});}
   ltStatus(errs.length?'err':'ok',ltSyncLabel(),errs.length?
-    'Could not read '+errs.map(rmEsc).join('<br>')+'<br>'+(LT_SCRIPT_URL
-      ?'Check the tab name, that you are signed in to your <b>Shadowfax Google account</b> in this browser, and that the Apps Script deployment is current, then hit REFRESH NOW.'
-      :'The workbook is restricted to <b>Shadowfax Technologies</b>. Deploy <b>pendency_live_tracker_apps_script.gs</b> as a web app and paste its /exec URL into <b>LT_SCRIPT_URL</b>.'):null);
+    'Could not read '+errs.map(rmEsc).join('<br>')+'<br>Check the tab name and that the workbook is shared as <b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.':null);
   ltRender(false);
 }
 function ltStartAuto(){
@@ -9782,18 +9722,10 @@ async function ltSaveRemark(inp,row){
   const match=[{idx:0,value:row.Date},{col:m.node,value:row.Node}];
   if(m.move)match.push({col:m.move,value:row['Movement Type']});
   inp.classList.add('saving');
-  const body=JSON.stringify({token:LT_TOKEN,sheet:LT_TABS[t].sheet,headerCol:m.node,match,remarkCol:m.remark,byCol:m.by,remark,user});
+  const body=JSON.stringify({sheet:LT_TABS[t].sheet,headerCol:m.node,match,remarkCol:m.remark,byCol:m.by,remark,user});
   try{
-    let j;
-    try{
-      const res=await fetch(LT_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
-      const text=await res.text();
-      if(/^\s*</.test(text))throw new Error('sign-in page');
-      j=JSON.parse(text);
-    }catch(e){
-      /* domain-only web app → send the same payload through JSONP */
-      j=await ltJsonp(ltScriptUrl({action:'remark',payload:body}));
-    }
+    const res=await fetch(LT_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    const j=await res.json().catch(()=>({ok:true}));
     if(j&&j.ok===false)throw new Error(j.error||'the sheet refused the update');
     LT_PENDING[t+'|'+row._gk]=remark;
     inp.classList.remove('saving');inp.classList.add('pending');
