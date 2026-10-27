@@ -10201,7 +10201,7 @@ function ltGroup(t){
     o['Remarks By']=o._by.join(', ');
   });
   const cols=['Date','Node','Movement Type','Manifest Count'].concat(stCols,
-    Array.from({length:nR},(_,i)=>'RCA '+(i+1)),Array.from({length:nM},(_,i)=>'Remarks '+(i+1)),['Add Remark','Remarks By']);
+    Array.from({length:nR},(_,i)=>'RCA '+(i+1)),Array.from({length:nM},(_,i)=>'Remarks '+(i+1)),['Remarks By']);
   return {cols,rows,stCols,num:new Set(['Manifest Count'].concat(stCols))};
 }
 
@@ -10308,7 +10308,7 @@ function ltRender(resetPage){
     if(el)el.textContent=fmtN(LT[k].grp?LT[k].grp.rows.length:LT[k].rows.length);});
   $$('.lt-tab').forEach(b=>b.classList.toggle('active',b.dataset.lt===LT_TAB));
   $('#ltTblTitle').textContent=LT_TABS[LT_TAB].sheet.toUpperCase();
-  $('#ltWriteHint').textContent=!LT[LT_TAB].grp?'':LT_SCRIPT_URL?'Type in Add Remark and press Enter: it is saved on every manifest of that node in the Google Sheet':'Adding remarks from here switches on once the sheet write-back is connected';
+  $('#ltWriteHint').textContent='';
   $('#ltRemFilter').style.display=LT[LT_TAB].grp?'':'none';
   ltKpis();
   const {t,G,cols,rows}=ltView();
