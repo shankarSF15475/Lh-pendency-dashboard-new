@@ -5762,7 +5762,7 @@ const DOC_SECTIONS=[
 {sec:'LH Recovery', note:'Every figure on this page comes from the CN Working sheet, not the Dashboard sheet.', items:[
  {t:'panel', n:'Live Google Sheet source', what:'CN Working is read straight from the response workbook instead of being uploaded.',
   src:'Google Sheet · AuditShield – CN & Loss Reporting (Responses_Final) · tab "CN Working"',
-  logic:'read via the sheet\u0027s CSV endpoint (gviz), no key required\nrefreshed on sign-in, on opening this page if the last pull is over a minute old,\nevery 5 minutes while the browser tab is visible, and on REFRESH NOW\nthe green dot and timestamp on the strip show the last successful read',
+  logic:'read through the Apps Script web app (runs as the sheet owner, so the workbook stays private; every call carries a key)\nrefreshed on sign-in, on opening this page if the last pull is over a minute old,\nevery 5 minutes while the browser tab is visible, and on REFRESH NOW\nthe green dot and timestamp on the strip show the last successful read',
   note:'The workbook must be shared "Anyone with the link · Viewer", otherwise Google returns a sign-in page and the strip turns red. Uploading CN_Working.csv still works as a fallback and does not overwrite sheet data. A browser cannot be pushed to, so "real time" here means polling — edits in the sheet appear on the next pull.'},
  {t:'panel', n:'How dates are read', what:'The two date columns are stored inconsistently in the source sheet, so they are read as the text Excel displays.',
   src:'CN Working sheet',
@@ -10081,9 +10081,13 @@ function wireControls(){
      Fwd Live Manifest Level Summary
      Rev Live Manifest Level Summary
      Fwd Live 2 & 30+ Summary
-   READ  — the gviz CSV feed (workbook shared "Anyone with the link ·
-           Viewer"); re-read on page open, every 2 minutes while visible,
-           and on REFRESH NOW, so edits made in the sheet show up here.
+   READ  — through the Apps Script web app in LT_SCRIPT_URL
+           (pendency_live_tracker_apps_script.gs), which runs as the sheet
+           owner, so the workbook stays private. Each call carries
+           LT_SCRIPT_KEY and the script only returns the three tabs below.
+           Without a script URL it falls back to the public gviz CSV feed.
+           Re-read on page open, every 2 minutes while visible, and on
+           REFRESH NOW, so edits made in the sheet show up here.
    GROUP — the source tabs hold one row per manifest, so the same node
            repeats many times. Rows are collapsed to one per
              Date (first column) + Node + Movement Type
@@ -10100,7 +10104,8 @@ function wireControls(){
            Type in the source tab.
 ============================================================= */
 const LT_ID='1KgNwUL3-uz0W36LrGLn2aqqtS_eTrPM72Ca0ZgswFRc';
-const LT_SCRIPT_URL='';                     // Apps Script /exec URL — enables saving remarks
+const LT_SCRIPT_URL='https://script.google.com/a/macros/shadowfax.in/s/AKfycbxE_SACjJhIBM_2drBsUST5ZvSvJbAMUe2AuNItf1MNOtAfunisuLn0ZKrdnYjd-mhG/exec';                     // Apps Script /exec URL: reads the private sheet and saves remarks
+const LT_SCRIPT_KEY='ltk_NOpN_v18_oMs-cDUtW6L5iM7SLbFx2HC';   // must match ACCESS_KEY in the Apps Script
 const LT_TABS={
   fwd:{sheet:'Fwd Live Manifest Level Summary',label:'Fwd'},
   rev:{sheet:'Rev Live Manifest Level Summary',label:'Rev'},
@@ -10117,6 +10122,7 @@ const LT_ERRS={};
 function ltUrls(sheet){
   const base='https://docs.google.com/spreadsheets/d/'+LT_ID;
   const cb='&_cb='+Date.now();
+  if(LT_SCRIPT_URL)return [LT_SCRIPT_URL+'?sheet='+encodeURIComponent(sheet)+'&key='+encodeURIComponent(LT_SCRIPT_KEY)+cb];
   return [base+'/gviz/tq?tqx=out:csv&headers=0&sheet='+encodeURIComponent(sheet)+cb,
           base+'/export?format=csv&sheet='+encodeURIComponent(sheet)+cb];
 }
@@ -10217,7 +10223,9 @@ async function ltPull(t){
       const res=await fetch(url,{cache:'no-store'});
       if(!res.ok)throw new Error('HTTP '+res.status);
       const text=await res.text();
-      if(/^\s*</.test(text))throw new Error('the sheet is not shared publicly');
+      if(/^\s*</.test(text))throw new Error(LT_SCRIPT_URL?'the Apps Script did not answer (check it is deployed with access "Anyone")':'the sheet is private and the Apps Script link is not set yet');
+      if(/^\s*\{/.test(text)){let j=null;try{j=JSON.parse(text);}catch(e){}
+        if(j&&j.ok===false)throw new Error(j.error==='not authorised'?'the Apps Script key does not match LT_SCRIPT_KEY':j.error);}
       const tb=ltTable(ltGrid(text));
       if(!tb.rows.length)throw new Error('no rows');
       return tb;
@@ -10239,7 +10247,9 @@ async function ltSync(quiet){
   for(const t of keys){const G=LT[t].grp;if(!G)continue;
     G.rows.forEach(o=>{const k=t+'|'+o._gk;if(LT_PENDING[k]!==undefined&&o._rm.includes(LT_PENDING[k]))delete LT_PENDING[k];});}
   ltStatus(errs.length?'err':'ok',ltSyncLabel(),errs.length?
-    'Could not read '+errs.map(rmEsc).join('<br>')+'<br>Check the tab name and that the workbook is shared as <b>Anyone with the link · Viewer</b>, then hit REFRESH NOW.':null);
+    'Could not read '+errs.map(rmEsc).join('<br>')+'<br>'+(LT_SCRIPT_URL
+      ?'Check the tab names and that the Apps Script is deployed (Execute as: Me · Who has access: Anyone), then hit REFRESH NOW.'
+      :'The sheet is private, so this page reads it through an Apps Script. Ask an admin to deploy <b>pendency_live_tracker_apps_script.gs</b> and put its /exec link in the dashboard.'):null);
   ltRender(false);
 }
 function ltStartAuto(){
@@ -10334,7 +10344,7 @@ async function ltSaveRemark(inp,row){
   const match=[{idx:0,value:row.Date},{col:m.node,value:row.Node}];
   if(m.move)match.push({col:m.move,value:row['Movement Type']});
   inp.classList.add('saving');
-  const body=JSON.stringify({sheet:LT_TABS[t].sheet,headerCol:m.node,match,remarkCol:m.remark,byCol:m.by,remark,user});
+  const body=JSON.stringify({key:LT_SCRIPT_KEY,sheet:LT_TABS[t].sheet,headerCol:m.node,match,remarkCol:m.remark,byCol:m.by,remark,user});
   try{
     const res=await fetch(LT_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
     const j=await res.json().catch(()=>({ok:true}));
