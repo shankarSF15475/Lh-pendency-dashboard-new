@@ -918,6 +918,77 @@ thead th{background:#F1F3FB;color:var(--pine);}
 .rm-foot .tool{margin-left:auto;width:auto;padding:0 12px;font-size:10px;font-weight:800;}
 @media(max-width:640px){.rm-form{grid-template-columns:1fr;}}
 
+/* ---- BAG REMARKS · one follow-up trail per manifest (bag) ---- */
+.mv-pivot th.brm-col{background:#FFF4E5;color:#B45309;text-align:center;}
+.mv-pivot td.brm-lane{cursor:pointer;text-align:center;white-space:nowrap;font-size:11px;}
+.mv-pivot td.brm-lane .brm-none{color:#C0C5D6;font-weight:700;}
+.mv-pivot td.brm-lane .brm-n{display:inline-block;min-width:18px;padding:1px 7px;border-radius:999px;background:#D97706;
+  color:#fff;font-size:10.5px;font-weight:800;margin-right:6px;}
+.mv-pivot td.brm-lane .brm-v{color:var(--mut);font-weight:700;}
+.mv-pivot tbody tr.mv-lane-row td.brm-lane:hover{background:#FFF4E5!important;}
+.lv-tbl th.brm-h{background:#FFF4E5;color:#B45309;}
+.lv-tbl td.brm-cell{cursor:pointer;white-space:nowrap;min-width:150px;}
+.lv-tbl td.brm-cell:hover{background:#FFF4E5;}
+.lv-tbl td.brm-cell .rm-add{color:#9AA3B8;font-weight:700;font-size:11px;}
+.lv-tbl td.brm-cell:hover .rm-add{color:#B45309;}
+.brm-chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:800;
+  margin-right:6px;border:1px solid transparent;white-space:nowrap;}
+.brm-g-follow{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}  /* Under follow-up (no reason ticked) */
+.brm-g-good{background:#DCFCE7;color:#166534;border-color:#BBF7D0;}    /* located / received */
+.brm-g-closed{background:#E5E7EB;color:#374151;border-color:#D1D5DB;}  /* closed */
+.brm-g-pend{background:#DBEAFE;color:#1E40AF;border-color:#BFDBFE;}    /* inscan pendency */
+.brm-g-warn{background:#FFEDD5;color:#9A3412;border-color:#FED7AA;}    /* short, CCTV, wrong bagging */
+.brm-g-bad{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}     /* missing, theft, fake intransit */
+.brm-more{font-size:10px;font-weight:800;color:var(--mut);margin-right:6px;}
+.br-rsn-hint{grid-column:2 / -1;align-self:center;font-size:11.5px;color:var(--mut);}
+.br-rsn-list{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 8px;
+  border:1px solid var(--line);border-radius:10px;background:#fff;padding:6px;}
+.br-rsn-list label{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:7px;font-size:12px;cursor:pointer;color:var(--ink);}
+.br-rsn-list label:hover{background:#FFF4E5;}
+.br-rsn-list input{accent-color:#D97706;flex:none;}
+.br-rsn-list label:has(input:checked){background:#FFF4E5;color:#92400E;font-weight:700;}
+@media(max-width:640px){.br-rsn-list{grid-template-columns:1fr 1fr;}.br-rsn-hint{grid-column:auto;}}
+.br-rsn{position:relative;grid-column:2 / -1;}
+.br-rsn-btn{width:100%;text-align:left;border:1px solid var(--line);border-radius:9px;padding:8px 30px 8px 10px;
+  font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.br-rsn-btn::after{content:'▾';position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--mut);}
+.br-rsn-btn.on{border-color:#D97706;color:#92400E;font-weight:700;}
+.br-rsn-panel{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;
+  border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 34px rgba(20,24,40,.18);padding:6px;
+  max-height:300px;overflow:auto;}
+.br-rsn.open .br-rsn-panel{display:block;}
+.br-rsn-panel label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;font-size:12.5px;cursor:pointer;color:var(--ink);}
+.br-rsn-panel label:hover{background:#FFF4E5;}
+.br-rsn-panel input{accent-color:#D97706;}
+.br-rsn-panel .br-rsn-clr{display:block;margin:2px 0 4px auto;border:none;background:none;color:#B45309;font-size:11px;font-weight:700;cursor:pointer;}
+.br-item-meta{font-size:11.5px;color:var(--mut);margin-bottom:3px;}
+.br-item-meta b{color:var(--ink);font-weight:700;}
+#brModal{display:none;position:fixed;inset:0;z-index:950;background:rgba(20,24,40,.42);
+  align-items:center;justify-content:center;padding:18px;}
+#brModal.show{display:flex;}
+#brModal .rm-head{border-top:4px solid #D97706;}
+#brModal .rm-form{grid-template-columns:150px 1fr 1fr;}
+#brModal .rm-form input[type=text]{border:1px solid var(--line);border-radius:9px;padding:8px 10px;
+  font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
+#brModal .rm-form input[type=text]:focus{border-color:var(--pine);}
+#brModal .rm-form textarea{grid-column:1 / -1;min-height:70px;}
+#brModal .rm-form #brAddBtn{grid-column:3;justify-self:end;}
+#brModal .rm-card{width:min(680px,96vw);}
+#brModal select{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12.5px;
+  font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
+#brCount{font-size:11px;font-weight:700;color:var(--mut);align-self:center;margin-left:auto;white-space:nowrap;}
+#brClose{border:none;background:#F1F3FB;color:var(--pine);width:30px;height:30px;border-radius:8px;font-size:14px;flex:none;}
+#brClose:hover{background:var(--pine);color:#fff;}
+#brAddBtn{border:none;border-radius:9px;background:#D97706;color:#fff;font-weight:700;font-size:12.5px;padding:9px 14px;}
+#brAddBtn:hover{background:#B45309;}
+#brAddBtn:disabled{opacity:.5;cursor:default;}
+#brModal .rm-item{border-left-color:#D97706;}
+#brModal .rm-item-date{color:#B45309;}
+#brStatus{font-size:11.5px;color:var(--mut);}
+.br-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:11.5px;color:var(--mut);}
+.br-meta b{color:var(--ink);}
+@media(max-width:640px){#brModal .rm-form{grid-template-columns:1fr;}#brModal .rm-form #brAddBtn,#brModal .rm-form #brPend,.br-rsn{grid-column:auto;}}
+
 /* seven cards, one line — small enough to survive a 1200px window */
 .mv-kpi{grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-top:12px;}
 .mv-kpi .kpi{padding:9px 10px;border-radius:12px;}
@@ -1674,6 +1745,33 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
     <div class="rm-foot">
       <span id="rmStatus"></span>
       <button class="tool" id="rmCsv" title="Download every remark across all lanes">CSV · ALL LANES</button>
+    </div>
+  </div>
+</div>
+<!-- bag remarks: follow-up log for one manifest, opened from Manifest Detail -->
+<div id="brModal">
+  <div class="rm-card">
+    <div class="rm-head">
+      <div>
+        <h3 id="brBag" class="mono">—</h3>
+        <span class="sub">Bag remarks for this manifest · newest first</span>
+        <div class="br-meta" id="brMeta"></div>
+      </div>
+      <span id="brCount"></span>
+      <button id="brClose" title="Close">✕</button>
+    </div>
+    <div class="rm-form" id="brForm">
+      <input type="date" id="brDate" title="Date this remark relates to">
+      <div class="br-rsn-hint">Tick a remark to put it in the box — or type your own comments in the box</div>
+      <div class="br-rsn-list" id="brRsnPanel"></div>
+      <textarea id="brText" rows="4" placeholder="Remarks — ticked items appear here; type your own comments too…"></textarea>
+      <button id="brAddBtn">Add bag remark</button>
+    </div>
+    <div class="rm-note" id="brReadonly" style="display:none">View only — your account can read bag remarks but not add them.</div>
+    <div class="rm-list" id="brList"></div>
+    <div class="rm-foot">
+      <span id="brStatus"></span>
+      <button class="tool" id="brCsv" title="Download every bag remark across all lanes">CSV · ALL BAGS</button>
     </div>
   </div>
 </div>
@@ -3909,6 +4007,8 @@ function lvDetailExport(){
 ============================================================= */
 const MV_DETAIL_COLS=[
   {k:'Manifest_code', label:'Manifest',   type:'text', cls:'mono'},
+  /* bag-level follow-up: latest status + remark count for this manifest */
+  {k:'__bagrm',       label:'Bag Remarks', type:'cat', bagrm:true},
   {k:'Lane Code',     label:'Lane Code',  type:'text'},
   {k:'Lane Type',     label:'Lane Type',  type:'cat'},
   /* Origin / Destination show the shipment's MM_origin / MM_destination */
@@ -4096,13 +4196,14 @@ function mvCatOptions(c,rows){
   const u=[...new Set(rows.map(r=>r[c.k]))].filter(x=>x!=='');
   if(c.k==='Ageing bucket')return ABKT.filter(o=>u.includes(o)).concat(u.filter(x=>!ABKT.includes(x)));
   if(c.k==='Day_ageing')return DAY_BKTS.filter(o=>u.includes(o)).concat(u.filter(x=>!DAY_BKTS.includes(x)));
+  if(c.bagrm)return [BR_FOLLOW].concat(BR_STATUS,[BR_NONE]);
   return u.sort((a,b)=>String(a).localeCompare(String(b)));
 }
 
 function mvBuildHeaders(){
   const rows=mvBuildManifestRows(RAW);
   $('#mvDetHead').innerHTML=MV_DETAIL_COLS.map(c=>
-    `<th data-k="${c.k}" class="${c.type==='num'?'num':''}">${c.label}<span class="arr"></span></th>`).join('');
+    `<th data-k="${c.k}" class="${c.type==='num'?'num':''}${c.bagrm?' brm-h':''}">${c.label}<span class="arr"></span></th>`).join('');
   $('#mvDetFilters').innerHTML=MV_DETAIL_COLS.map(c=>{
     if(c.nofilter)return '<th></th>';           // sortable, but no filter box
     if(c.type==='text')return `<th><input data-k="${c.k}" data-ft="text" placeholder="contains…"></th>`;
@@ -4426,6 +4527,7 @@ function mvFilterRows(){
   return rows.filter(r=>{
     for(const c of MV_DETAIL_COLS){
       const f=mvColF[c.k]; if(!f)continue;
+      if(c.bagrm){ if(!brTagsOf(r.Manifest_code).some(t=>f.has(t)))return false; continue; }
       if(c.type==='text'){ if(!String(r[c.k]).toLowerCase().includes(f.q))return false; }
       else if(c.type==='num'){
         const n=parseFloat(String(r[c.k]??'').replace(/[^0-9.\-]/g,''));
@@ -4443,6 +4545,11 @@ function mvRenderDetail(reset){
   const col=MV_DETAIL_COLS.find(x=>x.k===mvSort.k);
   const numOf=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));return isFinite(n)?n:-Infinity;};
   rows.sort((a,b)=>{ const av=a[mvSort.k],bv=b[mvSort.k];
+    if(mvSort.k==='__bagrm'){   /* bags with remarks first, newest remark on top */
+      const la=brLatest(a.Manifest_code),lb=brLatest(b.Manifest_code);
+      const ka=la?(String(la.date||'')+String(la.at||'')):'', kb=lb?(String(lb.date||'')+String(lb.at||'')):'';
+      return ka.localeCompare(kb)*mvSort.dir;
+    }
     if(mvSort.k==='value')return (a.Product_value-b.Product_value)*mvSort.dir;
     if(col&&col.type==='num')return (numOf(av)-numOf(bv))*mvSort.dir;
     return String(av).localeCompare(String(bv))*mvSort.dir;
@@ -4458,6 +4565,7 @@ function mvRenderDetail(reset){
       return `<td class="num">${isFinite(n)?fmtN(n):'—'}</td>`;
     }
     if(c.k==='Product_value')return `<td class="num">${fmtN(v)}</td>`;
+    if(c.bagrm)return brCellHTML(r);
     if(c.k==='Ageing bucket'){const cls=ABKT_CLS[v]||'';return `<td><span class="badge ${cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd'}">${v}</span></td>`;}
     if(c.day){const n=+v||0;return n?`<td class="num" style="font-weight:700;background:rgba(239,68,68,${Math.min(.08+n/40,.45).toFixed(2)})">${fmtN(n)}</td>`:'<td class="num" style="color:var(--mut)">·</td>';}
     if(c.k==='Day_ageing'){if(!v)return '<td>—</td>';const i=DAY_BKTS.indexOf(v);return `<td><span class="badge ${i>=7?'b-crit':i>=5?'b-rev':'b-fwd'}">${v}</span></td>`;}
@@ -4465,6 +4573,7 @@ function mvRenderDetail(reset){
   }).join('')+'</tr>').join('')
     || `<tr><td colspan="${MV_DETAIL_COLS.length}" style="text-align:center;padding:24px;color:var(--mut)">No manifests match the filters.</td></tr>`;
   $$('#mvDetHead th').forEach(th=>{const a=th.querySelector('.arr');a.textContent=th.dataset.k===mvSort.k?(mvSort.dir<0?'▼':'▲'):'';});
+  $$('#mvDetBody td.brm-cell').forEach(td=>td.onclick=e=>{e.stopPropagation();brOpen(td.dataset.bag);});
   $('#mvDetailCount').textContent=fmtN(rows.length)+' rows';
   $('#mvShown').textContent=fmtN(rows.length);
   $('#mvPgLbl').textContent='Page '+mvPage+' / '+pages;
@@ -4479,7 +4588,7 @@ function mvLaneAgg(){
     const k=r['Lane Code']||'Unknown';
     let e=m.get(k);
     if(!e){
-      e={lane:k,bkts:{},total:0,cnt:{},totalCnt:0,dests:new Map()};
+      e={lane:k,bkts:{},total:0,cnt:{},totalCnt:0,dests:new Map(),brBags:new Map()};
       ITB_LABELS.forEach(b=>{e.bkts[b]=0;e.cnt[b]=0;});
       m.set(k,e);
     }
@@ -4488,6 +4597,9 @@ function mvLaneAgg(){
     const ab=itBandOf(r), v=r.Product_value||0;
     if(ab&&ab in e.bkts){ e.bkts[ab]+=v; e.cnt[ab]++; }
     e.total+=v; e.totalCnt++;
+    /* bags on this lane that carry a bag remark — count + their value */
+    const mc=r.Manifest_code;
+    if(mc&&BAG_REMARKS[mc]&&BAG_REMARKS[mc].length)e.brBags.set(mc,(e.brBags.get(mc)||0)+v);
     /* destination sub-pivot — MM_destination as per the requirement */
     const dk=r.MM_destination||'Unknown';
     let d=e.dests.get(dk);
@@ -4554,7 +4666,7 @@ function mvRenderLaneTbl(){
     });
   }
 
-  const NCOL=1+ITB_LABELS.length+2;   // lane + bands + total + remarks
+  const NCOL=1+ITB_LABELS.length+3;   // lane + bands + total + remarks + bag remarks
   const mark=k=>mvLaneSort.k===k?(mvLaneSort.dir<0?' ▼':' ▲'):'';
 
   /* fixed column widths keep parent rows and destination rows perfectly aligned */
@@ -4565,14 +4677,15 @@ function mvRenderLaneTbl(){
     tbl.insertAdjacentHTML('afterbegin',
       '<colgroup><col style="width:230px">'+
       ITB_LABELS.map(()=>'<col style="width:118px">').join('')+
-      '<col style="width:130px"><col style="width:170px"></colgroup>');
+      '<col style="width:130px"><col style="width:170px"><col style="width:170px"></colgroup>');
   }
 
   $('#mvLaneHead').innerHTML=
     `<th class="sortable" data-k="lane" style="text-align:left">Lane code${mark('lane')}</th>`+
     ITB_LABELS.map((b,i)=>`<th class="sortable num ${ITB_HCLS[i]}" data-k="${b}">${b} days${mark(b)}</th>`).join('')+
     `<th class="sortable num tot-col" data-k="total">Total${mark('total')}</th>`+
-    `<th class="rm-col">Remarks</th>`;
+    `<th class="rm-col">Remarks</th>`+
+    `<th class="brm-col" title="Bags (manifests) on this lane that carry their own bag remark">Bag Remarks</th>`;
   $$('#mvLaneHead th[data-k]').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;
     mvLaneSort.dir = mvLaneSort.k===k ? -mvLaneSort.dir : -1;
@@ -4589,7 +4702,7 @@ function mvRenderLaneTbl(){
       `<td><span class="exp-ic">${open?'▼':'▶'}</span>${laneDotHTML(o)}${o.lane}</td>`+
       ITB_LABELS.map(b=>`<td class="num${o.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(o.bkts[b])}</td>`).join('')+
       `<td class="num tot-col drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" title="Show every manifest on this lane below">${fmtM(o.total)}</td>`+
-      rmCellHTML(o.lane)+`</tr>`
+      rmCellHTML(o.lane)+brLaneCellHTML(o)+`</tr>`
     );
     /* --- destination child rows (real cells, aligned to the same columns) --- */
     if(open){
@@ -4601,7 +4714,7 @@ function mvRenderLaneTbl(){
             `<tr class="mv-dest">`+
             `<td class="dest-name">${d.dest}</td>`+
             ITB_LABELS.map(b=>`<td class="num${d.bkts[b]>0?' drill':''}" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" data-bkt="${b}" title="Show these manifests below">${cell(d.bkts[b])}</td>`).join('')+
-            `<td class="num drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" title="Show these manifests below">${fmtM(d.total)}</td><td></td></tr>`
+            `<td class="num drill" data-lane="${o.lane.replace(/"/g,'&quot;')}" data-dest="${String(d.dest).replace(/"/g,'&quot;')}" title="Show these manifests below">${fmtM(d.total)}</td><td></td><td></td></tr>`
           );
         });
       }
@@ -4622,12 +4735,16 @@ function mvRenderLaneTbl(){
     e.stopPropagation();
     rmOpen(td.dataset.rmlane);
   });
+  $$('#mvLaneBody td.brm-lane').forEach(td=>td.onclick=e=>{
+    e.stopPropagation();
+    brShowLane(td.dataset.brlane,td.dataset.has==='1');
+  });
 
   /* --- grand total row across every lane shown --- */
   const gt={},gtot=arr.reduce((a,o)=>a+o.total,0);
   ITB_LABELS.forEach(b=>gt[b]=arr.reduce((a,o)=>a+(o.bkts[b]||0),0));
   $('#mvLaneFoot').innerHTML=arr.length
-    ? `<tr><td>Total</td>${ITB_LABELS.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtM(gtot)}</td><td></td></tr>`
+    ? `<tr><td>Total</td>${ITB_LABELS.map(b=>`<td class="num">${cell(gt[b])}</td>`).join('')}<td class="num">${fmtM(gtot)}</td><td></td><td></td></tr>`
     : '';
 
   mvLaneExport=arr.map(o=>{
@@ -4635,6 +4752,7 @@ function mvRenderLaneTbl(){
     const unit=MV_LANE_MODE==='awb'?' (AWBs)':' (value)';
     ITB_LABELS.forEach(b=>row[b+' days'+unit]=Math.round(o.bkts[b]||0));
     row['Total'+unit]=Math.round(o.total);
+    row['Bags with remarks']=o.brBags?o.brBags.size:0;
     return row;
   });
 }
@@ -4968,7 +5086,10 @@ function mvDetailExport(){
     Ageing_day:r.Day_ageing,
     ...Object.fromEntries(['D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+'].map(d=>[d,r['day_'+d]||0])),
     Created:r.ShipmentInManifest,Present:r.CurrentShipmentInManifest,
-    Product_value:r.Product_value,Trip_code:r.trip_code}));
+    Product_value:r.Product_value,Trip_code:r.trip_code,
+    ...(()=>{const l=brLatest(r.Manifest_code),n=(BAG_REMARKS[r.Manifest_code]||[]).length;
+      return {Bag_status:l?(brReasons(l).join('; ')||BR_FOLLOW):'',Bag_remarks:n||'',Bag_latest_remark:l?String(l.text||'').replace(/\r?\n/g,' '):'',
+        Bag_remark_date:l?(l.date||''):'',Bag_remark_by:l?(l.byName||l.by||''):''};})()}));
 }
 </script>
 <script>
@@ -5724,6 +5845,11 @@ const DOC_SECTIONS=[
   fields:'<code>Lane Code</code> + the remark you type (date, text, author)',
   logic:'click the Remarks cell on any lane row -> pick a date -> type a remark -> Add\nthe Feedback Manifest Lanes page filters that trail by lane code, lane type, Name (the Added by column) and date range\nlane type is looked up from the shipment file, so a lane no longer in today\u0027s data cannot be filtered by type\nstored as  lane -> [ {date, text, added by, recorded at} ]\nmany remarks per lane are kept; the list shows newest date first\nthe badge on the cell = number of remarks, beside the latest remark date\nCSV button exports every remark on every lane',
   note:'The Feedback Manifest Lanes page also shows a Lane Total column beside the date — that lane\u0027s pending value straight from the Top 20 Lanes pivot, so a remark can be read against the money still sitting on the lane. Shared, not per-browser: the file is re-read immediately before every save, so remarks added by different people at different times all survive. Writing is limited to the admin and to accounts flagged for remarks (currently Anup Pandey); everyone else can read the trail. Remarks are also written to the Activity Log.'},
+ {t:'panel', n:'Bag Remarks (per manifest)', what:'A dated remark + status trail on each individual bag, so one bag inside a big lane can be followed on its own.',
+  src:'Supabase Storage · bag_remarks.json',
+  fields:'<code>Manifest_code</code> + the status and remark you type (date, status, text, author); lane and bag value are stored with each remark',
+  logic:'Manifest Detail: click the Bag Remarks cell on any manifest -> pick a date -> tick any of the listed remarks (each one is written into the remark box) and/or type your own comments in the box -> Add\nthe bag status shown is the reasons on its newest remark (Under follow-up when none is ticked)\nLanes by Pending Manifest Code: the Bag Remarks column counts the bags in scope on that lane that carry a remark, with their value\nclick it to list those bags in Manifest Detail (or all the lane\u0027s bags when none has a remark yet)',
+  note:'Separate from the lane Remarks column: lane remarks talk about the whole lane, bag remarks about one manifest. Filter Manifest Detail by status with the Bag Remarks column filter. The CSV of Manifest Detail carries the latest bag status and remark.'},
  {t:'table', n:'Manifest detail — shipment level', what:'Shipment rows behind the pivots, one row per manifest.',
   fields:'<code>Manifest_code</code> and its lane, <code>MM_origin</code>, <code>MM_destination</code>, <code>MM_destination_type</code>, <code>Manifest_origin</code>, <code>Manifest_Destination</code>, status, ageing, value',
   logic:'rows deduplicated by Manifest_code\nProduct_value summed across the manifest\nintransit_ageing keeps the worst (oldest) value seen'}
@@ -6097,6 +6223,293 @@ function rmExportAll(){
     Added_by:r.byName||r.by||'',Recorded_at:r.at||''}));
   if(!rows.length){alert('Nothing to export — no remarks match the current filters.');return;}
   lvExport(rows,'csv','lane_remarks','remarks');
+}
+
+/* =============================================================
+   BAG REMARKS — follow-up log on one manifest (bag)
+   -------------------------------------------------------------
+   The lane Remarks column talks about the whole lane. A lane with
+   ₹2 L pending can hold three bags, and the one worth ₹80 K needs
+   its own trail. Bag remarks are keyed by Manifest_code and carry a
+   status, so every bag can be tracked on its own:
+       { "DcHub-5D5E7D05": [ {id,bag,lane,value,date,status,text,
+                              by,byName,at}, … ], … }
+   Same storage pattern as lane remarks: a snapshot in Supabase
+   (bag_remarks.json) plus an append-only journal (bag_remarks/<id>
+   .json) merged over it on every read, so two people saving at the
+   same moment can never wipe each other's remark. The bag's status
+   is the status on its newest remark.
+   ============================================================= */
+let BAG_REMARKS={};
+let BR_BAG=null;                 // manifest code open in the modal
+let BR_CTX={};                   // lane/value of that bag, for display + saving
+const BR_FILE='bag_remarks.json';
+const BR_DIR='bag_remarks/';
+const BR_IDB_KEY='bag_remarks';
+/* reasons the user ticks in the remark box — several can apply to one bag */
+const BR_STATUS=['Bag located','Received at destination','Short / partial','Bag missing','Closed',
+  'Inscan Pendency at DC','Inscan Pendency at HUB','Theft at HUB','Theft Intransit',
+  'Fake Intransit from HUB','Fake Intransit from DC','No CCTV Footage at HUB','No CCTV Footage at DC',
+  'Wrong bagging from DC','Wrong bagging from HUB'];
+const BR_FOLLOW='Under follow-up';   // a remark with no reason ticked
+const BR_NONE='No remark';
+const BR_GROUP={'Bag located':'good','Received at destination':'good','Closed':'closed',
+  'Inscan Pendency at DC':'pend','Inscan Pendency at HUB':'pend',
+  'Short / partial':'warn','No CCTV Footage at HUB':'warn','No CCTV Footage at DC':'warn',
+  'Wrong bagging from DC':'warn','Wrong bagging from HUB':'warn',
+  'Bag missing':'bad','Theft at HUB':'bad','Theft Intransit':'bad','Fake Intransit from HUB':'bad','Fake Intransit from DC':'bad'};
+/* older remarks carried one status string; newer ones a reasons list */
+function brReasons(r){
+  if(!r)return [];
+  if(Array.isArray(r.reasons))return r.reasons.filter(Boolean);
+  return r.status&&r.status!==BR_FOLLOW?[r.status]:[];
+}
+
+function brSorted(bag){return rmSort(BAG_REMARKS[bag]||[]);}
+function brLatest(bag){const l=BAG_REMARKS[bag];return l&&l.length?rmSort(l)[0]:null;}
+function brStatusOf(bag){const l=brLatest(bag);if(!l)return BR_NONE;const rs=brReasons(l);return rs[0]||BR_FOLLOW;}
+/* every label the column filter can match for this bag */
+function brTagsOf(bag){const l=brLatest(bag);if(!l)return [BR_NONE];const rs=brReasons(l);return rs.length?rs:[BR_FOLLOW];}
+function brChip(st){
+  return `<span class="brm-chip brm-g-${BR_GROUP[st]||'follow'}">${rmEsc(st||BR_FOLLOW)}</span>`;}
+function brChips(r,max){
+  const rs=brReasons(r); if(!rs.length)return brChip(BR_FOLLOW);
+  const n=max||rs.length;
+  return rs.slice(0,n).map(brChip).join('')+(rs.length>n?`<span class="brm-more">+${rs.length-n}</span>`:'');
+}
+
+/* cell in Manifest Detail */
+function brCellHTML(r){
+  const bag=r.Manifest_code||'';
+  const B=rmEsc(bag);
+  const list=BAG_REMARKS[bag]||[];
+  if(!bag)return '<td>—</td>';
+  if(!list.length)
+    return `<td class="brm-cell" data-bag="${B}" title="Add a remark and status for this bag"><span class="rm-add">+ Bag remark</span></td>`;
+  const l=rmSort(list)[0];
+  const tip=rmEsc((brReasons(l).join(', ')||BR_FOLLOW)+' · '+rmFmtDate(l.date)+' · '+(l.byName||l.by||'')+
+    (l.pendAt?'\nPending at: '+l.pendAt:'')+(l.followBy?'\nFollow-up: '+l.followBy:'')+'\n'+String(l.text||'').slice(0,200));
+  return `<td class="brm-cell" data-bag="${B}" title="${tip}">${brChips(l,1)}`+
+         `<span class="rm-badge" style="background:#D97706">${list.length}</span><span class="rm-date">${rmFmtDate(l.date)}</span></td>`;
+}
+/* cell in the lane pivot: how many of this lane's bags carry a bag remark */
+function brLaneCellHTML(o){
+  const L=rmEsc(o.lane);
+  const n=o.brBags?o.brBags.size:0;
+  if(!n)return `<td class="brm-lane" data-brlane="${L}" data-has="0" title="No bag on this lane has a remark yet — click to list its bags below and add one"><span class="brm-none">+ Bag</span></td>`;
+  let val=0;o.brBags.forEach(v=>val+=v);
+  const st={};o.brBags.forEach((v,bag)=>brTagsOf(bag).forEach(s=>{st[s]=(st[s]||0)+1;}));
+  const tip=Object.keys(st).map(s=>s+': '+st[s]).join(' · ');
+  return `<td class="brm-lane" data-brlane="${L}" data-has="1" title="${rmEsc(tip)} — click to show these bags below">`+
+         `<span class="brm-n">${n}</span><span class="brm-v">bag${n>1?'s':''} · ${fmtINR(val)}</span></td>`;
+}
+/* lane pivot click: show this lane's bags in Manifest Detail — only the
+   remarked ones when there are any */
+function brShowLane(lane,onlyRemarked){
+  const cs=document.querySelector('#mvDetFilters .lv-csel[data-k="__bagrm"]');
+  if(cs){
+    const btn=cs.querySelector('.lv-csel-btn');
+    const picked=[];
+    cs.querySelectorAll('input').forEach(ch=>{const on=onlyRemarked&&ch.value!==BR_NONE;ch.checked=on;if(on)picked.push(ch.value);});
+    if(picked.length){mvColF.__bagrm=new Set(picked);btn.textContent=picked.length+' sel ▾';btn.classList.add('on');}
+    else{delete mvColF.__bagrm;btn.textContent='All ▾';btn.classList.remove('on');}
+  }
+  mvFilterDetailBy({lane,dest:'',bucket:''});
+}
+
+async function brListJournal(){
+  const res=await fetch(SUPA_URL+'/storage/v1/object/list/'+SUPA_BUCKET,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({prefix:BR_DIR,limit:1000,offset:0,sortBy:{column:'updated_at',order:'desc'}})
+  });
+  if(!res.ok)throw new Error('list failed: '+res.status);
+  return (await res.json())||[];
+}
+async function brFetch(){
+  let snap={};
+  try{
+    const res=await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+BR_FILE+'?t='+Date.now());
+    if(res.ok){const j=await res.json();if(j&&typeof j==='object'&&!Array.isArray(j))snap=j;}
+  }catch(e){console.warn('[bag remarks] snapshot unavailable:',e.message);}
+  try{
+    const items=await brListJournal();
+    const have=rmIndexIds(snap);
+    const wanted=items.filter(it=>{
+      const id=String(it.name||'').replace(/\.json$/,'');
+      if(!id)return false;
+      if(!have.has(id))return true;
+      const t=Date.parse(it.updated_at||'');
+      return isFinite(t)&&t>(Date.parse(snap.__savedAt||'')||0);
+    }).slice(0,300);
+    for(const it of wanted){
+      try{
+        const r=await (await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+BR_DIR+it.name+'?t='+Date.now())).json();
+        if(!r||!r.id||!r.bag)continue;
+        snap[r.bag]=(snap[r.bag]||[]).filter(x=>x.id!==r.id);
+        if(!r.deleted)snap[r.bag].push(r);
+        if(!snap[r.bag].length)delete snap[r.bag];
+      }catch(e){}
+    }
+  }catch(e){console.warn('[bag remarks] journal unavailable:',e.message);}
+  delete snap.__savedAt;
+  BAG_REMARKS=snap;
+  idbSet(BR_IDB_KEY,{data:BAG_REMARKS,saved:Date.now()});
+  return true;
+}
+async function brSaveOne(rec){
+  await supaUpload(BR_DIR+rec.id+'.json',new Blob([JSON.stringify(rec)],{type:'application/json'}));
+}
+async function brSave(){
+  const out={...BAG_REMARKS,__savedAt:new Date().toISOString()};
+  try{await supaUpload(BR_FILE,new Blob([JSON.stringify(out)],{type:'application/json'}));}
+  catch(e){console.warn('[bag remarks] snapshot write failed, journal still holds it:',e.message);}
+  idbSet(BR_IDB_KEY,{data:BAG_REMARKS,saved:Date.now()});
+}
+function brRefreshTables(){
+  if(!RAW.length)return;
+  if(typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
+  if(typeof mvRenderDetail==='function'&&$('#mvDetHead')&&$('#mvDetHead').children.length)mvRenderDetail();
+}
+async function bagRemarksInit(){
+  try{const hit=await idbGet(BR_IDB_KEY);if(hit&&hit.data&&!Object.keys(BAG_REMARKS).length)BAG_REMARKS=hit.data;}catch(e){}
+  await brFetch();
+  brRefreshTables();
+}
+
+/* ---------- modal ---------- */
+function brContext(bag){
+  const r=(mvDetailRows||[]).find(x=>x.Manifest_code===bag);
+  if(r)return {lane:r['Lane Code']||'',value:+r.Product_value||0,dest:r.Manifest_Destination||'',trip:r.trip_code||'',
+               age:r.Day_ageing||'',present:r.CurrentShipmentInManifest,created:r.ShipmentInManifest};
+  const l=brLatest(bag);
+  return l?{lane:l.lane||'',value:+l.value||0}:{};
+}
+async function brOpen(bag){
+  if(!bag)return;
+  BR_BAG=bag; BR_CTX=brContext(bag);
+  const allowed=canRemark();
+  $('#brBag').textContent=bag;
+  const c=BR_CTX;
+  const lt=brLatest(bag);
+  $('#brMeta').innerHTML=[
+    c.lane?`Lane <b>${rmEsc(c.lane)}</b>`:'',
+    c.value?`Value <b>${fmtINR(c.value)}</b>`:'',
+    c.dest?`To <b>${rmEsc(c.dest)}</b>`:'',
+    c.age?`Ageing <b>${rmEsc(c.age)}</b>`:'',
+    (c.present!=null&&c.present!=='')?`Shipments <b>${rmEsc(c.present)}</b>${c.created!=null&&c.created!==''?' of '+rmEsc(c.created):''}`:'',
+    `<span id="brMetaSt"></span>`
+  ].filter(Boolean).map(x=>`<span>${x}</span>`).join('');
+  $('#brRsnPanel').innerHTML=BR_STATUS.map(s=>`<label><input type="checkbox" value="${rmEsc(s)}"><span>${rmEsc(s)}</span></label>`).join('');
+  $$('#brRsnPanel input').forEach(ch=>ch.onchange=brReasonsChanged);
+  BR_AUTO='';
+  $('#brDate').value=rmToday();
+  $('#brText').value='';
+
+  $('#brForm').style.display=allowed?'':'none';
+  $('#brReadonly').style.display=allowed?'none':'';
+  $('#brStatus').textContent='Syncing…';
+  $('#brModal').classList.add('show');
+  brRenderList();
+  await brFetch();
+  if(BR_BAG===bag){$('#brStatus').textContent='';brRenderList();}
+}
+function brClose(){
+  $('#brModal').classList.remove('show');
+  BR_BAG=null;
+  brRefreshTables();
+}
+function brRenderList(){
+  const list=brSorted(BR_BAG);
+  $('#brList').innerHTML=list.map(r=>
+    `<div class="rm-item">
+       <div class="rm-item-head">
+         <span class="rm-item-date">${rmFmtDate(r.date)}</span>
+         <span class="rm-item-by">${rmEsc(r.byName||r.by||'—')}</span>
+         ${rmCanManage(r)?`<button class="rm-del" data-id="${rmEsc(r.id)}" title="Delete this remark">✕</button>`:''}
+       </div>
+       <div style="margin-bottom:5px">${brChips(r)}</div>
+       ${(r.pendAt||r.followBy)?`<div class="br-item-meta">${r.pendAt?`Pending at <b>${rmEsc(r.pendAt)}</b>`:''}${r.pendAt&&r.followBy?' · ':''}${r.followBy?`Follow-up by <b>${rmEsc(r.followBy)}</b>`:''}</div>`:''}
+       ${r.text?`<div class="rm-item-text">${rmEsc(r.text)}</div>`:''}
+     </div>`).join('')
+    || `<div class="rm-empty">No remarks on this bag yet.</div>`;
+  $('#brCount').textContent=list.length?(list.length+' remark'+(list.length>1?'s':'')):'';
+  const st=$('#brMetaSt'); if(st)st.innerHTML='Status '+(list.length?brChips(list[0]):'<b>No remark yet</b>');
+  $$('#brList .rm-del').forEach(b=>b.onclick=()=>brDelete(b.dataset.id));
+}
+/* ---- reasons picker ----
+   Ticked reasons are written as the first line of the remark box
+   ("Reasons: A, B"). That line is rewritten on every tick, and whatever
+   the user typed below it is left alone. */
+let BR_AUTO='';
+function brPicked(){return [...$$('#brRsnPanel input:checked')].map(ch=>ch.value);}
+function brRsnLabel(){}
+function brReasonsChanged(){
+  const p=brPicked();
+  const auto=p.join('\n');
+  const ta=$('#brText'); let t=ta.value;
+  if(BR_AUTO&&t.startsWith(BR_AUTO))t=t.slice(BR_AUTO.length).replace(/^\n/,'');
+  ta.value=auto?(auto+'\n'+t):t;
+  BR_AUTO=auto;
+  brRsnLabel();
+}
+async function brAdd(){
+  if(!canRemark()||!BR_BAG)return;
+  const bag=BR_BAG;
+  const date=$('#brDate').value||rmToday();
+  const reasons=brPicked();
+  const status=reasons[0]||BR_FOLLOW;
+  const pendAt='', followBy='';
+  const text=($('#brText').value||'').trim();
+  if(!text&&!reasons.length){$('#brStatus').textContent='Tick a reason or type a remark before saving.';return;}
+  const btn=$('#brAddBtn');btn.disabled=true;$('#brStatus').textContent='Saving…';
+  try{
+    await brFetch();
+    if(!BAG_REMARKS[bag])BAG_REMARKS[bag]=[];
+    const rec={
+      id:'b'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      bag,lane:BR_CTX.lane||'',value:Math.round(BR_CTX.value||0),date,status,reasons,pendAt,followBy,text,
+      by:CURRENT_USER.id,byName:CURRENT_USER.name||CURRENT_USER.id,
+      at:new Date().toISOString()};
+    BAG_REMARKS[bag].push(rec);
+    await brSaveOne(rec);
+    await brSave();
+    $('#brText').value='';BR_AUTO='';
+    $$('#brRsnPanel input').forEach(ch=>ch.checked=false);brRsnLabel();
+    $('#brStatus').textContent='Saved.';
+    setTimeout(()=>{const st=$('#brStatus');if(st&&st.textContent==='Saved.')st.textContent='';},2500);
+    brRenderList();
+    try{logEvent('bag remark',bag+' · '+status+' · '+date);}catch(e){}
+  }catch(e){$('#brStatus').textContent='Could not save: '+e.message;}
+  btn.disabled=false;
+}
+async function brDelete(id){
+  if(!BR_BAG||!canRemark())return;
+  if(!confirm('Delete this bag remark? This cannot be undone.'))return;
+  const bag=BR_BAG;
+  $('#brStatus').textContent='Deleting…';
+  try{
+    await brFetch();
+    const gone=(BAG_REMARKS[bag]||[]).find(r=>r.id===id);
+    if(gone&&!rmCanManage(gone)){$('#brStatus').textContent='Only the author or an admin can delete this remark.';return;}
+    BAG_REMARKS[bag]=(BAG_REMARKS[bag]||[]).filter(r=>r.id!==id);
+    if(!BAG_REMARKS[bag].length)delete BAG_REMARKS[bag];
+    if(gone)await brSaveOne({...gone,bag,deleted:true,
+      deletedBy:CURRENT_USER.name||CURRENT_USER.id,deletedAt:new Date().toISOString()});
+    await brSave();
+    $('#brStatus').textContent='';
+    brRenderList();
+  }catch(e){$('#brStatus').textContent='Could not delete: '+e.message;}
+}
+function brExportAll(){
+  const rows=[];
+  Object.keys(BAG_REMARKS).forEach(bag=>rmSort(BAG_REMARKS[bag]).forEach(r=>rows.push({
+    Manifest:bag,Lane_Code:r.lane||'',Bag_value_at_remark:r.value||'',Date:r.date||'',
+    Reasons:brReasons(r).join('; ')||BR_FOLLOW,
+    Remark:String(r.text||'').replace(/\r?\n/g,' '),Added_by:r.byName||r.by||'',Recorded_at:r.at||''})));
+  if(!rows.length){alert('No bag remarks yet.');return;}
+  rows.sort((a,b)=>String(b.Date).localeCompare(String(a.Date))||String(b.Recorded_at).localeCompare(String(a.Recorded_at)));
+  lvExport(rows,'csv','bag_remarks','remarks');
 }
 
 /* =============================================================
@@ -9906,6 +10319,7 @@ function boot(){
   if(fu)fu.textContent=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name:'—';
   renderRefreshTime();
   remarksInit();
+  bagRemarksInit();
   gsSyncCN(true);
   gsStartAuto();
   if(!booted){
@@ -10064,6 +10478,13 @@ function wireControls(){
   $('#rmAddBtn').onclick=rmAdd;
   $('#rmCsv').onclick=rmExportAll;
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#rmModal').classList.contains('show'))rmClose();});
+  /* bag remarks */
+  $('#brClose').onclick=brClose;
+  $('#brModal').onclick=e=>{if(e.target===$('#brModal'))brClose();};
+  $('#brAddBtn').onclick=brAdd;
+  $('#brCsv').onclick=brExportAll;
+
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#brModal').classList.contains('show'))brClose();});
 
   /* lock */
   $('#lockSealCsv').onclick=()=>lvExport(lockSealExport,'csv','lock_seal_status','seal');
