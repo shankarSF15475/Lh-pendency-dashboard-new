@@ -432,7 +432,7 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 .hov-chart canvas,.lk-chart canvas{max-height:300px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
-body.remarks-page .filterbar,body.projection-page .filterbar,
+body.remarks-page .filterbar,body.bagfb-page .filterbar,body.projection-page .filterbar,
 body.tasks-page .filterbar,body.team-page .filterbar,
 body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
@@ -1487,6 +1487,36 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 #rmPgClear{border:1px solid var(--line);background:#fff;color:var(--pine);border-radius:9px;
   font-weight:700;font-size:12.5px;padding:9px 14px;white-space:nowrap;}
 #rmPgClear:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+/* ---- Feedback on Bag page ---- */
+#page-bagfb .rmpg-new{grid-template-columns:200px 220px 180px 150px 150px auto;}
+#bfPgTbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:normal;}
+#bfPgTbl td.bf-bag{font-weight:800;color:var(--ink);white-space:nowrap;font-family:'Consolas','SF Mono',ui-monospace,monospace;font-size:12px;}
+#bfPgTbl td.bf-lane{font-weight:700;color:var(--ink);white-space:nowrap;}
+#bfPgTbl td.rmpg-date{white-space:nowrap;font-weight:700;color:#B45309;}
+#bfPgTbl td.rmpg-total{text-align:right;white-space:nowrap;font-weight:800;color:var(--ink);
+  font-family:'Consolas','SF Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+#bfPgTbl td.rmpg-total.none{color:#9AA3B8;font-weight:600;}
+#bfPgTbl td.bf-rsn{min-width:170px;}
+#bfPgTbl td.bf-rsn .brm-chip{margin:0 4px 4px 0;}
+#bfPgTbl td.rmpg-text{min-width:240px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+#bfPgTbl td.rmpg-meta{white-space:nowrap;color:var(--mut);font-size:11px;}
+#bfPgTbl td.rmpg-act{white-space:nowrap;}
+#bfPgTbl input,#bfPgTbl textarea{border:1px solid var(--line);border-radius:8px;padding:6px 8px;
+  font-size:12.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;width:100%;}
+#bfPgTbl textarea{resize:vertical;min-height:60px;}
+#bfPgTbl tr.rmpg-editing td{background:#FFF8EE;}
+#bfPgTbl .bf-edit-rsn{display:grid;grid-template-columns:1fr 1fr;gap:1px 8px;margin-bottom:6px;}
+#bfPgTbl .bf-edit-rsn label{display:flex;align-items:center;gap:5px;font-size:11px;white-space:nowrap;cursor:pointer;}
+#bfPgTbl .bf-edit-rsn input{width:auto;accent-color:#D97706;}
+.bf-sum{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;}
+.bf-sum .bf-k{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;min-width:120px;}
+.bf-sum .bf-k b{display:block;font-size:16px;color:var(--ink);}
+.bf-sum .bf-k span{font-size:10.5px;color:var(--mut);font-weight:700;letter-spacing:.02em;}
+#bfPgClear{border:1px solid var(--line);background:#fff;color:var(--pine);border-radius:9px;
+  font-weight:700;font-size:12.5px;padding:9px 14px;white-space:nowrap;}
+#bfPgClear:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+#page-bagfb .card-tools .tool{width:auto;min-width:0;padding:0 13px;height:30px;
+  font-size:10.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap;}
 /* Refresh / CSV sit in a 30px square by default, which clipped the words */
 #page-remarks .card-tools .tool{width:auto;min-width:0;padding:0 13px;height:30px;
   font-size:10.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap;}
@@ -1800,6 +1830,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
       <button data-page="remarks"><span class="ic">📝</span>Feedback Manifest Lanes</button>
+      <button data-page="bagfb"><span class="ic">👜</span>Feedback on Bag</button>
       <button data-page="tasks"><span class="ic">✅</span>Tasks</button>
     </nav>
     <div class="side-foot">
@@ -2951,6 +2982,69 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           same for everyone. Editing a remark keeps its original author and recorded time.
           <b>Lane Total</b> is that lane's pending value from the Top 20 Lanes pivot in Bag wise View, so it moves
           with today's data and with any Bag wise View filters — a lane outside that scope shows a dash.</div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: FEEDBACK ON BAG ============ -->
+    <section class="page" id="page-bagfb">
+      <div class="card" style="margin-top:12px;padding:18px">
+        <div class="card-head">
+          <div><h3>Feedback on Bag</h3>
+            <span class="sub">every bag remark added from Manifest Detail in Bag wise View · newest date first · filter by lane, remark, name and date, edit or delete here</span></div>
+          <div class="card-tools">
+            <button class="tool" id="bfPgRefresh">Refresh</button>
+            <button class="tool" id="bfPgCsv" title="Downloads only the rows matching the filters above">CSV</button>
+          </div>
+        </div>
+
+        <div class="rmpg-new">
+          <div class="mv-mcsel rmpg-lanesel" id="bfPgLaneMcsel">
+            <button class="mv-mcsel-btn" id="bfPgLaneBtn">Lane Code ▾</button>
+            <div class="mv-mcsel-panel" id="bfPgLanePanel"></div>
+          </div>
+          <div class="mv-mcsel rmpg-lanesel" id="bfPgRsnMcsel">
+            <button class="mv-mcsel-btn" id="bfPgRsnBtn">Remark ▾</button>
+            <div class="mv-mcsel-panel" id="bfPgRsnPanel"></div>
+          </div>
+          <div class="mv-mcsel rmpg-lanesel" id="bfPgNameMcsel">
+            <button class="mv-mcsel-btn" id="bfPgNameBtn">Name ▾</button>
+            <div class="mv-mcsel-panel" id="bfPgNamePanel"></div>
+          </div>
+          <input type="date" id="bfPgFrom" title="Remarks dated on or after this day">
+          <input type="date" id="bfPgTo" title="Remarks dated on or before this day">
+          <button id="bfPgClear">Clear filters</button>
+        </div>
+        <div class="bf-sum" id="bfPgSum"></div>
+        <div class="rm-note" id="bfPgReadonly" style="display:none;margin-top:12px;border-radius:9px">
+          View only — your account can read bag remarks but not edit or delete them.</div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px">
+          <input id="bfPgFilter" placeholder="filter by manifest, lane, remark text or person…"
+            style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;min-width:280px">
+          <span class="pill" id="bfPgCount">0 remarks</span>
+          <span id="bfPgStatus" style="font-size:11.5px;color:var(--mut)"></span>
+        </div>
+
+        <div class="lv-mini-wrap" style="max-height:560px">
+          <table class="lv-mini" id="bfPgTbl">
+            <thead><tr>
+              <th style="text-align:left">Manifest</th>
+              <th style="text-align:left">Lane Code</th>
+              <th style="text-align:left">Date</th>
+              <th style="text-align:right">Bag Value</th>
+              <th style="text-align:left">Remarks</th>
+              <th style="text-align:left">Comment</th>
+              <th style="text-align:left">Added by</th>
+              <th style="text-align:left">Recorded</th>
+              <th style="text-align:left">Actions</th>
+            </tr></thead>
+            <tbody id="bfPgBody"></tbody>
+          </table>
+        </div>
+        <div class="hint" style="margin-top:10px">Bag remarks live in Supabase, so this trail is the same for everyone.
+          <b>Bag Value</b> is the bag's pending value in today's data (with the Bag wise View filters); a bag that is
+          no longer in scope shows the value recorded when the remark was added, in grey. Editing keeps the original
+          author and recorded time.</div>
       </div>
     </section>
   </main>
@@ -6418,6 +6512,7 @@ function brClose(){
   $('#brModal').classList.remove('show');
   BR_BAG=null;
   brRefreshTables();
+  if($('#page-bagfb')&&$('#page-bagfb').classList.contains('active'))bfPageRender();
 }
 function brRenderList(){
   const list=brSorted(BR_BAG);
@@ -6911,6 +7006,187 @@ async function rmPageSave(lane,id){
     if(RAW.length&&typeof mvRenderLaneTbl==='function')mvRenderLaneTbl();
     try{logEvent('remark','edited · '+lane+' · '+(date||row.date));}catch(e){}
   }catch(e){rmPgStatus('Could not save: '+e.message);}
+}
+
+
+/* =============================================================
+   FEEDBACK ON BAG PAGE — the whole bag-remark trail in one table
+   Mirrors Feedback Manifest Lanes, keyed by manifest instead of lane.
+============================================================= */
+let BF_EDIT=null, BF_LANE_SEL=new Set(), BF_RSN_SEL=new Set(), BF_NAME_SEL=new Set();
+function bfPgStatus(m){const el=$('#bfPgStatus');if(el)el.textContent=m||'';}
+function bfAllRows(){
+  const out=[];
+  Object.keys(BAG_REMARKS).forEach(bag=>(BAG_REMARKS[bag]||[]).forEach(r=>out.push({...r,bag})));
+  out.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.at||'').localeCompare(String(a.at||'')));
+  return out;
+}
+function bfTags(r){const rs=brReasons(r);return rs.length?rs:[BR_FOLLOW];}
+function bfRows(){
+  const val=id=>{const el=$(id);return el?String(el.value||'').trim():'';};
+  const from=val('#bfPgFrom'),to=val('#bfPgTo'),q=val('#bfPgFilter').toLowerCase();
+  return bfAllRows().filter(r=>{
+    if(BF_LANE_SEL.size&&!BF_LANE_SEL.has(r.lane||''))return false;
+    if(BF_NAME_SEL.size&&!BF_NAME_SEL.has(r.byName||r.by||''))return false;
+    if(BF_RSN_SEL.size&&!bfTags(r).some(t=>BF_RSN_SEL.has(t)))return false;
+    if(from&&String(r.date||'')<from)return false;
+    if(to&&String(r.date||'')>to)return false;
+    if(q&&!(r.bag+' '+(r.lane||'')+' '+bfTags(r).join(' ')+' '+(r.text||'')+' '+(r.byName||r.by||'')).toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+/* bag -> pending value in today's data, same scope as the Bag wise View pivots */
+function bfBagTotals(){
+  const m=new Map();
+  try{
+    if(typeof mvScopeRows!=='function'||!RAW.length)return m;
+    for(const r of mvScopeRows()){const k=r.Manifest_code;if(k&&BAG_REMARKS[k])m.set(k,(m.get(k)||0)+(r.Product_value||0));}
+  }catch(e){console.warn('[bag feedback] totals unavailable:',e.message);}
+  return m;
+}
+/* generic multi-select used by the three pickers */
+function bfMcsel(ids,opts,getSel,setSel,label,empty){
+  const panel=$('#'+ids[0]),btn=$('#'+ids[1]),box=$('#'+ids[2]);
+  if(!panel||!btn)return;
+  setSel(new Set([...getSel()].filter(v=>opts.includes(v))));
+  panel.innerHTML=(opts.length>12?`<div class="mv-mcsel-search"><input type="text" placeholder="Search ${label.toLowerCase()}…"></div>`:'')+
+    `<div class="mc-actions"><button type="button" data-a="all">All</button><button type="button" data-a="clear">Clear</button></div>`+
+    (opts.length?opts.map(o=>`<label><input type="checkbox" value="${rmEsc(o)}"${getSel().has(o)?' checked':''}><span>${rmEsc(o)}</span></label>`).join('')
+                :`<div class="msel-more">${empty}</div>`);
+  const sync=()=>{const n=getSel().size;btn.classList.toggle('active',n>0);btn.textContent=(n?n+' selected':label)+' ▾';};
+  const apply=()=>{setSel(new Set([...panel.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value)));sync();bfPageRender();};
+  panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=apply);
+  const sBox=panel.querySelector('.mv-mcsel-search input');
+  if(sBox){sBox.onclick=e=>e.stopPropagation();
+    sBox.oninput=()=>{const q=sBox.value.trim().toLowerCase();
+      panel.querySelectorAll('label').forEach(l=>l.style.display=(!q||l.textContent.toLowerCase().includes(q))?'':'none');};}
+  panel.querySelectorAll('.mc-actions button').forEach(b=>b.onclick=e=>{e.stopPropagation();const all=b.dataset.a==='all';
+    panel.querySelectorAll('label').forEach(l=>{if(all&&l.style.display==='none')return;const c=l.querySelector('input');if(c)c.checked=all;});apply();});
+  panel.onclick=e=>e.stopPropagation();
+  btn.onclick=e=>{e.stopPropagation();const open=box.classList.contains('open');
+    $$('.mv-mcsel.open').forEach(m=>m.classList.remove('open'));if(!open)box.classList.add('open');};
+  sync();
+}
+function bfBuildPickers(){
+  const all=bfAllRows();
+  const lanes=[...new Set(all.map(r=>r.lane||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const names=[...new Set(all.map(r=>r.byName||r.by||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const used=new Set(all.flatMap(bfTags));
+  const rsn=[BR_FOLLOW].concat(BR_STATUS).filter(x=>used.has(x));
+  bfMcsel(['bfPgLanePanel','bfPgLaneBtn','bfPgLaneMcsel'],lanes,()=>BF_LANE_SEL,v=>BF_LANE_SEL=v,'Lane Code','No lanes with bag remarks yet');
+  bfMcsel(['bfPgRsnPanel','bfPgRsnBtn','bfPgRsnMcsel'],rsn,()=>BF_RSN_SEL,v=>BF_RSN_SEL=v,'Remark','No remarks ticked yet');
+  bfMcsel(['bfPgNamePanel','bfPgNameBtn','bfPgNameMcsel'],names,()=>BF_NAME_SEL,v=>BF_NAME_SEL=v,'Name','No bag remarks recorded yet');
+}
+function bfPageRender(){
+  const body=$('#bfPgBody'); if(!body)return;
+  const allowed=canRemark()||!!(CURRENT_USER&&CURRENT_USER.remarksManage);
+  const ro=$('#bfPgReadonly'); if(ro)ro.style.display=allowed?'none':'';
+  const rows=bfRows(), totals=bfBagTotals();
+  const valCell=r=>{const v=totals.get(r.bag);
+    return v!==undefined?`<td class="rmpg-total">${fmtINR(v)}</td>`
+      :`<td class="rmpg-total none" title="Not in today's Bag wise View scope — value recorded with the remark">${r.value?fmtINR(r.value):'—'}</td>`;};
+  body.innerHTML=rows.map(r=>{
+    const key=rmEsc(r.id),bag=rmEsc(r.bag);
+    const who=`<td class="rmpg-meta">${rmEsc(r.byName||r.by||'—')}${r.editedBy?`<br><span title="Edited ${rmEsc(r.editedAt||'')}">edited by ${rmEsc(r.editedBy)}</span>`:''}</td>`;
+    if(BF_EDIT===r.id&&rmCanManage(r)){
+      const rs=new Set(brReasons(r));
+      return `<tr class="rmpg-editing">
+        <td class="bf-bag">${bag}</td><td class="bf-lane">${rmEsc(r.lane||'—')}</td>
+        <td class="rmpg-date"><input type="date" id="bfEditDate" value="${rmEsc(r.date||'')}"></td>
+        ${valCell(r)}
+        <td class="bf-rsn" colspan="2"><div class="bf-edit-rsn">${BR_STATUS.map(x=>
+          `<label><input type="checkbox" class="bfEditRsn" value="${rmEsc(x)}"${rs.has(x)?' checked':''}>${rmEsc(x)}</label>`).join('')}</div>
+          <textarea id="bfEditText">${rmEsc(r.text||'')}</textarea></td>
+        ${who}<td class="rmpg-meta">${rmPgFmtAt(r.at)}</td>
+        <td class="rmpg-act"><button class="rmpg-btn" data-save="${key}" data-bag="${bag}">Save</button>
+          <button class="rmpg-btn" data-cancel="1">Cancel</button></td></tr>`;
+    }
+    return `<tr>
+      <td class="bf-bag">${bag}</td><td class="bf-lane">${rmEsc(r.lane||'—')}</td>
+      <td class="rmpg-date">${rmFmtDate(r.date)}</td>
+      ${valCell(r)}
+      <td class="bf-rsn">${brChips(r)}</td>
+      <td class="rmpg-text">${rmEsc(r.text||'')}</td>
+      ${who}<td class="rmpg-meta">${rmPgFmtAt(r.at)}</td>
+      <td class="rmpg-act">${rmCanManage(r)
+        ?`<button class="rmpg-btn" data-edit="${key}">Edit</button><button class="rmpg-btn danger" data-del="${key}" data-bag="${bag}">Delete</button>`
+        :'<span style="font-size:11px;color:var(--mut)">—</span>'}</td></tr>`;
+  }).join('')||`<tr><td colspan="9" style="text-align:center;padding:26px;color:var(--mut)">
+      ${Object.keys(BAG_REMARKS).length?'No bag remarks match that filter.'
+        :'No bag remarks yet. Add one from the Bag Remarks column in Manifest Detail on Bag wise View.'}</td></tr>`;
+  $('#bfPgCount').textContent=fmtN(rows.length)+' remark'+(rows.length===1?'':'s');
+  /* summary over the filtered rows */
+  const bags=new Set(rows.map(r=>r.bag));
+  let val=0; bags.forEach(b=>{const v=totals.get(b);if(v!==undefined)val+=v;});
+  const cnt={}; rows.forEach(r=>bfTags(r).forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,4);
+  $('#bfPgSum').innerHTML=rows.length?
+    `<div class="bf-k"><b>${fmtN(bags.size)}</b><span>BAGS WITH REMARKS</span></div>`+
+    `<div class="bf-k"><b>${fmtINR(val)}</b><span>THEIR PENDING VALUE TODAY</span></div>`+
+    top.map(t=>`<div class="bf-k"><b>${fmtN(cnt[t])}</b><span>${rmEsc(t.toUpperCase())}</span></div>`).join(''):'';
+  body.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{BF_EDIT=b.dataset.edit;bfPageRender();const t=$('#bfEditText');if(t)t.focus();});
+  body.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{BF_EDIT=null;bfPageRender();});
+  body.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>bfPageSave(b.dataset.bag,b.dataset.save));
+  body.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>bfPageDelete(b.dataset.bag,b.dataset.del));
+}
+async function bfPageOpen(){
+  BF_EDIT=null;
+  bfBuildPickers(); bfPageRender();
+  bfPgStatus('Syncing…');
+  await brFetch();
+  bfPgStatus('');
+  bfBuildPickers(); bfPageRender();
+}
+function bfPageClear(){
+  ['#bfPgFrom','#bfPgTo','#bfPgFilter'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  BF_LANE_SEL=new Set();BF_RSN_SEL=new Set();BF_NAME_SEL=new Set();
+  bfBuildPickers(); bfPageRender();
+}
+async function bfPageSave(bag,id){
+  if(!canRemark()&&!(CURRENT_USER&&CURRENT_USER.remarksManage))return;
+  const date=($('#bfEditDate')&&$('#bfEditDate').value)||'';
+  const reasons=[...$$('#bfPgBody .bfEditRsn:checked')].map(x=>x.value);
+  const text=(($('#bfEditText')&&$('#bfEditText').value)||'').trim();
+  if(!text&&!reasons.length){bfPgStatus('A remark cannot be empty — delete it instead.');return;}
+  bfPgStatus('Saving…');
+  try{
+    await brFetch();
+    const row=(BAG_REMARKS[bag]||[]).find(r=>r.id===id);
+    if(!row){bfPgStatus('That remark no longer exists — it may have been deleted elsewhere.');BF_EDIT=null;bfPageRender();return;}
+    if(!rmCanManage(row)){bfPgStatus('Only the author or an admin can edit this remark.');return;}
+    row.date=date||row.date; row.reasons=reasons; row.status=reasons[0]||BR_FOLLOW; row.text=text; row.bag=bag;
+    row.editedBy=CURRENT_USER.name||CURRENT_USER.id; row.editedAt=new Date().toISOString();
+    await brSaveOne(row); await brSave();
+    BF_EDIT=null; bfPgStatus('Saved.');
+    setTimeout(()=>{if($('#bfPgStatus')&&$('#bfPgStatus').textContent==='Saved.')bfPgStatus('');},2500);
+    bfBuildPickers(); bfPageRender(); brRefreshTables();
+    try{logEvent('bag remark','edited · '+bag);}catch(e){}
+  }catch(e){bfPgStatus('Could not save: '+e.message);}
+}
+async function bfPageDelete(bag,id){
+  if(!canRemark()&&!(CURRENT_USER&&CURRENT_USER.remarksManage))return;
+  if(!confirm('Delete this remark on bag '+bag+'? This cannot be undone.'))return;
+  bfPgStatus('Deleting…');
+  try{
+    await brFetch();
+    const gone=(BAG_REMARKS[bag]||[]).find(r=>r.id===id);
+    if(gone&&!rmCanManage(gone)){bfPgStatus('Only the author or an admin can delete this remark.');return;}
+    BAG_REMARKS[bag]=(BAG_REMARKS[bag]||[]).filter(r=>r.id!==id);
+    if(!BAG_REMARKS[bag].length)delete BAG_REMARKS[bag];
+    if(gone)await brSaveOne({...gone,bag,deleted:true,deletedBy:CURRENT_USER.name||CURRENT_USER.id,deletedAt:new Date().toISOString()});
+    await brSave();
+    BF_EDIT=null; bfPgStatus('');
+    bfBuildPickers(); bfPageRender(); brRefreshTables();
+  }catch(e){bfPgStatus('Could not delete: '+e.message);}
+}
+function bfExport(){
+  const totals=bfBagTotals();
+  const rows=bfRows().map(r=>({Manifest:r.bag,Lane_Code:r.lane||'',Date:r.date||'',
+    Bag_value_today:totals.has(r.bag)?Math.round(totals.get(r.bag)):'',Bag_value_at_remark:r.value||'',
+    Remarks:bfTags(r).join('; '),Comment:String(r.text||'').replace(/\r?\n/g,' '),
+    Added_by:r.byName||r.by||'',Recorded_at:r.at||'',Edited_by:r.editedBy||''}));
+  if(!rows.length){alert('Nothing to export — no bag remarks match the current filters.');return;}
+  lvExport(rows,'csv','bag_feedback','remarks');
 }
 
 async function rmPageDelete(lane,id){
@@ -10310,6 +10586,7 @@ const PAGE_META={
   tasks:{t:'Tasks',c:'Assign work, then send it by email and WhatsApp'},
   team:{t:'Team Tree',c:'Who reports to whom, with contact details'},
   reference:{t:'Activity Tracker',c:'Live view of the activity tracker workbook'},
+  bagfb:{t:'Feedback on Bag',c:'Bag remark trail from Bag wise View — filter, edit or delete'},
   remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
 var booted=false;   /* var, not let: hoisted, so boot() can never hit a temporal-dead-zone error */
@@ -10349,6 +10626,7 @@ function navTo(page){
   if(page==='docs'&&!$('#docBody').innerHTML)renderDocs();
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
+  if(page==='bagfb')bfPageOpen();
   if(page==='tasks')tkOpenPage();
   if(page==='team')ttOpenPage();
   if(page==='reference')rfOpenPage();
@@ -10483,6 +10761,12 @@ function wireControls(){
   $('#brModal').onclick=e=>{if(e.target===$('#brModal'))brClose();};
   $('#brAddBtn').onclick=brAdd;
   $('#brCsv').onclick=brExportAll;
+  /* Feedback on Bag page */
+  ['#bfPgFrom','#bfPgTo'].forEach(id=>$(id).onchange=bfPageRender);
+  $('#bfPgFilter').oninput=bfPageRender;
+  $('#bfPgClear').onclick=bfPageClear;
+  $('#bfPgRefresh').onclick=bfPageOpen;
+  $('#bfPgCsv').onclick=bfExport;
 
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#brModal').classList.contains('show'))brClose();});
 
