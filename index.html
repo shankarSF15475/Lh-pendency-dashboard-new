@@ -1532,6 +1532,10 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 #page-olfy .mt .l{font-weight:700}
 #page-olfy .mt .v{color:var(--ol-text);font-size:16px;font-weight:700}
 #page-olfy .mt .s{color:var(--ol-muted);font-size:11px}
+#page-olfy .mt .cn{margin-top:6px;padding-top:6px;border-top:1px dashed var(--ol-line);font-size:11px;color:#166534;font-weight:600;line-height:1.35}
+#page-olfy .mt .cn b{display:block;font-size:14px;font-weight:800}
+#page-olfy .mt .cn span{display:block;color:var(--ol-muted);font-weight:500;font-size:10.5px}
+#page-olfy .ol-kpi .v.cn{color:#166534}
 #page-olfy .insights{background:#fff;border:1px solid var(--ol-line);border-left:3px solid var(--ol-acc);border-radius:12px;padding:10px 14px;margin:12px 0}
 #page-olfy .insights ul{margin:4px 0 0;padding-left:18px}
 #page-olfy .insights li{margin:2px 0}
@@ -11558,7 +11562,7 @@ function render(){
   const P={}; DIMS.forEach(d=>P[d.id]=pivot(d.key,mask,d.period));
   // KPIs
   renderKpis(mask,tot,n,P);
-  const pl=P.lane; olEl('mstrip').innerHTML=pl.months.map(m=>{const c=mc(m);return `<div class="mt ${F.month.has(m)?'on':''}" data-m="${m}" style="color:rgb(${c});border-top:3px solid rgb(${c})"><div class="l">${esc(D.months[m].label)}</div><div class="v">${inrShort(pl.mv[m])}</div><div class="s">${inr(pl.mc[m])} shipments · ${tot?(pl.mv[m]/tot*100).toFixed(1):0}%</div></div>`}).join('');
+  const pl=P.lane; olEl('mstrip').innerHTML=pl.months.map(m=>{const c=mc(m);return `<div class="mt ${F.month.has(m)?'on':''}" data-m="${m}" style="color:rgb(${c});border-top:3px solid rgb(${c})"><div class="l">${esc(D.months[m].label)}</div><div class="v">${inrShort(pl.mv[m])}</div><div class="s">${inr(pl.mc[m])} shipments · ${tot?(pl.mv[m]/tot*100).toFixed(1):0}%</div>${olCnLine(D.months[m].label,pl.mv[m])}</div>`}).join('');
   olRoot().querySelectorAll('#ol-mstrip .mt').forEach(x=>x.onclick=()=>{const m=+x.dataset.m; F.month.has(m)?F.month.delete(m):F.month.add(m); changed()});
   renderInsights(P,tot,n);
   const host=olEl('cards'), hostTop=olEl('cardsTop');
@@ -11673,12 +11677,31 @@ dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag'); i
 
 
 
+/* ---------- CN received value (LH Recovery · CN Working) ----------
+   Same figures as LH Recovery's "CN Received Value by month of CN Received
+   Date" table, matched to each tile by its Mon'YY label. It is a different
+   dataset, so the page filters do not narrow it. */
+function olCnMap(){
+  const m=new Map();
+  try{ if(typeof lhrSummaryRows==='function'&&typeof LHR_RAW!=='undefined'&&LHR_RAW.length)
+         lhrSummaryRows().forEach(o=>m.set(o.month,o.value)); }catch(e){}
+  return m;
+}
+let OL_CN=new Map();
+function olCnLine(label,debit){
+  if(!OL_CN.size) return '';
+  const v=OL_CN.get(label)||0;
+  const pct=debit?(v/debit*100).toFixed(1)+'% of debit':'';
+  return `<div class="cn" title="CN Received Value for CN Received Date in ${esc(label)} (from LH Recovery · CN Working). Not affected by the filters on this page.">CN received <b>${inrShort(v)}</b>${pct?`<span>${pct}</span>`:''}</div>`;
+}
 /* ---------- headline KPIs ---------- */
 function renderKpis(mask,tot,n,P){
+  OL_CN=olCnMap();
   let pv=0; if(D.pv) for(let i=0;i<D.n;i++) if(mask[i]) pv+=D.pv[i];
   const cnt=k=>P[k]?P[k].rows.length:0;
   const k=[['Total debit value',inrShort(tot),'lime'],['Shipments',inr(n),''],
     D.pv?['Product value',inrShort(pv),'']:null,['Avg debit / shipment',n?'₹'+inr(tot/n):'—',''],
+    OL_CN.size?['CN received value',inrShort([...OL_CN.values()].reduce((a,b)=>a+b,0)),'cn']:null,
     ['Lanes',inr(cnt('lane')),''],['Vehicles',inr(cnt('vehicle')),''],['Vendors',inr(cnt('vendor')),''],['Clients',inr(cnt('client')),'']].filter(Boolean);
   olEl('kpis').innerHTML=k.map(x=>`<div class="ol-kpi"><div class="l">${x[0]}</div><div class="v ${x[2]}">${x[1]}</div></div>`).join('');
 }
@@ -11834,6 +11857,9 @@ async function olOpen(){
   olBusy=false;
   /* nothing published yet: build the first copy from the sheet */
   if(!OL_META&&!(cached&&cached.txt)) await olRefreshFromSheet();
+  if(typeof LHR_RAW!=='undefined'&&!LHR_RAW.length&&typeof gsSyncCN==='function'){
+    try{ if(await gsSyncCN(true)&&D) render(); }catch(e){}
+  }
   else if(!OL_META) olStatus(olEl('src').textContent.replace(' · checking for newer data…','')+' · not yet in Supabase — click Refresh to publish it');
 }
 olEl('refreshBtn').onclick=olRefreshFromSheet;
