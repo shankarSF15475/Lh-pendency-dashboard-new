@@ -3151,7 +3151,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <input type="file" id="ol-file" accept=".xlsx,.xlsm,.csv" hidden>
-            <button class="ol-btn primary" id="ol-refreshBtn" title="Pull the latest data from the Google Sheet">⟳ Refresh from sheet</button>
+            <button class="ol-btn primary" id="ol-refreshBtn" title="Pull the latest data from the Google Sheet">⟳ Refresh</button>
             <button class="ol-btn" id="ol-loadBtn" title="Load an Excel / CSV export instead of the live sheet">⬆ Upload data (Excel / CSV)</button>
             <button class="ol-btn" id="ol-expRaw">Export filtered rows</button>
             <button class="ol-btn" id="ol-resetBtn">Reset filters</button>
@@ -9706,12 +9706,18 @@ function renderRefreshTime(){
   if(pill)pill.title='Data published by admin on '+d.toLocaleString('en-IN');
 }
 
+/* who may open Overall_loss_FY_2026 — edit this list to add or remove people */
+const OL_USERS=['pushkar.verma@shadowfax.in','anup.pandey1@shadowfax.in','gowri.shankar@shadowfax.in',
+  'sachin.r1@shadowfax.in','rahul.gautam@shadowfax.in','abhay.singh7@shadowfax.in'];
+function olAllowed(u){return !!(u&&u.id&&OL_USERS.includes(String(u.id).toLowerCase()));}
 function applyLHRecoveryAccess(u){
   const btn=document.querySelector('.nav button[data-page="lhrecovery"]');
   if(btn)btn.style.display=(u&&u.lhRecovery)?'':'none';
-  /* Overall_loss_FY_2026 is loss / debit data: same audience as LH Recovery */
+  /* Overall_loss_FY_2026: only the named accounts in OL_USERS */
   const ol=document.querySelector('.nav button[data-page="olfy"]');
-  if(ol)ol.style.display=(u&&u.lhRecovery)?'':'none';
+  if(ol)ol.style.display=olAllowed(u)?'':'none';
+  const olp=document.getElementById('page-olfy');
+  if(olp&&olp.classList.contains('active')&&!olAllowed(u)&&typeof navTo==='function'){try{navTo(homePage());}catch(e){}}
 }
 function applyAdminAccess(u){
   applyLHRecoveryAccess(u);
@@ -10758,7 +10764,10 @@ function navTo(page){
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
   if(page==='bagfb')bfPageOpen();
-  if(page==='olfy'&&window.olfyOpen)window.olfyOpen();
+  if(page==='olfy'){
+    if(!olAllowed(CURRENT_USER)){closeSidebar();navTo(homePage());return;}
+    if(window.olfyOpen)window.olfyOpen();
+  }
   if(page==='tasks')tkOpenPage();
   if(page==='team')ttOpenPage();
   if(page==='reference')rfOpenPage();
@@ -11225,7 +11234,7 @@ if(document.readyState!=='loading')ltWire();
    the private "Base" tab, cached in IndexedDB; Excel / CSV upload
    stays available as a fallback.
 ============================================================= */
-const OL_SCRIPT_URL='';                                      // Apps Script /exec URL (paste after deploying)
+const OL_SCRIPT_URL='https://script.google.com/macros/s/AKfycbym2eaWtYOiywj65qTziBxm7ONWLEkO2rXiqbij4dmI-CTf8sU75tWgHlKND9EBPJjb/exec';                                      // Apps Script /exec URL (paste after deploying)
 const OL_SCRIPT_KEY='olk_7Qm2_FY26_vRb9XkT4pLs8wNcZ3hD';      // must match ACCESS_KEY in the Apps Script
 (function(){
 const OLS={};
