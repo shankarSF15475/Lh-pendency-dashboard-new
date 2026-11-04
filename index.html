@@ -11693,21 +11693,47 @@ function olUseCsv(txt,label){
   olEl('cards').innerHTML=''; olEl('cardsTop').innerHTML='';
   setData(data,label);
 }
+async function olGet(params){
+  const res=await fetch(OL_SCRIPT_URL+'?key='+encodeURIComponent(OL_SCRIPT_KEY)+params+'&t='+Date.now());
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const txt=await res.text();
+  if(/^\s*\{/.test(txt)){const j=JSON.parse(txt); if(j.ok===false) throw new Error(j.error||'unexpected reply'); return j;}
+  return txt;
+}
+/* the Base tab is ~1.6 lakh rows, more than Google returns in one call, so it is
+   pulled in batches (three at a time) and stitched back together */
+let olBusy=false;
 async function olFetchLive(){
   if(!OL_SCRIPT_URL){olStatus(D?olEl('src').textContent:'Live feed not connected yet: waiting for the Apps Script link. Meanwhile you can upload an Excel / CSV export of the sheet.',!D);return;}
+  if(olBusy) return; olBusy=true;
   ld.classList.add('on'); lm.textContent='Pulling Overall_loss_FY_2026 from Google Sheets…';
   try{
-    const res=await fetch(OL_SCRIPT_URL+'?key='+encodeURIComponent(OL_SCRIPT_KEY)+'&t='+Date.now());
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const txt=await res.text();
-    if(/^\s*\{/.test(txt)){const j=JSON.parse(txt); throw new Error(j.error||'unexpected reply');}
+    const info=await olGet('&ping=1');
+    if(typeof info!=='object'||!info.batch) throw new Error('the Apps Script is still the old version — open it, paste the new overall_loss_apps_script.gs, then Deploy → Manage deployments → edit → New version');
+    const total=info.rows, B=info.batch, n=Math.max(1,Math.ceil(total/B));
+    const parts=new Array(n); let done=0, next=0;
+    lm.textContent='Pulling '+total.toLocaleString('en-IN')+' rows · batch 0 of '+n+'…';
+    async function worker(){
+      while(next<n){
+        const i=next++;
+        let txt, tries=0;
+        for(;;){ try{ txt=await olGet('&start='+(i*B)+'&count='+B); break; }
+                 catch(e){ if(++tries>=3) throw e; await new Promise(r=>setTimeout(r,1500*tries)); } }
+        if(typeof txt!=='string') throw new Error('batch '+(i+1)+' returned no data');
+        parts[i]=i===0?txt:txt.slice(txt.indexOf('\n')+1);
+        done++; lm.textContent='Pulling '+total.toLocaleString('en-IN')+' rows · batch '+done+' of '+n+'…';
+      }
+    }
+    await Promise.all([worker(),worker(),worker()]);
+    const csv=parts.filter(Boolean).join('\n');
     const when=new Date();
-    olUseCsv(txt,'Google Sheet · Overall_loss_FY_2026 · synced '+when.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
-    try{idbSet(OL_IDB,{txt,at:when.toISOString()});}catch(e){}
+    lm.textContent='Building the view…'; await new Promise(r=>setTimeout(r,20));
+    olUseCsv(csv,'Google Sheet · Overall_loss_FY_2026 · synced '+when.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+    try{idbSet(OL_IDB,{txt:csv,at:when.toISOString()});}catch(e){}
   }catch(e){
-    olStatus((D?olEl('src').textContent+' · ':'')+'Live refresh failed: '+e.message,true);
+    olStatus((D?olEl('src').textContent.replace(/ · Live refresh failed:.*$/,'')+' · ':'')+'Live refresh failed: '+e.message,true);
   }
-  ld.classList.remove('on');
+  ld.classList.remove('on'); olBusy=false;
 }
 let olStarted=false;
 async function olOpen(){
