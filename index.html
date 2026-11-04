@@ -11700,50 +11700,144 @@ async function olGet(params){
   if(/^\s*\{/.test(txt)){const j=JSON.parse(txt); if(j.ok===false) throw new Error(j.error||'unexpected reply'); return j;}
   return txt;
 }
-/* the Base tab is ~1.6 lakh rows, more than Google returns in one call, so it is
-   pulled in batches (three at a time) and stitched back together */
-let olBusy=false;
-async function olFetchLive(){
-  if(!OL_SCRIPT_URL){olStatus(D?olEl('src').textContent:'Live feed not connected yet: waiting for the Apps Script link. Meanwhile you can upload an Excel / CSV export of the sheet.',!D);return;}
+/* =============================================================
+   DATA PATH
+   1. Supabase (fast, default): olfy/meta.json + olfy/chunk_<i>.gz — the
+      sheet split into 25k-row CSV slices, each gzip-compressed (~0.4 MB).
+      Every viewer downloads these in parallel instead of waiting on Google.
+   2. Google Sheet (slow, on Refresh): the Apps Script batches, then the
+      result is re-published to Supabase so the next viewer gets it fast.
+   3. IndexedDB: the last copy this browser saw, shown instantly on open.
+   ============================================================= */
+const OL_DIR='olfy/';
+let olBusy=false, OL_META=null;
+const olFmt=d=>new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+
+async function olGzip(txt){
+  const s=new Blob([txt]).stream().pipeThrough(new CompressionStream('gzip'));
+  return await new Response(s).blob();
+}
+async function olGunzip(buf){
+  const s=new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(s).text();
+}
+/* run fn over 0..n-1 with k at a time, keeping results in order */
+async function olPool(n,k,fn){
+  const out=new Array(n); let next=0;
+  async function w(){ while(next<n){ const i=next++; out[i]=await fn(i); } }
+  await Promise.all(Array.from({length:Math.min(k,n)},w));
+  return out;
+}
+async function olRetry(fn){
+  for(let t=1;;t++){ try{return await fn();}catch(e){ if(t>=3) throw e; await new Promise(r=>setTimeout(r,1500*t)); } }
+}
+
+/* ---- 1. Supabase ---- */
+async function olReadMeta(){
+  try{
+    const r=await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+OL_DIR+'meta.json?t='+Date.now());
+    if(!r.ok) return null;
+    const j=await r.json(); return (j&&j.chunks)?j:null;
+  }catch(e){ return null; }
+}
+async function olLoadSupa(meta){
+  lm.textContent='Loading '+(meta.rows||0).toLocaleString('en-IN')+' rows…'; ld.classList.add('on');
+  let done=0;
+  const parts=await olPool(meta.chunks,4,i=>olRetry(async()=>{
+    const r=await fetch(SUPA_URL+'/storage/v1/object/public/'+SUPA_BUCKET+'/'+OL_DIR+'chunk_'+i+'.gz?v='+encodeURIComponent(meta.synced));
+    if(!r.ok) throw new Error('chunk '+i+': HTTP '+r.status);
+    const txt=await olGunzip(await r.arrayBuffer());
+    lm.textContent='Loading '+(meta.rows||0).toLocaleString('en-IN')+' rows · part '+(++done)+' of '+meta.chunks+'…';
+    return txt;
+  }));
+  /* chunk 0 carries the header row; the rest are data only */
+  const csv=parts.join('\n');
+  lm.textContent='Building the view…'; await new Promise(r=>setTimeout(r,20));
+  olUseCsv(csv,olLabel(meta));
+  try{idbSet(OL_IDB,{txt:csv,at:meta.synced,meta});}catch(e){}
+  ld.classList.remove('on');
+}
+function olLabel(meta){
+  return 'Overall_loss_FY_2026 · data as of '+olFmt(meta.synced)+(meta.byName?' (refreshed by '+meta.byName+')':'');
+}
+
+/* ---- 2. Google Sheet → Supabase ---- */
+async function olGet(params){
+  const res=await fetch(OL_SCRIPT_URL+'?key='+encodeURIComponent(OL_SCRIPT_KEY)+params+'&t='+Date.now());
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const txt=await res.text();
+  if(/^\s*\{/.test(txt)){const j=JSON.parse(txt); if(j.ok===false) throw new Error(j.error||'unexpected reply'); return j;}
+  return txt;
+}
+async function olPullSheet(){
+  const info=await olGet('&ping=1');
+  if(typeof info!=='object'||!info.batch) throw new Error('the Apps Script is still the old version — paste the new overall_loss_apps_script.gs, then Deploy → Manage deployments → edit → New version');
+  const total=info.rows, B=info.batch, n=Math.max(1,Math.ceil(total/B));
+  let done=0;
+  lm.textContent='Pulling '+total.toLocaleString('en-IN')+' rows from Google Sheets · batch 0 of '+n+'…';
+  return await olPool(n,3,i=>olRetry(async()=>{
+    const txt=await olGet('&start='+(i*B)+'&count='+B);
+    if(typeof txt!=='string') throw new Error('batch '+(i+1)+' returned no data');
+    lm.textContent='Pulling '+total.toLocaleString('en-IN')+' rows from Google Sheets · batch '+(++done)+' of '+n+'…';
+    return i===0?txt:txt.slice(txt.indexOf('\n')+1);
+  }));
+}
+async function olPublish(parts,rows,synced){
+  lm.textContent='Saving to Supabase so everyone loads it fast…';
+  await olPool(parts.length,4,async i=>{
+    const gz=await olGzip(parts[i]);
+    await olRetry(()=>supaUpload(OL_DIR+'chunk_'+i+'.gz',new Blob([gz],{type:'application/gzip'})));
+  });
+  const meta={chunks:parts.length,rows,synced,by:CURRENT_USER&&CURRENT_USER.id||'',
+              byName:CURRENT_USER&&(CURRENT_USER.name||CURRENT_USER.id)||'',source:'Google Sheet · Base'};
+  /* meta last: readers never see a meta that points at chunks not yet written */
+  await supaUpload(OL_DIR+'meta.json',new Blob([JSON.stringify(meta)],{type:'application/json'}));
+  return meta;
+}
+async function olRefreshFromSheet(){
+  if(!OL_SCRIPT_URL){olStatus('Live feed not connected yet: waiting for the Apps Script link.',true);return;}
   if(olBusy) return; olBusy=true;
   ld.classList.add('on'); lm.textContent='Pulling Overall_loss_FY_2026 from Google Sheets…';
+  const before=D?olEl('src').textContent.replace(/ · (Live refresh|Saving to Supabase) failed:.*$/,''):'';
   try{
-    const info=await olGet('&ping=1');
-    if(typeof info!=='object'||!info.batch) throw new Error('the Apps Script is still the old version — open it, paste the new overall_loss_apps_script.gs, then Deploy → Manage deployments → edit → New version');
-    const total=info.rows, B=info.batch, n=Math.max(1,Math.ceil(total/B));
-    const parts=new Array(n); let done=0, next=0;
-    lm.textContent='Pulling '+total.toLocaleString('en-IN')+' rows · batch 0 of '+n+'…';
-    async function worker(){
-      while(next<n){
-        const i=next++;
-        let txt, tries=0;
-        for(;;){ try{ txt=await olGet('&start='+(i*B)+'&count='+B); break; }
-                 catch(e){ if(++tries>=3) throw e; await new Promise(r=>setTimeout(r,1500*tries)); } }
-        if(typeof txt!=='string') throw new Error('batch '+(i+1)+' returned no data');
-        parts[i]=i===0?txt:txt.slice(txt.indexOf('\n')+1);
-        done++; lm.textContent='Pulling '+total.toLocaleString('en-IN')+' rows · batch '+done+' of '+n+'…';
-      }
-    }
-    await Promise.all([worker(),worker(),worker()]);
-    const csv=parts.filter(Boolean).join('\n');
-    const when=new Date();
+    const parts=await olPullSheet();
+    const csv=parts.join('\n'), synced=new Date().toISOString();
+    const rows=Math.max(0,csv.split('\n').length-1);
     lm.textContent='Building the view…'; await new Promise(r=>setTimeout(r,20));
-    olUseCsv(csv,'Google Sheet · Overall_loss_FY_2026 · synced '+when.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
-    try{idbSet(OL_IDB,{txt:csv,at:when.toISOString()});}catch(e){}
+    const meta0={synced,byName:CURRENT_USER&&(CURRENT_USER.name||CURRENT_USER.id)||''};
+    olUseCsv(csv,olLabel(meta0));
+    try{idbSet(OL_IDB,{txt:csv,at:synced});}catch(e){}
+    try{ OL_META=await olPublish(parts,rows,synced); olStatus(olLabel(OL_META)+' · '+rows.toLocaleString('en-IN')+' rows'); }
+    catch(e){ olStatus(olEl('src').textContent+' · Saving to Supabase failed: '+e.message,true); }
   }catch(e){
-    olStatus((D?olEl('src').textContent.replace(/ · Live refresh failed:.*$/,'')+' · ':'')+'Live refresh failed: '+e.message,true);
+    olStatus((before?before+' · ':'')+'Live refresh failed: '+e.message,true);
   }
   ld.classList.remove('on'); olBusy=false;
 }
+
+/* ---- open: cache → Supabase → (first time only) sheet ---- */
 let olStarted=false;
 async function olOpen(){
   if(olStarted) return; olStarted=true;
-  try{const hit=await idbGet(OL_IDB);
-    if(hit&&hit.txt){olUseCsv(hit.txt,'Cached copy from '+new Date(hit.at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+' · refreshing…');}
+  let cached=null;
+  try{ cached=await idbGet(OL_IDB);
+    if(cached&&cached.txt) olUseCsv(cached.txt,(cached.meta?olLabel(cached.meta):'Saved copy from '+olFmt(cached.at))+' · checking for newer data…');
   }catch(e){}
-  await olFetchLive();
+  if(olBusy) return; olBusy=true;
+  try{
+    OL_META=await olReadMeta();
+    if(OL_META){
+      if(cached&&cached.at===OL_META.synced) olStatus(olLabel(OL_META)+' · '+D.n.toLocaleString('en-IN')+' rows');
+      else await olLoadSupa(OL_META);
+    }
+  }catch(e){ olStatus('Could not load from Supabase: '+e.message,true); ld.classList.remove('on'); }
+  olBusy=false;
+  /* nothing published yet: build the first copy from the sheet */
+  if(!OL_META&&!(cached&&cached.txt)) await olRefreshFromSheet();
+  else if(!OL_META) olStatus(olEl('src').textContent.replace(' · checking for newer data…','')+' · not yet in Supabase — click Refresh to publish it');
 }
-olEl('refreshBtn').onclick=olFetchLive;
+olEl('refreshBtn').onclick=olRefreshFromSheet;
+olEl('refreshBtn').title='Pull the latest data from the Google Sheet and save it to Supabase for everyone';
 window.olfyOpen=olOpen;
 
 })();
