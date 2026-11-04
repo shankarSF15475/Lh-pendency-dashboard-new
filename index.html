@@ -432,7 +432,7 @@ table.lv-tbl{min-width:1180px;font-size:12px}
 .hov-chart canvas,.lk-chart canvas{max-height:300px}
 body.hov-page .filterbar,body.lhrecovery-page .filterbar,body.manifest-page .filterbar,
 body.activity-page .filterbar,body.docs-page .filterbar,
-body.remarks-page .filterbar,body.bagfb-page .filterbar,body.projection-page .filterbar,
+body.remarks-page .filterbar,body.bagfb-page .filterbar,body.olfy-page .filterbar,body.projection-page .filterbar,
 body.tasks-page .filterbar,body.team-page .filterbar,
 body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
 .lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
@@ -1487,6 +1487,99 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 #rmPgClear{border:1px solid var(--line);background:#fff;color:var(--pine);border-radius:9px;
   font-weight:700;font-size:12.5px;padding:9px 14px;white-space:nowrap;}
 #rmPgClear:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+/* ---- OVERALL_LOSS_FY_2026 page (ported Debit Value View, scoped) ---- */
+#page-olfy{--ol-bg:#f5f7fa;--ol-panel:#fff;--ol-panel2:#eef2f7;--ol-line:#dde3ea;--ol-text:#1b2430;--ol-muted:#66727f;
+  --ol-acc:#2563eb;--ol-warn:#b45309;color:var(--ol-text);font-size:14px;line-height:1.4;position:relative;}
+#page-olfy .ol-head{background:#fff;border:1px solid var(--ol-line);border-radius:12px;padding:12px 16px;margin-top:12px;
+  position:sticky;top:0;z-index:30;box-shadow:0 1px 3px rgba(16,24,40,.06);}
+#page-olfy .hrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+#page-olfy .ol-h1{margin:0;font-size:18px;letter-spacing:.2px;font-weight:800;color:var(--ol-text)}
+#page-olfy .ol-h1 span{color:var(--ol-acc)}
+#page-olfy .src{color:var(--ol-muted);font-size:12px}
+#page-olfy .src.err{color:var(--ol-warn);font-weight:600}
+#page-olfy .ol-btn{background:var(--ol-panel2);color:var(--ol-text);border:1px solid var(--ol-line);border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap;width:auto;height:auto}
+#page-olfy .ol-btn:hover{border-color:var(--ol-acc)}
+#page-olfy .ol-btn.primary{background:var(--ol-acc);color:#fff;border-color:var(--ol-acc);font-weight:600}
+#page-olfy .ol-btn.sm{padding:4px 9px;font-size:12px}
+#page-olfy .filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#page-olfy .fdd{position:relative}
+#page-olfy .fdd>.ol-btn{min-width:150px;text-align:left;display:flex;justify-content:space-between;gap:8px}
+#page-olfy .fdd>.ol-btn b{color:var(--ol-acc);font-weight:600}
+#page-olfy .fdd.active>.ol-btn{border-color:var(--ol-acc)}
+#page-olfy .fpanel{display:none;position:absolute;top:calc(100% + 4px);left:0;width:min(340px,90vw);background:#fff;border:1px solid var(--ol-line);border-radius:10px;box-shadow:0 12px 30px rgba(16,24,40,.15);padding:8px;z-index:50}
+#page-olfy .fdd.open .fpanel{display:block}
+#page-olfy .fpanel input[type=search]{width:100%;padding:7px 9px;border-radius:7px;border:1px solid var(--ol-line);background:var(--ol-bg);color:var(--ol-text);font:inherit}
+#page-olfy .fpanel .acts{display:flex;gap:6px;margin:6px 0}
+#page-olfy .flist{max-height:280px;overflow:auto}
+#page-olfy .flist label{display:flex;gap:8px;align-items:center;padding:4px;border-radius:5px;cursor:pointer;font-size:13px}
+#page-olfy .flist label:hover{background:var(--ol-panel2)}
+#page-olfy .flist label span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#page-olfy .flist label i{flex:none}
+#page-olfy .flist label em{font-style:normal;color:var(--ol-muted);font-size:11px}
+#page-olfy .fnote{color:var(--ol-muted);font-size:11px;padding:4px}
+#page-olfy .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#page-olfy .ol-chip{background:var(--ol-panel2);border:1px solid var(--ol-acc);color:var(--ol-text);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer}
+#page-olfy .ol-chip:hover{background:#dbe7fd}
+#page-olfy .ol-main{padding:14px 0}
+#page-olfy .ol-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+#page-olfy .ol-kpi{background:#fff;border:1px solid var(--ol-line);border-radius:12px;padding:12px 14px}
+#page-olfy .ol-kpi .l{color:var(--ol-muted);font-size:12px}
+#page-olfy .ol-kpi .v{font-size:22px;font-weight:700;margin-top:2px;color:var(--ol-text)}
+#page-olfy .ol-kpi .v.lime{color:var(--ol-acc)}
+#page-olfy .mstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px;margin-top:10px}
+#page-olfy .mt{background:#fff;border:1px solid var(--ol-line);border-radius:10px;padding:8px 12px;cursor:pointer}
+#page-olfy .mt.on{outline:2px solid currentColor}
+#page-olfy .mt .l{font-weight:700}
+#page-olfy .mt .v{color:var(--ol-text);font-size:16px;font-weight:700}
+#page-olfy .mt .s{color:var(--ol-muted);font-size:11px}
+#page-olfy .insights{background:#fff;border:1px solid var(--ol-line);border-left:3px solid var(--ol-acc);border-radius:12px;padding:10px 14px;margin:12px 0}
+#page-olfy .insights ul{margin:4px 0 0;padding-left:18px}
+#page-olfy .insights li{margin:2px 0}
+#page-olfy .ol-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,640px),1fr));gap:14px}
+#page-olfy .ol-grid.top{grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));margin-bottom:14px}
+#page-olfy .ol-grid.top .twrap{max-height:calc(38px + 8 * 33px + 36px)}
+#page-olfy .ol-card{background:#fff;border:1px solid var(--ol-line);border-radius:12px;padding:12px;min-width:0}
+#page-olfy .ol-card.wide{grid-column:1/-1}
+#page-olfy .chead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+#page-olfy .chead h2{margin:0;font-size:15px;color:var(--ol-text)}
+#page-olfy .ctools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#page-olfy .ol-seg{display:inline-flex;border:1px solid var(--ol-line);border-radius:8px;overflow:hidden}
+#page-olfy .ol-seg button{background:transparent;color:var(--ol-muted);border:0;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer;width:auto;height:auto;border-radius:0}
+#page-olfy .ol-seg button.on{background:var(--ol-acc);color:#fff;font-weight:600}
+#page-olfy .csearch{padding:4px 8px;border-radius:7px;border:1px solid var(--ol-line);background:var(--ol-bg);color:var(--ol-text);font:inherit;font-size:12px;width:150px}
+#page-olfy .tmeta{color:var(--ol-muted);font-size:12px;margin-bottom:6px}
+#page-olfy .twrap{overflow:auto;max-height:calc(38px + 20 * 33px + 36px);border:1px solid var(--ol-line);border-radius:8px}
+#page-olfy table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;margin:0}
+#page-olfy th,#page-olfy td{padding:0 10px;height:33px;white-space:nowrap;border-bottom:1px solid var(--ol-line);text-align:right;background:transparent}
+#page-olfy thead th{position:sticky;top:0;background:var(--ol-panel2);z-index:3;height:38px;color:var(--ol-muted);font-weight:600;cursor:pointer;user-select:none;text-transform:none;letter-spacing:0;font-size:13px}
+#page-olfy thead th:hover{color:var(--ol-text)}
+#page-olfy thead th.sorted{text-decoration:underline}
+#page-olfy tfoot td{position:sticky;bottom:0;background:#e8eef7;font-weight:700;z-index:3;height:36px}
+#page-olfy th.name,#page-olfy td.name{text-align:left;position:sticky;left:0;z-index:2;background:#fff;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+#page-olfy thead th.name{z-index:4;background:var(--ol-panel2)}
+#page-olfy tfoot td.name{z-index:4;background:#e8eef7}
+#page-olfy td.name .rk{display:inline-block;width:28px;color:var(--ol-muted);font-size:11px}
+#page-olfy tbody tr.top20 td.name{box-shadow:inset 3px 0 0 var(--ol-acc)}
+#page-olfy tbody tr{cursor:pointer}
+#page-olfy tbody tr:hover td{background:#f0f5ff !important}
+#page-olfy tbody tr.sel td{outline:1px solid var(--ol-acc);outline-offset:-1px}
+#page-olfy td.tot{font-weight:600}
+#page-olfy td.share{color:var(--ol-muted)}
+#page-olfy .ol-empty{padding:20px;text-align:center;color:var(--ol-muted)}
+#page-olfy .ol-foot{color:var(--ol-muted);font-size:12px;padding:6px 0 16px}
+#page-olfy #ol-loading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:none;align-items:flex-start;justify-content:center;padding-top:120px;z-index:100;font-size:15px}
+#page-olfy #ol-loading.on{display:flex}
+#page-olfy #ol-loading div{background:#fff;border:1px solid var(--ol-acc);padding:16px 22px;border-radius:12px}
+#page-olfy.drag{outline:2px dashed var(--ol-acc);outline-offset:-8px}
+@media (max-width:600px){
+  #page-olfy .ol-head{position:static}
+  #page-olfy .ol-h1{font-size:16px}
+  #page-olfy .fdd>.ol-btn{min-width:0}
+  #page-olfy .ol-kpi .v{font-size:18px}
+  #page-olfy .csearch{width:120px}
+  #page-olfy th.name,#page-olfy td.name{max-width:170px}
+}
+
 /* ---- Feedback on Bag page ---- */
 #page-bagfb .rmpg-new{grid-template-columns:200px 220px 180px 150px 150px auto;}
 #bfPgTbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:normal;}
@@ -1826,6 +1919,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       <button data-page="hov"><span class="ic">🎯</span>HOV Analytics</button>
       <button data-page="livetracker"><span class="ic">📡</span>Pendency Live Tracker</button>
       <button data-page="lhrecovery"><span class="ic">💰</span>LH Recovery</button>
+      <button data-page="olfy"><span class="ic">📉</span>Overall_loss_FY_2026</button>
       <button data-page="lock"><span class="ic">🔐</span>Lock Analysis</button>
       <button data-page="activity"><span class="ic">🛡️</span>Activity Log</button>
       <button data-page="docs"><span class="ic">📖</span>Documentation</button>
@@ -3046,6 +3140,39 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           no longer in scope shows the value recorded when the remark was added, in grey. Editing keeps the original
           author and recorded time.</div>
       </div>
+    </section>
+    <!-- ============ PAGE: OVERALL_LOSS_FY_2026 ============ -->
+    <section class="page" id="page-olfy">
+      <div class="ol-head">
+        <div class="hrow">
+          <div>
+            <div class="ol-h1">Overall_loss_FY_2026 · Debit Value <span>View</span></div>
+            <div class="src" id="ol-src">Loading…</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="file" id="ol-file" accept=".xlsx,.xlsm,.csv" hidden>
+            <button class="ol-btn primary" id="ol-refreshBtn" title="Pull the latest data from the Google Sheet">⟳ Refresh from sheet</button>
+            <button class="ol-btn" id="ol-loadBtn" title="Load an Excel / CSV export instead of the live sheet">⬆ Upload data (Excel / CSV)</button>
+            <button class="ol-btn" id="ol-expRaw">Export filtered rows</button>
+            <button class="ol-btn" id="ol-resetBtn">Reset filters</button>
+          </div>
+        </div>
+        <div class="filters" id="ol-filters"></div>
+        <div class="chips" id="ol-chips"></div>
+      </div>
+      <div class="ol-main">
+        <section class="ol-kpis" id="ol-kpis"></section>
+        <section class="mstrip" id="ol-mstrip"></section>
+        <section class="insights" id="ol-insights"></section>
+        <section class="ol-grid top" id="ol-cardsTop"></section>
+        <section class="ol-grid" id="ol-cards"></section>
+      </div>
+      <div class="ol-foot">
+        Source: Google Sheet <b>Overall_loss_FY_2026</b>, tab <b>Base</b>, read through a private Apps Script feed (only the columns this page needs).
+        Rules applied on load: text values trimmed · blank values shown as “(Blank)” · non-numeric debit_value counted as 0 · pickup month taken from picked_month + picked_year, falling back to picked_date.
+        Tip: click a month tile or any row to filter every view by it; click a column header to sort; drag and drop an Excel / CSV file anywhere on the page to load it.
+      </div>
+      <div id="ol-loading"><div id="ol-loadMsg">Loading…</div></div>
     </section>
   </main>
 </div>
@@ -9582,6 +9709,9 @@ function renderRefreshTime(){
 function applyLHRecoveryAccess(u){
   const btn=document.querySelector('.nav button[data-page="lhrecovery"]');
   if(btn)btn.style.display=(u&&u.lhRecovery)?'':'none';
+  /* Overall_loss_FY_2026 is loss / debit data: same audience as LH Recovery */
+  const ol=document.querySelector('.nav button[data-page="olfy"]');
+  if(ol)ol.style.display=(u&&u.lhRecovery)?'':'none';
 }
 function applyAdminAccess(u){
   applyLHRecoveryAccess(u);
@@ -10586,6 +10716,7 @@ const PAGE_META={
   tasks:{t:'Tasks',c:'Assign work, then send it by email and WhatsApp'},
   team:{t:'Team Tree',c:'Who reports to whom, with contact details'},
   reference:{t:'Activity Tracker',c:'Live view of the activity tracker workbook'},
+  olfy:{t:'Overall_loss_FY_2026',c:'Debit value by loss bucket, lane, vehicle, vendor and client × pickup month, from the Overall_loss_FY_2026 sheet'},
   bagfb:{t:'Feedback on Bag',c:'Bag remark trail from Bag wise View — filter, edit or delete'},
   remarks:{t:'Feedback Manifest Lanes',c:'Lane follow-up trail from Bag wise View — add, edit or delete'},
 };
@@ -10627,6 +10758,7 @@ function navTo(page){
   if(page==='activity')loadActivity();
   if(page==='remarks')rmPageOpen();
   if(page==='bagfb')bfPageOpen();
+  if(page==='olfy'&&window.olfyOpen)window.olfyOpen();
   if(page==='tasks')tkOpenPage();
   if(page==='team')ttOpenPage();
   if(page==='reference')rfOpenPage();
@@ -11083,5 +11215,503 @@ document.addEventListener('DOMContentLoaded',ltWire);
 if(document.readyState!=='loading')ltWire();
 </script>
 
+<script>
+/* =============================================================
+   OVERALL_LOSS_FY_2026 — debit value view, ported from the
+   reference "Debit Value View" page. Self-contained: every id is
+   prefixed ol-, every class is scoped under #page-olfy, and all
+   state lives inside this closure.
+   Data: Apps Script web app (overall_loss_apps_script.gs) reading
+   the private "Base" tab, cached in IndexedDB; Excel / CSV upload
+   stays available as a fallback.
+============================================================= */
+const OL_SCRIPT_URL='';                                      // Apps Script /exec URL (paste after deploying)
+const OL_SCRIPT_KEY='olk_7Qm2_FY26_vRb9XkT4pLs8wNcZ3hD';      // must match ACCESS_KEY in the Apps Script
+(function(){
+const OLS={};
+function olRoot(){return document.getElementById('page-olfy');}
+function olEl(id){return document.getElementById('ol-'+id);}
+
+
+/* ---------- column mapping ---------- */
+const FIELDS = {
+  awb:['awb_number','awb'],
+  debit:['debit_value','debit value'],
+  loss:['loss bucket sub tagging'],
+  laneType:['lane type','lane_type'],
+  lane:['lane code','lane_code','lane'],
+  vehicle:['vehicle_number','vehicle number','vehicle'],
+  vendor:['vendor_name','vendor name','vendor'],
+  dest:['manifest_destination','manifest destination'],
+  client:['client_name','client name','client'],
+  pm:['picked_month','pickup month','pickup_month'],
+  py:['picked_year','pickup year','pickup_year'],
+  pd:['picked_date','pickup date','pickup_date'],
+  pv:['product_value','product value']
+};
+const DATE_FIELDS = new Set(['pd']);
+const TOP_KEYS = new Set(['loss','laneType','laneTypeQ','dest']);
+const DIMS = [
+  {key:'loss',label:'Loss Bucket Sub Tagging'},
+  {key:'laneType',label:'Lane Type'},
+  {key:'laneType',label:'Lane Type',id:'laneTypeQ',period:'q'},
+  {key:'dest',label:'Manifest Destination'},
+  {key:'lane',label:'Lane (Lane Code)'},
+  {key:'vehicle',label:'Vehicle Number'},
+  {key:'vendor',label:'Vendor Name'},
+  {key:'client',label:'Client'}
+];
+const FILTERS = [
+  {key:'month',label:'Pickup Month'},
+  {key:'quarter',label:'Pickup Quarter'},
+  {key:'lane',label:'Lane'},
+  {key:'vehicle',label:'Vehicle'},
+  {key:'vendor',label:'Vendor'},
+  {key:'dest',label:'Manifest Destination'},
+  {key:'loss',label:'Loss Bucket Sub'},
+  {key:'laneType',label:'Lane Type'},
+  {key:'client',label:'Client'}
+];
+DIMS.forEach(d=>{d.id=d.id||d.key; d.period=d.period||'m'});
+const DIM_KEYS = ['loss','lane','laneType','vehicle','vendor','dest','client'];
+/* one colour per calendar month */
+const MCOL=[[37,99,235],[219,39,119],[5,150,105],[202,138,4],[124,58,237],[220,38,38],[8,145,178],[101,163,13],[234,88,12],[79,70,229],[13,148,136],[192,38,211]];
+function mc(m){const x=D.months[m]; return x&&x.m!=null?MCOL[x.m]:[147,173,156]}
+function monthColor(m){return mc(m)}
+const QCOL=[[37,99,235],[5,150,105],[234,88,12],[124,58,237]];
+function qc(q){const x=D.quarters[q]; return x&&x.q!=null?QCOL[x.q]:[147,173,156]}
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function norm(h){return String(h||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function mapHeaders(headers){
+  const m={};
+  headers.forEach((h,i)=>{const n=norm(h);
+    for(const k in FIELDS){ if(m[k]===undefined && FIELDS[k].includes(n)) m[k]=i; }});
+  return m;
+}
+
+/* ---------- data store (dictionary encoded, columnar) ---------- */
+function newBuilder(){
+  const b={n:0,pv:[],debit:[],month:[],dims:{},dict:{},idx:{},raw:[],monthIdx:new Map(),months:[]};
+  DIM_KEYS.forEach(k=>{b.dims[k]=[];b.dict[k]=[];b.idx[k]=new Map()});
+  return b;
+}
+function enc(b,k,v){
+  v=(v==null?'':String(v)).trim(); if(!v) v='(Blank)';
+  let c=b.idx[k].get(v); if(c===undefined){c=b.dict[k].length;b.dict[k].push(v);b.idx[k].set(v,c)}
+  return c;
+}
+function serialToDate(n){return new Date(Math.round((n-25569)*86400000))}
+function monthOf(pm,py,pdv){
+  let m=-1,y=null;
+  const s=(pm==null?'':String(pm)).trim();
+  if(s){
+    if(/^\d+(\.\d+)?$/.test(s)){const n=+s; if(n>=1&&n<=12) m=n-1; else if(n>59){const d=serialToDate(n);m=d.getUTCMonth();y=d.getUTCFullYear()}}
+    else{const i=MON.findIndex(x=>s.toLowerCase().startsWith(x.toLowerCase())); if(i>=0)m=i;
+      const yy=s.match(/(\d{4})|[-' ](\d{2})$/); if(yy) y= yy[1]? +yy[1] : 2000 + +yy[2];}
+  }
+  const ys=(py==null?'':String(py)).trim();
+  if(/^\d{4}(\.0)?$/.test(ys)) y=parseInt(ys);
+  if(m<0||y==null){
+    const d=(pdv==null?'':String(pdv)).trim(); let dm=-1,dy=null,r;
+    if(/^\d+(\.\d+)?$/.test(d)&&+d>59){const dt=serialToDate(+d);dm=dt.getUTCMonth();dy=dt.getUTCFullYear()}
+    else if(r=d.match(/^(\d{4})[-\/](\d{1,2})/)){dy=+r[1];dm=+r[2]-1}
+    else if(r=d.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/)){dy=+r[3];dm=+r[2]-1}
+    else if(r=d.match(/^(\d{1,2})[- ]([A-Za-z]{3})[A-Za-z]*[- ](\d{2,4})/)){dm=MON.findIndex(x=>x.toLowerCase()===r[2].toLowerCase());dy=+r[3]<100?2000+ +r[3]:+r[3]}
+    if(m<0)m=dm; if(y==null)y=dy;
+  }
+  if(m<0) return {label:'(No Month)',sort:9e9};
+  return y==null?{label:MON[m],sort:m,m}:{label:MON[m]+"'"+String(y).slice(-2),sort:y*12+m,m};
+}
+function addRow(b,get){
+  const mo=monthOf(get('pm'),get('py'),get('pd'));
+  let mc=b.monthIdx.get(mo.label); if(mc===undefined){mc=b.months.length;b.months.push(mo);b.monthIdx.set(mo.label,mc)}
+  const dv=parseFloat(String(get('debit')??'').replace(/[,₹\s]/g,'')); b.debit.push(isFinite(dv)?dv:0);
+  const pvv=parseFloat(String(get('pv')??'').replace(/[,₹\s]/g,'')); b.pv.push(isFinite(pvv)?pvv:0);
+  b.month.push(mc);
+  DIM_KEYS.forEach(k=>b.dims[k].push(enc(b,k,get(k))));
+  b.raw.push(get('awb')==null?'':String(get('awb')).trim());
+  b.n++;
+}
+function finish(b){
+  const D={n:b.n,pv:b.pv.some(x=>x)?Float64Array.from(b.pv):null,debit:Float64Array.from(b.debit),month:Int32Array.from(b.month),dims:{},dict:b.dict,awb:b.raw,months:b.months};
+  DIM_KEYS.forEach(k=>D.dims[k]=Int32Array.from(b.dims[k]));
+  D.dict.month=b.months.map(x=>x.label);
+  D.dims.month=D.month;
+  // Calendar quarters: Q1 = Jan–Mar, label Q1'26
+  const qIdx=new Map(), quarters=[], m2q=new Int32Array(b.months.length);
+  b.months.forEach((mo,i)=>{let lab,sort,qn=null,rng='';
+    if(mo.m==null){lab='(No Month)';sort=9e9}
+    else{const y=mo.sort>=12?Math.floor(mo.sort/12):null, yy=y==null?'':"'"+String(y).slice(-2); qn=Math.floor(mo.m/3);
+      rng=MON[qn*3]+'–'+MON[qn*3+2]+yy; lab='Q'+(qn+1)+yy; sort=y==null?qn:y*4+qn;}
+    let c=qIdx.get(lab); if(c===undefined){c=quarters.length;quarters.push({label:lab,sort,q:qn,rng});qIdx.set(lab,c)} m2q[i]=c;});
+  D.quarters=quarters; D.quarter=new Int32Array(D.n); for(let i=0;i<D.n;i++) D.quarter[i]=m2q[D.month[i]];
+  D.dims.quarter=D.quarter; D.dict.quarter=quarters.map(q=>q.label);
+  return D;
+}
+
+/* ---------- minimal streaming XLSX reader (no external library) ---------- */
+function u16(v,o){return v.getUint16(o,true)} function u32(v,o){return v.getUint32(o,true)}
+function readZipEntries(buf){
+  const v=new DataView(buf); let e=-1;
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-70000);i--){if(u32(v,i)===0x06054b50){e=i;break}}
+  if(e<0) throw new Error('Not a valid .xlsx file');
+  const cnt=u16(v,e+10); let p=u32(v,e+16); const out={}; const td=new TextDecoder();
+  for(let i=0;i<cnt;i++){
+    if(u32(v,p)!==0x02014b50) break;
+    const method=u16(v,p+10), csize=u32(v,p+20), nl=u16(v,p+28), xl=u16(v,p+30), cl=u16(v,p+32), lho=u32(v,p+42);
+    const name=td.decode(new Uint8Array(buf,p+46,nl));
+    out[name]={method,csize,lho}; p+=46+nl+xl+cl;
+  }
+  return {v,buf,entries:out};
+}
+function entryStream(z,name){
+  const en=z.entries[name]; if(!en) return null;
+  const lh=en.lho, nl=u16(z.v,lh+26), xl=u16(z.v,lh+28);
+  const data=new Uint8Array(z.buf,lh+30+nl+xl,en.csize);
+  let s=new Blob([data]).stream();
+  if(en.method===8) s=s.pipeThrough(new DecompressionStream('deflate-raw'));
+  return s.pipeThrough(new TextDecoderStream());
+}
+async function readText(z,name){const s=entryStream(z,name); if(!s) return null; const r=s.getReader(); let t=''; for(;;){const {done,value}=await r.read(); if(value) t+=value; if(done) break} return t}
+async function streamChunks(z,name,closeTag,onBlock){
+  const s=entryStream(z,name); const r=s.getReader(); let buf='';
+  for(;;){const {done,value}=await r.read(); if(value) buf+=value;
+    const k=buf.lastIndexOf(closeTag);
+    if(k>=0){onBlock(buf.slice(0,k+closeTag.length)); buf=buf.slice(k+closeTag.length)}
+    if(done){if(buf) onBlock(buf); break}}
+}
+const ENT={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};
+function xdec(s){return s.indexOf('&')<0?s:s.replace(/&(#x[0-9a-f]+|#\d+|\w+);/gi,(m,c)=>c[0]==='#'?String.fromCodePoint(c[1]==='x'||c[1]==='X'?parseInt(c.slice(2),16):+c.slice(1)):(ENT[c]??m))}
+function colNum(L){let n=0;for(let i=0;i<L.length;i++)n=n*26+(L.charCodeAt(i)-64);return n-1}
+
+async function parseXlsx(file,progress){
+  const buf=await file.arrayBuffer(); const z=readZipEntries(buf);
+  // locate first sheet
+  let sheetPath=null;
+  const wb=await readText(z,'xl/workbook.xml'), rels=await readText(z,'xl/_rels/workbook.xml.rels');
+  if(wb&&rels){const sm=wb.match(/<sheet\b[^>]*>/); const id=sm&&(sm[0].match(/r:id="([^"]+)"/)||[])[1];
+    if(id){for(const t of rels.match(/<Relationship\b[^>]*>/g)||[]){const I=(t.match(/\bId="([^"]+)"/)||[])[1],T=(t.match(/\bTarget="([^"]+)"/)||[])[1]; if(I===id&&T){sheetPath=T.startsWith('/')?T.slice(1):'xl/'+T.replace(/^\.\//,'');}}}}
+  if(!sheetPath||!z.entries[sheetPath]) sheetPath=Object.keys(z.entries).filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort()[0];
+  if(!sheetPath) throw new Error('No worksheet found');
+  // shared strings
+  const sst=[];
+  if(z.entries['xl/sharedStrings.xml']){
+    progress('Reading text values…');
+    await streamChunks(z,'xl/sharedStrings.xml','</si>',blk=>{
+      const re=/<si>([\s\S]*?)<\/si>|<si\/>/g; let m;
+      while(m=re.exec(blk)){ if(m[1]===undefined){sst.push('');continue}
+        const inner=m[1].replace(/<rPh\b[\s\S]*?<\/rPh>/g,''); let t='',mm; const tr=/<t\b[^>]*>([\s\S]*?)<\/t>/g;
+        while(mm=tr.exec(inner)) t+=mm[1]; sst.push(xdec(t)); }
+    });
+  }
+  // rows
+  const b=newBuilder(); let hmap=null, want=null, rowsDone=0;
+  const rowRe=/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g, cRe=/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  await streamChunks(z,sheetPath,'</row>',blk=>{
+    rowRe.lastIndex=0; let m;
+    while(m=rowRe.exec(blk)){
+      const body=m[1]; if(!body) continue;
+      const cells={}; let ci=-1, c; cRe.lastIndex=0;
+      while(c=cRe.exec(body)){
+        const at=c[1]; const rr=at.match(/\br="([A-Z]+)/); ci= rr?colNum(rr[1]):ci+1;
+        if(want && !want.has(ci)) continue;
+        const inner=c[2]; if(inner==null) continue;
+        const t=(at.match(/\bt="(\w+)"/)||[])[1];
+        let val;
+        if(t==='inlineStr'){let s='',mm;const tr=/<t\b[^>]*>([\s\S]*?)<\/t>/g;while(mm=tr.exec(inner))s+=mm[1];val=xdec(s)}
+        else{const vm=inner.match(/<v>([\s\S]*?)<\/v>/); if(!vm) continue; val=vm[1];
+          if(t==='s') val=sst[+val]??''; else if(t==='str'||t==='e') val=xdec(val); else if(t==='b') val=val==='1'?'TRUE':'FALSE';}
+        cells[ci]=val;
+      }
+      if(!hmap){
+        const mx=Math.max(-1,...Object.keys(cells).map(Number)); const hs=[]; for(let i=0;i<=mx;i++)hs.push(cells[i]??'');
+        hmap=mapHeaders(hs); want=new Set(Object.values(hmap)); checkHeaders(hmap); continue;
+      }
+      addRow(b,k=>hmap[k]===undefined?null:cells[hmap[k]]);
+      if(++rowsDone%20000===0) progress('Read '+rowsDone.toLocaleString('en-IN')+' rows…');
+    }
+  });
+  if(!hmap) throw new Error('Sheet is empty');
+  return finish(b);
+}
+function parseCsvText(txt){
+  const rows=[]; let row=[],f='',q=false;
+  for(let i=0;i<txt.length;i++){const ch=txt[i];
+    if(q){ if(ch==='"'){ if(txt[i+1]==='"'){f+='"';i++} else q=false } else f+=ch }
+    else if(ch==='"') q=true; else if(ch===','){row.push(f);f=''} else if(ch==='\n'){row.push(f);rows.push(row);row=[];f=''} else if(ch!=='\r') f+=ch;}
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows;
+}
+function fromTable(headers,rows){
+  const hmap=mapHeaders(headers); checkHeaders(hmap); const b=newBuilder();
+  for(const r of rows){ if(r.length===1&&r[0]==='') continue; addRow(b,k=>hmap[k]===undefined?null:r[hmap[k]]) }
+  return finish(b);
+}
+let missingCols=[];
+function checkHeaders(h){
+  const need={debit:'debit_value',loss:'Loss Bucket Sub Tagging',laneType:'Lane Type',lane:'Lane Code',vehicle:'vehicle_number',vendor:'vendor_name',dest:'manifest_destination',client:'client_name'};
+  missingCols=Object.keys(need).filter(k=>h[k]===undefined).map(k=>need[k]);
+  if(h.pm===undefined&&h.pd===undefined) missingCols.push('picked_month / picked_date');
+  if(h.debit===undefined) throw new Error('Column "debit_value" not found in the first row of the sheet.');
+}
+
+/* ---------- state ---------- */
+let D=null; const F={}; const cardState={};
+DIMS.forEach(d=>cardState[d.id]={metric:'debit',sort:'total',dir:-1,q:''});
+let fullTotals={};
+
+function setData(data,label){
+  D=data; FILTERS.forEach(f=>F[f.key]=new Set());
+  fullTotals={};
+  FILTERS.forEach(f=>{const arr=new Float64Array(D.dict[f.key].length), c=D.dims[f.key];
+    for(let i=0;i<D.n;i++) arr[c[i]]+=D.debit[i]; fullTotals[f.key]=arr;});
+  olEl('src').textContent=label+' · '+D.n.toLocaleString('en-IN')+' rows'+(missingCols.length?' · missing columns: '+missingCols.join(', '):''); olEl('src').classList.remove('err');
+  buildFilters(); render();
+}
+
+/* ---------- formatting ---------- */
+const nf=new Intl.NumberFormat('en-IN',{maximumFractionDigits:0});
+function inr(v){return nf.format(Math.round(v))}
+function inrShort(v){const a=Math.abs(v); if(a>=1e7) return '₹'+(v/1e7).toFixed(2)+' Cr'; if(a>=1e5) return '₹'+(v/1e5).toFixed(2)+' L'; return '₹'+inr(v)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- filters UI ---------- */
+function buildFilters(){
+  const host=olEl('filters'); host.innerHTML='';
+  FILTERS.forEach(f=>{
+    const el=document.createElement('div'); el.className='fdd'; el.dataset.key=f.key;
+    el.innerHTML=`<button class="ol-btn"><span>${f.label}</span><b>All</b></button>
+      <div class="fpanel"><input type="search" placeholder="Search ${f.label.toLowerCase()}…">
+      <div class="acts"><button class="ol-btn sm" data-a="all">Select shown</button><button class="ol-btn sm" data-a="clr">Clear</button></div>
+      <div class="flist"></div><div class="fnote"></div></div>`;
+    host.appendChild(el);
+    const btn=el.querySelector('.ol-btn'), inp=el.querySelector('input'), list=el.querySelector('.flist');
+    btn.onclick=e=>{e.stopPropagation(); const was=el.classList.contains('open'); closeAll(); if(!was){el.classList.add('open'); drawOptions(el); inp.focus()}};
+    el.querySelector('.fpanel').onclick=e=>e.stopPropagation();
+    inp.oninput=()=>drawOptions(el);
+    el.querySelector('[data-a=all]').onclick=()=>{currentOpts(el).forEach(c=>F[f.key].add(c)); drawOptions(el); changed()};
+    el.querySelector('[data-a=clr]').onclick=()=>{F[f.key].clear(); drawOptions(el); changed()};
+    list.onchange=e=>{const c=+e.target.value; e.target.checked?F[f.key].add(c):F[f.key].delete(c); changed()};
+  });
+  updateFilterLabels();
+}
+function currentOpts(el){
+  const k=el.dataset.key, q=el.querySelector('input').value.trim().toLowerCase(), dict=D.dict[k];
+  let codes=dict.map((_,i)=>i);
+  if(q) codes=codes.filter(i=>dict[i].toLowerCase().includes(q));
+  if(k==='month') codes.sort((a,b)=>D.months[a].sort-D.months[b].sort);
+  else if(k==='quarter') codes.sort((a,b)=>D.quarters[a].sort-D.quarters[b].sort);
+  else codes.sort((a,b)=>fullTotals[k][b]-fullTotals[k][a]);
+  return codes;
+}
+function drawOptions(el){
+  const k=el.dataset.key, codes=currentOpts(el), LIM=400, sel=F[k];
+  const shown=codes.slice(0,LIM);
+  el.querySelector('.flist').innerHTML=shown.map(c=>`<label><input type="checkbox" value="${c}" ${sel.has(c)?'checked':''}>${k==='month'||k==='quarter'?`<i style="width:10px;height:10px;border-radius:3px;background:rgb(${k==='month'?mc(c):qc(c)})"></i>`:''}<span title="${esc(D.dict[k][c])}">${esc(D.dict[k][c])}</span><em>${inrShort(fullTotals[k][c])}</em></label>`).join('')||'<div class="fnote">No match</div>';
+  el.querySelector('.fnote:last-child').textContent=codes.length>LIM?`Showing ${LIM} of ${codes.length.toLocaleString('en-IN')} — type to search`:`${codes.length.toLocaleString('en-IN')} values`;
+}
+function closeAll(){olRoot().querySelectorAll('.fdd.open').forEach(x=>x.classList.remove('open'))}
+document.addEventListener('click',closeAll);
+function updateFilterLabels(){
+  olRoot().querySelectorAll('.fdd').forEach(el=>{const s=F[el.dataset.key]; el.classList.toggle('active',s.size>0);
+    el.querySelector('.ol-btn b').textContent=s.size===0?'All':s.size===1?trunc(D.dict[el.dataset.key][[...s][0]],14):s.size+' selected'});
+  const chips=[]; FILTERS.forEach(f=>F[f.key].forEach(c=>chips.push(`<span class="ol-chip" data-k="${f.key}" data-c="${c}">${f.label}: ${esc(D.dict[f.key][c])} ✕</span>`)));
+  const ch=olEl('chips'); ch.innerHTML=chips.join('');
+  ch.querySelectorAll('.ol-chip').forEach(x=>x.onclick=()=>{F[x.dataset.k].delete(+x.dataset.c); changed(); const el=olRoot().querySelector(`.fdd[data-key="${x.dataset.k}"]`); if(el.classList.contains('open'))drawOptions(el)});
+}
+function trunc(s,n){return s.length>n?s.slice(0,n-1)+'…':s}
+let rT=null; function changed(){updateFilterLabels(); clearTimeout(rT); rT=setTimeout(render,60)}
+
+/* ---------- compute ---------- */
+function computeMask(){
+  const act=FILTERS.filter(f=>F[f.key].size).map(f=>{const a=new Uint8Array(D.dict[f.key].length); F[f.key].forEach(c=>a[c]=1); return [D.dims[f.key],a]});
+  const mask=new Uint8Array(D.n);
+  outer: for(let i=0;i<D.n;i++){for(let j=0;j<act.length;j++){if(!act[j][1][act[j][0][i]]) continue outer} mask[i]=1}
+  return mask;
+}
+function pivot(key,mask,period){
+  const isQ=period==='q', per=isQ?D.quarters:D.months, pm=isQ?D.quarter:D.month, col=isQ?qc:monthColor;
+  const nd=D.dict[key].length, nm=per.length, codes=D.dims[key];
+  const val=new Float64Array(nd*nm), cnt=new Int32Array(nd*nm), tv=new Float64Array(nd), tc=new Int32Array(nd);
+  const mv=new Float64Array(nm), mc=new Int32Array(nm);
+  for(let i=0;i<D.n;i++){ if(!mask[i]) continue; const d=codes[i], m=pm[i], x=D.debit[i];
+    val[d*nm+m]+=x; cnt[d*nm+m]++; tv[d]+=x; tc[d]++; mv[m]+=x; mc[m]++; }
+  const months=[]; for(let m=0;m<nm;m++) if(mc[m]) months.push(m);
+  months.sort((a,b)=>per[a].sort-per[b].sort);
+  const rows=[]; for(let d=0;d<nd;d++) if(tc[d]) rows.push(d);
+  return {nm,val,cnt,tv,tc,mv,mc,months,rows,per,col,isQ};
+}
+
+/* ---------- render ---------- */
+function render(){
+  const mask=computeMask(); let tot=0,n=0; for(let i=0;i<D.n;i++) if(mask[i]){tot+=D.debit[i];n++}
+  const P={}; DIMS.forEach(d=>P[d.id]=pivot(d.key,mask,d.period));
+  // KPIs
+  renderKpis(mask,tot,n,P);
+  const pl=P.lane; olEl('mstrip').innerHTML=pl.months.map(m=>{const c=mc(m);return `<div class="mt ${F.month.has(m)?'on':''}" data-m="${m}" style="color:rgb(${c});border-top:3px solid rgb(${c})"><div class="l">${esc(D.months[m].label)}</div><div class="v">${inrShort(pl.mv[m])}</div><div class="s">${inr(pl.mc[m])} shipments · ${tot?(pl.mv[m]/tot*100).toFixed(1):0}%</div></div>`}).join('');
+  olRoot().querySelectorAll('#ol-mstrip .mt').forEach(x=>x.onclick=()=>{const m=+x.dataset.m; F.month.has(m)?F.month.delete(m):F.month.add(m); changed()});
+  renderInsights(P,tot,n);
+  const host=olEl('cards'), hostTop=olEl('cardsTop');
+  if(!host.children.length) DIMS.forEach(d=>(TOP_KEYS.has(d.id)?hostTop:host).appendChild(makeCard(d)));
+  DIMS.forEach(d=>drawCard(d,P[d.id],tot));
+  OLS.P=P; OLS.mask=mask; OLS.tot=tot;
+}
+function renderInsights(P,tot,n){
+  const L=[];
+  if(!n){olEl('insights').innerHTML='<b>No rows match the current filters.</b>';return}
+  const top=(key)=>{const p=P[key]; let best=-1; p.rows.forEach(d=>{if(best<0||p.tv[d]>p.tv[best])best=d}); return best<0?null:{name:D.dict[key][best],v:p.tv[best],c:p.tc[best]}};
+  const share=(key,k)=>{const arr=P[key].rows.map(d=>P[key].tv[d]).sort((a,b)=>b-a); const s=arr.slice(0,k).reduce((a,b)=>a+b,0); return {pct:tot?s/tot*100:0,count:arr.length}};
+  const tl=top('lane'); if(tl) L.push(`Top lane <b>${esc(tl.name)}</b> carries ${inrShort(tl.v)} (${(tl.v/tot*100).toFixed(1)}% of debit) across ${inr(tl.c)} shipments.`);
+  const tv=top('vendor'); if(tv) L.push(`Top vendor <b>${esc(tv.name)}</b>: ${inrShort(tv.v)} (${(tv.v/tot*100).toFixed(1)}%).`);
+  const s=share('lane',20); if(s.count>20) L.push(`Top 20 of ${inr(s.count)} lanes hold ${s.pct.toFixed(1)}% of total debit value.`);
+  const sv=share('vehicle',20); if(sv.count>20) L.push(`Top 20 of ${inr(sv.count)} vehicles hold ${sv.pct.toFixed(1)}% of total debit value.`);
+  const tb=top('loss'); if(tb) L.push(`Largest loss bucket is <b>${esc(tb.name)}</b> at ${(tb.v/tot*100).toFixed(1)}% of value (${(tb.c/n*100).toFixed(1)}% of shipments).`);
+  const pm=P.lane; if(pm.months.length>1){const ms=pm.months, a=ms[ms.length-2], b=ms[ms.length-1], va=pm.mv[a], vb=pm.mv[b];
+    L.push(`${D.months[b].label} debit ${inrShort(vb)} vs ${D.months[a].label} ${inrShort(va)} (${va?((vb-va)/va*100>=0?'+':'')+((vb-va)/va*100).toFixed(1)+'%':'new'}).`);}
+  const dum=D.dict.vendor.findIndex(x=>/dummy/i.test(x)); if(dum>=0&&P.vendor.tc[dum]) L.push(`<span style="color:var(--warn)">“${esc(D.dict.vendor[dum])}” holds ${inrShort(P.vendor.tv[dum])} — the real vendor is not mapped for these shipments.</span>`);
+  olEl('insights').innerHTML='<b>Key points</b><ul>'+L.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+}
+function makeCard(d){
+  const el=document.createElement('div'); el.className='ol-card'; el.id='ol-card-'+d.id;
+  if(d.key==='lane'||d.key==='vehicle') el.classList.add('wide');
+  el.innerHTML=`<div class="chead"><h2>${d.label} × Pickup ${d.period==='q'?'Quarter':'Month'}</h2><div class="ctools">
+    <div class="ol-seg"><button data-m="debit" class="on">Debit ₹</button><button data-m="count">Count</button></div>
+    <input class="csearch" type="search" placeholder="Search…">
+    <button class="ol-btn sm" data-x="csv">Export</button></div></div>
+    <div class="tmeta"></div><div class="twrap"><table><thead></thead><tbody></tbody><tfoot></tfoot></table></div>`;
+  const st=cardState[d.id];
+  el.querySelectorAll('.ol-seg button').forEach(b=>b.onclick=()=>{st.metric=b.dataset.m; el.querySelectorAll('.ol-seg button').forEach(x=>x.classList.toggle('on',x===b)); drawCard(d,OLS.P[d.id],OLS.tot)});
+  el.querySelector('.csearch').oninput=e=>{st.q=e.target.value.trim().toLowerCase(); drawCard(d,OLS.P[d.id],OLS.tot)};
+  el.querySelector('[data-x=csv]').onclick=()=>exportCard(d);
+  el.querySelector('thead').onclick=e=>{const th=e.target.closest('th'); if(!th)return; const s=th.dataset.s; if(st.sort===s) st.dir*=-1; else {st.sort=s; st.dir=s==='name'?1:-1} drawCard(d,OLS.P[d.id],OLS.tot)};
+  el.querySelector('tbody').onclick=e=>{const tr=e.target.closest('tr'); if(!tr||tr.dataset.c===undefined)return; const c=+tr.dataset.c, S=F[d.key]; S.has(c)?S.delete(c):S.add(c); changed()};
+  return el;
+}
+function sortedRows(d,p){
+  const st=cardState[d.id], nm=p.nm, dict=D.dict[d.key], isC=st.metric==='count';
+  // rank always by debit total
+  const byTot=[...p.rows].sort((a,b)=>p.tv[b]-p.tv[a]); const rank=new Map(); byTot.forEach((c,i)=>rank.set(c,i+1));
+  let rows=[...p.rows];
+  if(st.q) rows=rows.filter(c=>dict[c].toLowerCase().includes(st.q));
+  const s=st.sort, dir=st.dir;
+  let keyf;
+  if(s==='name') keyf=c=>dict[c];
+  else if(s==='total') keyf=c=>p.tv[c];
+  else if(s==='count') keyf=c=>p.tc[c];
+  else {const m=+s.slice(1); keyf=c=>isC?p.cnt[c*nm+m]:p.val[c*nm+m];}
+  rows.sort((a,b)=>{const x=keyf(a),y=keyf(b); return (x<y?-1:x>y?1:0)*dir || p.tv[b]-p.tv[a]});
+  return {rows,rank};
+}
+function drawCard(d,p,tot){
+  const el=olEl('card-'+d.id), st=cardState[d.id], isC=st.metric==='count', nm=p.nm;
+  const {rows,rank}=sortedRows(d,p); const LIM=10000, shown=rows.slice(0,LIM), dict=D.dict[d.key];
+  const sc=s=>st.sort===s?' sorted':'', ar=s=>st.sort===s?(st.dir<0?' ▼':' ▲'):'';
+  el.querySelector('thead').innerHTML='<tr><th class="name'+sc('name')+'" data-s="name">#  '+esc(d.label)+ar('name')+'</th>'+
+    p.months.map(m=>{const c=p.col(m);return `<th class="mh${sc('m'+m)}" data-s="m${m}" title="${esc(p.per[m].rng||'')}" style="color:rgb(${c});box-shadow:inset 0 -3px 0 rgb(${c})">${esc(p.per[m].label)}${ar('m'+m)}${p.isQ&&p.per[m].rng?`<div style="font-size:10px;font-weight:500;color:var(--muted);line-height:1">${esc(p.per[m].rng)}</div>`:''}</th>`}).join('')+
+    `<th class="${sc('total')}" data-s="total">Total Debit ₹${ar('total')}</th><th class="${sc('count')}" data-s="count">Shipments${ar('count')}</th><th data-s="total">Share %</th></tr>`;
+  let max=0; shown.forEach(c=>p.months.forEach(m=>{const v=isC?p.cnt[c*nm+m]:p.val[c*nm+m]; if(v>max)max=v}));
+  const sel=F[d.key];
+  el.querySelector('tbody').innerHTML=shown.length?shown.map(c=>{const r=rank.get(c);
+    return `<tr data-c="${c}" class="${r<=20?'top20':''} ${sel.has(c)?'sel':''}"><td class="name" title="${esc(dict[c])}"><span class="rk">${r}</span>${esc(dict[c])}</td>`+
+    p.months.map(m=>{const v=isC?p.cnt[c*nm+m]:p.val[c*nm+m]; const a=max?.06+Math.min(.30,v/max*.30):0, k=p.col(m); return `<td style="${v?`background:rgba(${k},${a.toFixed(3)})`:''}">${v?inr(v):'–'}</td>`}).join('')+
+    `<td class="tot">${inr(p.tv[c])}</td><td>${inr(p.tc[c])}</td><td class="share">${tot?(p.tv[c]/tot*100).toFixed(1):'0.0'}%</td></tr>`}).join('')
+    :`<tr><td class="ol-empty" colspan="${p.months.length+4}">No rows</td></tr>`;
+  el.querySelector('tfoot').innerHTML='<tr><td class="name">Grand Total</td>'+p.months.map(m=>`<td style="color:rgb(${p.col(m)})">${inr(isC?p.mc[m]:p.mv[m])}</td>`).join('')+
+    `<td>${inr(tot)}</td><td>${inr(p.rows.reduce((a,c)=>a+p.tc[c],0))}</td><td>100%</td></tr>`;
+  el.querySelector('.tmeta').textContent=(rows.length>20?`Top 20 highlighted · scroll for all ${rows.length.toLocaleString('en-IN')}`:`${rows.length} rows`)+(rows.length>LIM?` (first ${LIM} drawn — use search to narrow)`:'')+` · ranked by debit value · click a row to filter`;
+}
+
+/* ---------- export ---------- */
+function dl(name,rows){
+  const csv='﻿'+rows.map(r=>r.map(v=>{v=v==null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function exportCard(d){
+  const p=OLS.P[d.id], st=cardState[d.id], isC=st.metric==='count', nm=p.nm, {rows}=sortedRows(d,p), tot=OLS.tot;
+  const out=[[d.label,...p.months.map(m=>p.per[m].label+(isC?' (Count)':' (Debit)')),'Total Debit','Shipments','Share %']];
+  rows.forEach(c=>out.push([D.dict[d.key][c],...p.months.map(m=>isC?p.cnt[c*nm+m]:Math.round(p.val[c*nm+m])),Math.round(p.tv[c]),p.tc[c],tot?(p.tv[c]/tot*100).toFixed(2):0]));
+  dl(d.id+(d.period==='q'?'_by_quarter.csv':'_by_month.csv'),out);
+}
+olEl('expRaw').onclick=()=>{ if(!D)return;
+  const m=OLS.mask, out=[['awb_number','pickup_month','pickup_quarter','debit_value',...DIMS.filter(d=>d.period==='m').map(d=>d.label)]];
+  for(let i=0;i<D.n;i++) if(m[i]) out.push([D.awb[i],D.months[D.month[i]].label,D.quarters[D.quarter[i]].label,D.debit[i],...DIMS.filter(d=>d.period==='m').map(d=>D.dict[d.key][D.dims[d.key][i]])]);
+  dl('filtered_rows.csv',out);
+};
+olEl('resetBtn').onclick=()=>{ if(!D)return;FILTERS.forEach(f=>F[f.key].clear()); DIMS.forEach(d=>{cardState[d.id].q=''}); olRoot().querySelectorAll('.csearch').forEach(x=>x.value=''); changed()};
+
+/* ---------- loading ---------- */
+const ld=olEl('loading'), lm=olEl('loadMsg');
+async function loadFile(file){
+  ld.classList.add('on'); lm.textContent='Loading '+file.name+'…';
+  await new Promise(r=>setTimeout(r,30));
+  try{
+    let data;
+    if(/\.csv$/i.test(file.name)){const rows=parseCsvText(await file.text()); data=fromTable(rows[0],rows.slice(1))}
+    else{ if(typeof DecompressionStream==='undefined') throw new Error('This browser cannot read .xlsx directly — please update Chrome/Edge, or save the sheet as CSV.');
+      data=await parseXlsx(file,t=>{lm.textContent=t}); }
+    olEl('cards').innerHTML=''; olEl('cardsTop').innerHTML='';
+    setData(data,file.name);
+  }catch(e){alert('Could not load file: '+e.message)}
+  ld.classList.remove('on');
+}
+olEl('loadBtn').onclick=()=>olEl('file').click();
+olEl('file').onchange=e=>{if(e.target.files[0]) loadFile(e.target.files[0]); e.target.value=''};
+const dz=olRoot();
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',e=>{if(e.target===dz)dz.classList.remove('drag')});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag'); if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0])});
+
+
+
+/* ---------- headline KPIs ---------- */
+function renderKpis(mask,tot,n,P){
+  let pv=0; if(D.pv) for(let i=0;i<D.n;i++) if(mask[i]) pv+=D.pv[i];
+  const cnt=k=>P[k]?P[k].rows.length:0;
+  const k=[['Total debit value',inrShort(tot),'lime'],['Shipments',inr(n),''],
+    D.pv?['Product value',inrShort(pv),'']:null,['Avg debit / shipment',n?'₹'+inr(tot/n):'—',''],
+    ['Lanes',inr(cnt('lane')),''],['Vehicles',inr(cnt('vehicle')),''],['Vendors',inr(cnt('vendor')),''],['Clients',inr(cnt('client')),'']].filter(Boolean);
+  olEl('kpis').innerHTML=k.map(x=>`<div class="ol-kpi"><div class="l">${x[0]}</div><div class="v ${x[2]}">${x[1]}</div></div>`).join('');
+}
+
+/* ---------- live feed (Apps Script) + local cache ---------- */
+const OL_IDB='olfy_csv';
+function olStatus(msg,err){const s=olEl('src');if(s){s.textContent=msg;s.classList.toggle('err',!!err);}}
+function olUseCsv(txt,label){
+  const rows=parseCsvText(txt);
+  if(!rows.length) throw new Error('the feed returned no rows');
+  const data=fromTable(rows[0],rows.slice(1));
+  olEl('cards').innerHTML=''; olEl('cardsTop').innerHTML='';
+  setData(data,label);
+}
+async function olFetchLive(){
+  if(!OL_SCRIPT_URL){olStatus(D?olEl('src').textContent:'Live feed not connected yet: waiting for the Apps Script link. Meanwhile you can upload an Excel / CSV export of the sheet.',!D);return;}
+  ld.classList.add('on'); lm.textContent='Pulling Overall_loss_FY_2026 from Google Sheets…';
+  try{
+    const res=await fetch(OL_SCRIPT_URL+'?key='+encodeURIComponent(OL_SCRIPT_KEY)+'&t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const txt=await res.text();
+    if(/^\s*\{/.test(txt)){const j=JSON.parse(txt); throw new Error(j.error||'unexpected reply');}
+    const when=new Date();
+    olUseCsv(txt,'Google Sheet · Overall_loss_FY_2026 · synced '+when.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+    try{idbSet(OL_IDB,{txt,at:when.toISOString()});}catch(e){}
+  }catch(e){
+    olStatus((D?olEl('src').textContent+' · ':'')+'Live refresh failed: '+e.message,true);
+  }
+  ld.classList.remove('on');
+}
+let olStarted=false;
+async function olOpen(){
+  if(olStarted) return; olStarted=true;
+  try{const hit=await idbGet(OL_IDB);
+    if(hit&&hit.txt){olUseCsv(hit.txt,'Cached copy from '+new Date(hit.at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+' · refreshing…');}
+  }catch(e){}
+  await olFetchLive();
+}
+olEl('refreshBtn').onclick=olFetchLive;
+window.olfyOpen=olOpen;
+
+})();
+</script>
 </body>
 </html>
