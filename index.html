@@ -3305,6 +3305,47 @@ function excelTime(v){
   }
   return s(v);
 }
+/* ---- Bag Creation Ageing: days from manifest_in_transit_time to today ----
+   The cell can arrive as a Date (xlsx, cellDates), an Excel serial number, or
+   text from a CSV ("2026-10-24 13:05:00", "24-10-2026 13:05", "24/10/2026",
+   "24-Oct-2026"). Day count compares calendar days only, so 24 Oct read on
+   5 Nov is 12 days whatever the hour. Blank or unreadable -> null. */
+let MIT_KEY=null;
+function mitKeyOf(r){
+  if(MIT_KEY&&MIT_KEY in r)return MIT_KEY;
+  const k=Object.keys(r).find(x=>String(x).trim().toLowerCase().replace(/[\s-]+/g,'_')==='manifest_in_transit_time');
+  if(k)MIT_KEY=k;
+  return k||null;
+}
+const MON3={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function mitDate(v){
+  if(v==null||v==='')return null;
+  if(v instanceof Date)return isNaN(v)?null:new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  if(typeof v==='number'&&isFinite(v)&&v>1){
+    const d=new Date(Date.UTC(1899,11,30)+Math.floor(v)*86400000);   // Excel serial
+    return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  }
+  const t=String(v).trim(); if(!t)return null;
+  let m;
+  if(/^\d+(\.\d+)?$/.test(t))return mitDate(+t);                 // serial stored as text
+  if(m=t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))         // 2026-10-24 …
+    return new Date(+m[1],+m[2]-1,+m[3]);
+  if(m=t.match(/^(\d{1,2})[-\/. ]([A-Za-z]{3})[A-Za-z]*[-\/. ,]*(\d{2,4})/)){  // 24-Oct-2026
+    const mo=MON3[m[2].toLowerCase()]; if(mo==null)return null;
+    let y=+m[3]; if(y<100)y+=2000; return new Date(y,mo,+m[1]);
+  }
+  if(m=t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/)){    // 24-10-2026 / 24/10/26 (day first)
+    let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]);
+  }
+  const d=new Date(t);
+  return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function bagAgeDays(v){
+  const d=mitDate(v); if(!d)return null;
+  const n=new Date(), today=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  return Math.max(0,Math.round((today-d)/86400000));
+}
+
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 
 /* ---- Movement column (Dashboard sheet column H) ----------------------------
@@ -3347,6 +3388,7 @@ const isFeederLane=lane=>FEEDER_SET.has(laneKey(lane));
 
 function normalize(r){
   const age=+r['intransit_ageing']||0;
+  const mk=mitKeyOf(r), bagAge=mk?bagAgeDays(r[mk]):null;
   let fl=s(r.flag).toLowerCase();
   fl = fl.includes('rev')?'Reverse':'Forward';
   return {Zone:s(r.Zone)||'Unknown',
@@ -3368,7 +3410,11 @@ function normalize(r){
       r['Shipment_In_Manifest']||r.shipment_in_manifest||r['ShipmentinManifest']||''),
     CurrentShipmentInManifest:s(r.CurrentShipmentInManifest||r['Current Shipment In Manifest']||
       r['Current_Shipment_In_Manifest']||r.current_shipment_in_manifest||r['CurrentShipmentinManifest']||''),
-    'Ageing bucket':s(r['Ageing bucket'])||'',
+    /* Bag Creation Ageing: days since manifest_in_transit_time, banded into
+       the six A–F buckets. The sheet's own 'Ageing bucket' is only a fallback
+       for rows with no readable timestamp. */
+    bag_age_days:bagAge,
+    'Ageing bucket':bagAge!=null?ageBktOf(bagAge):(s(r['Ageing bucket'])||''),
     /* --- fields the HOV cuts are built from (Dashboard sheet) --- */
     HHOV:s(r.HHOV)||'',
     misroute_location:s(r.misroute_location)||'',
@@ -4245,6 +4291,8 @@ const MV_DETAIL_COLS=[
   {k:'Manifest_status',      label:'Status',      type:'cat'},
   /* day-wise in-transit ageing (replaces the Bag Creation 'Ageing Bkt' column) */
   {k:'Day_ageing',           label:'Ageing Day',  type:'cat'},
+  /* days since manifest_in_transit_time (drives Bag Creation Ageing) */
+  {k:'bag_age_days',         label:'Bag Age (days)', type:'num', nofilter:true},
   /* one column per ageing day: how many of the manifest's shipments sit in that day */
   ...['D2','D3','D4','D5','D6','D7-10','D11-15','D16-30','30+'].map(d=>
     ({k:'day_'+d, label:d, type:'num', nofilter:true, day:true})),
@@ -4395,9 +4443,13 @@ function mvBuildManifestRows(data){
       Manifest_status:r.Manifest_status,intransit_ageing:r.intransit_ageing,
       ShipmentInManifest:r.ShipmentInManifest,CurrentShipmentInManifest:r.CurrentShipmentInManifest,
       'Ageing bucket':r['Ageing bucket']||'',
+      bag_age_days:r.bag_age_days,
       intransit_ageing_bucket:r.intransit_ageing_bucket||'',
       Product_value:0,trip_code:r.trip_code,_awbs:0};m.set(code,o);}
     o.Product_value+=r.Product_value; o._awbs++;
+    /* bag creation age is per manifest; keep the oldest reading and its band */
+    if(r.bag_age_days!=null&&(o.bag_age_days==null||r.bag_age_days>o.bag_age_days)){
+      o.bag_age_days=r.bag_age_days; o['Ageing bucket']=r['Ageing bucket'];}
     {const dk='day_'+dayBktOf(r.intransit_ageing_bucket,r.intransit_ageing); o[dk]=(o[dk]||0)+1;}
     /* the counts repeat on every row of a bag, but a blank first row must not
        beat a populated later one */
@@ -4406,7 +4458,7 @@ function mvBuildManifestRows(data){
     /* keep the worst (oldest) ageing seen for this manifest */
     if(r.intransit_ageing>o.intransit_ageing){
       o.intransit_ageing=r.intransit_ageing;
-      if(r['Ageing bucket'])o['Ageing bucket']=r['Ageing bucket'];
+      if(r['Ageing bucket']&&o.bag_age_days==null)o['Ageing bucket']=r['Ageing bucket'];
       if(r.intransit_ageing_bucket)o.intransit_ageing_bucket=r.intransit_ageing_bucket;
     }
   }
@@ -4545,7 +4597,7 @@ function mvBuildHeaders(){
     all:'mvLaneTypeAll',none:'mvLaneTypeNone',label:'Lane Type',opts:ltOpts,
     set:s=>{mvLaneTypeSel=s;}});
 
-  /* 4. Bag Creation Ageing  ← 'Ageing bucket' column */
+  /* 4. Bag Creation Ageing  ← days since manifest_in_transit_time, banded A–F */
   const abOpts=ABKT.filter(b=>RAW.some(r=>r['Ageing bucket']===b));
   const mcAB=buildMcsel({panel:'mvAgeingPanel',btn:'mvAgeingBtn',mcsel:'mvAgeingMcsel',
     all:'mvAgeingAll',none:'mvAgeingNone',label:'Bag Creation Ageing',opts:abOpts.length?abOpts:ABKT,
@@ -4790,6 +4842,7 @@ function mvRenderDetail(reset){
       return `<td class="num">${isFinite(n)?fmtN(n):'—'}</td>`;
     }
     if(c.k==='Product_value')return `<td class="num">${fmtN(v)}</td>`;
+    if(c.k==='bag_age_days')return `<td class="num">${v==null?'—':fmtN(v)}</td>`;
     if(c.bagrm)return brCellHTML(r);
     if(c.k==='Ageing bucket'){const cls=ABKT_CLS[v]||'';return `<td><span class="badge ${cls==='aged-red'?'b-crit':cls==='aged-ora'?'b-rev':'b-fwd'}">${v}</span></td>`;}
     if(c.day){const n=+v||0;return n?`<td class="num" style="font-weight:700;background:rgba(239,68,68,${Math.min(.08+n/40,.45).toFixed(2)})">${fmtN(n)}</td>`:'<td class="num" style="color:var(--mut)">·</td>';}
@@ -5921,8 +5974,8 @@ const DOC_SECTIONS=[
   logic:'Order: 2, 3, 4, 5, 6, 7, 8-10, 11-15, 16-30, 30+\nRead straight from the sheet column, not recalculated.'},
 
  {t:'panel', n:'Bag creation ageing bucket', what:'The six-band ageing used by Bag wise View. Distinct from the in-transit bucket above.',
-  fields:'<code>Ageing bucket</code>',
-  logic:'A. 0 to 6 days | B. 7 to 13 days | C. 14 to 20 days\nD. 21 to 27 days | E. 28 to 34 days | F. 35+ Days',
+  fields:'<code>manifest_in_transit_time</code> (fallback: <code>Ageing bucket</code>)',
+  logic:'days = today - date(manifest_in_transit_time), calendar days (24 Oct -> 12 on 5 Nov)\nA. 0 to 6 days | B. 7 to 13 days | C. 14 to 20 days\nD. 21 to 27 days | E. 28 to 34 days | F. 35+ Days\nRows with no readable timestamp keep the sheet\'s Ageing bucket value.',
   note:'Two different ageing systems exist in the file. Overview uses intransit_ageing_bucket; Bag wise View uses Ageing bucket. They will not tie to each other.'},
 
  {t:'panel', n:'Value formatting', what:'How rupee figures are shortened on screen.',
