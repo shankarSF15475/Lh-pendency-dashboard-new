@@ -1430,6 +1430,36 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 .tk-person .no-wa{margin-left:auto;font-size:10.5px;color:#B45309;}
 .tk-list-card{margin-top:14px;padding:15px 17px;}
 .tk-filters{display:flex;gap:10px;margin:12px 0 0;flex-wrap:wrap;}
+/* clearer buttons: real labels instead of clipped 30px squares */
+#page-tasks .card-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+#page-tasks .tool.tk-btn{width:auto;min-width:0;height:32px;padding:0 13px;font-size:12px;font-weight:700;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #C7CCF5;color:var(--pine);border-radius:8px;}
+#page-tasks .tool.tk-btn:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+.tk-psearch{display:flex;align-items:center;gap:10px;margin-top:10px;}
+#tkPeopleQ{flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:12.5px;font-family:inherit;outline:none;background:#fff;}
+#tkPeopleQ:focus{border-color:var(--pine);}
+#tkSelCount{font-size:11.5px;font-weight:700;color:var(--pine);white-space:nowrap;}
+/* due-date states */
+.tk-due{display:block;margin-top:3px;font-size:10.5px;font-weight:800;white-space:nowrap;}
+.tk-due.od{color:#B91C1C;}
+.tk-due.today{color:#B45309;}
+.tk-due.late{color:#9A3412;}
+.tk-due.ok{color:#15803D;}
+.tk-due.soon{color:var(--mut);font-weight:600;}
+.tk-due.soon.near{color:#B45309;font-weight:800;}
+#tkTbl tbody tr.tk-row-od td{background:#FEF2F2;}
+#tkTbl tbody tr.tk-row-od td:first-child{box-shadow:inset 3px 0 0 #DC2626;}
+.tk-alert{margin-top:12px;border-radius:12px;padding:12px 16px;border:1px solid;}
+.tk-alert.bad{background:#FEF2F2;border-color:#FECACA;color:#7F1D1D;}
+.tk-alert.warn{background:#FFFBEB;border-color:#FDE68A;color:#78350F;}
+.tk-alert-h{display:flex;align-items:center;gap:10px;font-size:13px;}
+.tk-alert-h .ic{font-size:20px;}
+.tk-alert-h .me{font-weight:800;}
+.tk-alert-h .tool{margin-left:auto;}
+.tk-alert ul{margin:8px 0 0 30px;padding:0;font-size:12px;line-height:1.7;}
+.tk-alert .od{color:#B91C1C;font-weight:800;}
+.tk-alert .td{color:#B45309;font-weight:800;}
+.tk-alert .more{margin:2px 0 0 30px;font-size:11.5px;opacity:.8;}
 #tkFilter{max-width:320px;}
 #tkStatusFilter{max-width:170px;}
 .tk-wrap{max-height:520px;margin-top:10px;}
@@ -2959,6 +2989,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
     <!-- ============ PAGE: TASKS ============ -->
     <section class="page" id="page-tasks">
       <div class="card tk-note" id="tkNote"></div>
+      <div class="tk-alert" id="tkAlert" style="display:none"></div>
 
       <div class="tk-row" id="tkComposer">
         <div class="card tk-form">
@@ -2984,9 +3015,13 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <div class="card-head"><div><h3>Assign to</h3>
             <span class="sub">email and WhatsApp on file</span></div>
             <div class="card-tools">
-              <button class="tool" id="tkAllBtn">ALL</button>
-              <button class="tool" id="tkNoneBtn">CLEAR</button>
+              <button class="tool tk-btn" id="tkAllBtn" title="Tick everyone shown in the list">✓ Select all</button>
+              <button class="tool tk-btn" id="tkNoneBtn" title="Untick everyone">✕ Clear</button>
             </div>
+          </div>
+          <div class="tk-psearch">
+            <input id="tkPeopleQ" type="search" placeholder="🔍 Search name or email…" autocomplete="off">
+            <span id="tkSelCount">0 selected</span>
           </div>
           <div class="tk-people-list" id="tkPeople"></div>
         </div>
@@ -2997,8 +3032,8 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <div><h3>Task list</h3><span class="sub" id="tkListSub">every task, newest first</span></div>
           <div class="card-tools">
             <span class="pill mv-lane-count" id="tkCount">—</span>
-            <button class="tool" id="tkRefresh">REFRESH</button>
-            <button class="tool" id="tkCsv">CSV</button>
+            <button class="tool tk-btn" id="tkRefresh" title="Reload the task list">⟳ Refresh</button>
+            <button class="tool tk-btn" id="tkCsv" title="Download the tasks shown below">⬇ CSV</button>
           </div>
         </div>
         <div class="tk-filters">
@@ -3008,6 +3043,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
+            <option value="__overdue">⚠ Overdue only</option>
           </select>
         </div>
         <div class="lv-mini-wrap tk-wrap">
@@ -7913,14 +7949,22 @@ function tkRenderPastes(){
 
 function tkRenderPeople(){
   const host=$('#tkPeople'); if(!host)return;
-  host.innerHTML=tkPeople().map(p=>
+  const qEl=$('#tkPeopleQ');
+  if(qEl&&!qEl.oninput)qEl.oninput=tkRenderPeople;
+  const q=((qEl&&qEl.value)||'').trim().toLowerCase();
+  const list=tkPeople().filter(p=>!q||(p.name+' '+p.id).toLowerCase().includes(q));
+  const sc=$('#tkSelCount'); if(sc)sc.textContent=TK_SEL.size+' selected';
+  if(!list.length){host.innerHTML='<div class="tk-person" style="color:var(--mut);justify-content:center">No one matches “'+rmEsc(q)+'”</div>';return;}
+  host.innerHTML=list.map(p=>
     `<label class="tk-person">
        <input type="checkbox" value="${rmEsc(p.id)}"${TK_SEL.has(p.id)?' checked':''}>
        <span><span class="nm">${rmEsc(p.name)}</span><br><span class="em">${rmEsc(p.id)}</span></span>
        ${p.wa?`<span class="wa">${rmEsc(p.wa)}</span>`:'<span class="no-wa">no WhatsApp on file</span>'}
      </label>`).join('');
+  /* toggle one person at a time, so ticks survive a search that hides them */
   host.querySelectorAll('input').forEach(c=>c.onchange=()=>{
-    TK_SEL=new Set([...host.querySelectorAll('input:checked')].map(x=>x.value));
+    if(c.checked)TK_SEL.add(c.value); else TK_SEL.delete(c.value);
+    const sc=$('#tkSelCount'); if(sc)sc.textContent=TK_SEL.size+' selected';
   });
 }
 async function tkAssign(){
@@ -7961,6 +8005,59 @@ async function tkAssign(){
   btn.disabled=false;
 }
 
+/* ---- due-date tracking ----
+   A task is OVERDUE when its due date is before today and it is not Completed.
+   A Completed task whose status changed after the due date is "completed late". */
+function tkToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function tkDaysBetween(a,b){return Math.round((Date.parse(b+'T00:00:00')-Date.parse(a+'T00:00:00'))/86400000);}
+function tkOverdueDays(t){
+  if(!t.due||t.status==='Completed')return 0;
+  const n=tkDaysBetween(t.due,tkToday()); return n>0?n:0;
+}
+function tkDueToday(t){return !!t.due&&t.status!=='Completed'&&t.due===tkToday();}
+function tkLate(t){return t.status==='Completed'&&t.due&&t.statusAt&&String(t.statusAt).slice(0,10)>t.due;}
+function tkDueCell(t){
+  if(!t.due)return '\u2014';
+  const od=tkOverdueDays(t);
+  if(od)return `${tkFmtDate(t.due)}<span class="tk-due od">⚠ Overdue by ${od} day${od>1?'s':''}</span>`;
+  if(tkDueToday(t))return `${tkFmtDate(t.due)}<span class="tk-due today">Due today</span>`;
+  if(tkLate(t))return `${tkFmtDate(t.due)}<span class="tk-due late">Completed late</span>`;
+  if(t.status==='Completed')return `${tkFmtDate(t.due)}<span class="tk-due ok">On time</span>`;
+  const left=tkDaysBetween(tkToday(),t.due);
+  return `${tkFmtDate(t.due)}<span class="tk-due soon${left<=2?' near':''}">${left} day${left>1?'s':''} left</span>`;
+}
+/* notification strip at the top of the page: what this person must act on */
+function tkRenderAlert(){
+  const box=$('#tkAlert'); if(!box)return;
+  const mineOnly=!tkCanAssign();
+  const scope=TASKS.filter(t=>!mineOnly||(t.to||[]).includes(CURRENT_USER.id)||t.by===CURRENT_USER.id);
+  const od=scope.filter(t=>tkOverdueDays(t)>0).sort((a,b)=>tkOverdueDays(b)-tkOverdueDays(a));
+  const today=scope.filter(tkDueToday);
+  const myOd=od.filter(t=>(t.to||[]).includes(CURRENT_USER.id));
+  if(!od.length&&!today.length){box.style.display='none';box.innerHTML='';return;}
+  const nm=id=>rmEsc((AUTH_USERS[id]&&AUTH_USERS[id].name)||id);
+  const line=t=>`<li><b>${rmEsc(t.title)}</b> — ${(t.to||[]).map(nm).join(', ')} · due ${tkFmtDate(t.due)}`+
+    (tkOverdueDays(t)?` · <span class="od">${tkOverdueDays(t)} day${tkOverdueDays(t)>1?'s':''} late</span>`:' · <span class="td">today</span>')+`</li>`;
+  box.className='tk-alert'+(od.length?' bad':' warn');
+  box.style.display='';
+  box.innerHTML=
+    `<div class="tk-alert-h"><span class="ic">${od.length?'🔔':'⏰'}</span><div>`+
+    (od.length?`<b>${od.length} task${od.length>1?'s are':' is'} past the due date and not completed.</b>`:'')+
+    (myOd.length?` <span class="me">${myOd.length} of them ${myOd.length>1?'are':'is'} assigned to you.</span>`:'')+
+    (today.length?` <span>${today.length} due today.</span>`:'')+
+    `</div>`+(od.length?`<button class="tool tk-btn" id="tkShowOd">Show overdue only</button>`:'')+`</div>`+
+    `<ul>${od.slice(0,6).map(line).join('')}${today.slice(0,Math.max(0,6-od.length)).map(line).join('')}</ul>`+
+    (od.length+today.length>6?`<div class="more">…and ${od.length+today.length-6} more</div>`:'');
+  const b=$('#tkShowOd');
+  if(b)b.onclick=()=>{const f=$('#tkStatusFilter');if(f){f.value='__overdue';tkRender();}
+    const c=document.querySelector('.tk-list-card');if(c)c.scrollIntoView({behavior:'smooth',block:'start'});};
+  /* one pop-up per browser per day, so it is noticed but not nagging */
+  try{
+    const k='tk_od_seen_'+(CURRENT_USER&&CURRENT_USER.id)+'_'+tkToday();
+    if(myOd.length&&!localStorage.getItem(k)){localStorage.setItem(k,'1');
+      setTimeout(()=>alert('Reminder: '+myOd.length+' task'+(myOd.length>1?'s':'')+' assigned to you '+(myOd.length>1?'are':'is')+' past the due date. Please update or complete '+(myOd.length>1?'them':'it')+'.'),300);}
+  }catch(e){}
+}
 function tkVisible(){
   const mine=!tkCanAssign();
   const q=(($('#tkFilter')&&$('#tkFilter').value)||'').trim().toLowerCase();
@@ -7968,7 +8065,8 @@ function tkVisible(){
   return TASKS.filter(t=>{
     /* anyone who cannot assign sees only their own tasks */
     if(mine&&!(t.to||[]).includes(CURRENT_USER.id)&&t.by!==CURRENT_USER.id)return false;
-    if(sf&&t.status!==sf)return false;
+    if(sf==='__overdue'){if(!tkOverdueDays(t))return false;}
+    else if(sf&&t.status!==sf)return false;
     if(q){
       const names=(t.to||[]).map(id=>(AUTH_USERS[id]&&AUTH_USERS[id].name)||id).join(' ');
       if(!((t.title+' '+(t.detail||'')+' '+names+' '+(t.byName||'')+' '+(t.status||''))
@@ -7997,11 +8095,11 @@ function tkRender(){
       ? `<select class="tk-sel" data-status="${rmEsc(t.id)}">`+
         TK_STATUSES.map(s=>`<option${s===t.status?' selected':''}>${s}</option>`).join('')+`</select>`
       : `<span class="tk-badge ${tkStatusClass(t.status)}">${rmEsc(t.status)}</span>`;
-    return `<tr>
+    return `<tr class="${tkOverdueDays(t)?'tk-row-od':''}">
       <td class="tk-task">${rmEsc(t.title)}${t.detail?`<span class="dt">${rmEsc(t.detail)}</span>`:''}</td>
       <td>${who}</td>
       <td>${rmEsc(t.byName||t.by)}</td>
-      <td>${tkFmtDate(t.due)}</td>
+      <td class="tk-duecol">${tkDueCell(t)}</td>
       <td>${files}</td>
       <td>${status}</td>
       <td>${send}${(tkCanAssign()||t.by===CURRENT_USER.id)?`<button class="tk-send del" data-del="${rmEsc(t.id)}">Delete</button>`:''}</td>
@@ -8017,6 +8115,7 @@ function tkRender(){
   body.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>tkDelete(b.dataset.del));
   const cnt=$('#tkCount');
   if(cnt)cnt.textContent=fmtN(rows.length)+' task'+(rows.length===1?'':'s');
+  tkRenderAlert();
 }
 async function tkSetStatus(id,status){
   const t=TASKS.find(x=>x.id===id); if(!t)return;
@@ -8037,7 +8136,7 @@ function tkExport(){
   const rows=tkVisible().map(t=>({Task:t.title,Details:String(t.detail||'').replace(/\r?\n/g,' '),
     Assigned_to:(t.to||[]).map(id=>(AUTH_USERS[id]&&AUTH_USERS[id].name)||id).join('; '),
     Assigned_by:t.byName||t.by,Assigned_on:String(t.at||'').slice(0,10),Due:t.due||'',
-    Status:t.status,Attachments:(t.files||[]).map(f=>f.url).join(' ')}));
+    Status:t.status,Overdue_days:tkOverdueDays(t)||'',Completed_late:tkLate(t)?'Yes':'',Attachments:(t.files||[]).map(f=>f.url).join(' ')}));
   if(!rows.length){alert('Nothing to export.');return;}
   lvExport(rows,'csv','tasks','tasks');
 }
@@ -9693,10 +9792,10 @@ const AUTH_USERS={
   'gowri.shankar@shadowfax.in':{pass:'garask123',name:'Gowri Shankar',isMaster:true, isAdmin:true, lhRecovery:true, remarks:true, wa:'918341761221'},
   'pushkar.verma@shadowfax.in':{pass:'pushkar@123',name:'pushkar verma',isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'917566662451'},
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'919180203317'},
-  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',   isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'917019052918'},
+  'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:true, lhRecovery:true, remarks:true, wa:'917019052918'},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, wa:'916363726152'},
    'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:true, lhRecovery:true, remarks:true, wa:'9953227741'},
-  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'917879065834'},
+  'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, wa:'917879065834'},
   'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918597503303'},
   'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918960267035'},
   'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918098440612'},
@@ -9712,7 +9811,7 @@ const AUTH_USERS={
   'm.arivazhagan@shadowfax.in':{pass:'Arivu@123',  name:'arivazhagan',    isAdmin:false,  lhRecovery:false, remarks:true},
   'nesant.kumar@shadowfax.in':{pass:'Heavenboy@123',  name:'nesant.kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'manojkumar.ghuge@shadowfax.in':{pass:'manoj@11234',  name:'Manoj Kumar Ghuge',    isAdmin:false,  lhRecovery:false, remarks:true},
-  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh', isAdmin:true, lhRecovery:true, remarks:true, tasks:true,wa:'918299228059'},
+  'abhay.singh7@shadowfax.in':{pass:'Abhay@123',  name:'Abhay singh',    isAdmin:true,  lhRecovery:true, remarks:true, tasks:true, wa:'918299228059'},
   'farjad.ali@shadowfax.in':   {pass:'Farjad@11050',  name:'Farjad ali',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918073991694'},
   'manoj.tanti@shadowfax.in':{pass:'Manoj@123',  name:'Manoj Tanti',    isAdmin:false,  lhRecovery:false, remarks:true},
   'satyam.tomar@shadowfax.in':{pass:'Satyam@123',  name:'Satyam Tomar',    isAdmin:false,  lhRecovery:false, remarks:true},
@@ -9773,6 +9872,7 @@ function applyLHRecoveryAccess(u){
   /* Overall_loss_FY_2026: only the named accounts in OL_USERS */
   const ol=document.querySelector('.nav button[data-page="olfy"]');
   if(ol)ol.style.display=olAllowed(u)?'':'none';
+  if(window.olfyApplyRole)window.olfyApplyRole();
   const olp=document.getElementById('page-olfy');
   if(olp&&olp.classList.contains('active')&&!olAllowed(u)&&typeof navTo==='function'){try{navTo(homePage());}catch(e){}}
 }
@@ -10935,7 +11035,8 @@ function wireControls(){
 
   /* tasks */
   $('#tkAssign').onclick=tkAssign;
-  $('#tkAllBtn').onclick=()=>{TK_SEL=new Set(tkPeople().map(p=>p.id));tkRenderPeople();};
+  $('#tkAllBtn').onclick=()=>{const q=(($('#tkPeopleQ')&&$('#tkPeopleQ').value)||'').trim().toLowerCase();
+    tkPeople().filter(p=>!q||(p.name+' '+p.id).toLowerCase().includes(q)).forEach(p=>TK_SEL.add(p.id));tkRenderPeople();};
   $('#tkNoneBtn').onclick=()=>{TK_SEL=new Set();tkRenderPeople();};
   $('#tkRefresh').onclick=tkOpenPage;
   $('#tkCsv').onclick=tkExport;
@@ -11709,6 +11810,7 @@ olEl('resetBtn').onclick=()=>{ if(!D)return;FILTERS.forEach(f=>F[f.key].clear())
 /* ---------- loading ---------- */
 const ld=olEl('loading'), lm=olEl('loadMsg');
 async function loadFile(file){
+  if(!olIsMaster())return;
   ld.classList.add('on'); lm.textContent='Loading '+file.name+'…';
   await new Promise(r=>setTimeout(r,30));
   try{
@@ -11870,7 +11972,14 @@ async function olPublish(parts,rows,synced){
   await supaUpload(OL_DIR+'meta.json',new Blob([JSON.stringify(meta)],{type:'application/json'}));
   return meta;
 }
+/* only the master admin may pull from the sheet / upload / publish */
+function olIsMaster(){return !!(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.isMaster);}
+function olApplyRole(){
+  const m=olIsMaster();
+  ['refreshBtn','loadBtn'].forEach(id=>{const b=olEl(id);if(b)b.style.display=m?'':'none';});
+}
 async function olRefreshFromSheet(){
+  if(!olIsMaster())return;
   if(!OL_SCRIPT_URL){olStatus('Live feed not connected yet: waiting for the Apps Script link.',true);return;}
   if(olBusy) return; olBusy=true;
   ld.classList.add('on'); lm.textContent='Pulling Overall_loss_FY_2026 from Google Sheets…';
@@ -11894,6 +12003,7 @@ async function olRefreshFromSheet(){
 /* ---- open: cache → Supabase → (first time only) sheet ---- */
 let olStarted=false;
 async function olOpen(){
+  olApplyRole();
   if(olStarted) return; olStarted=true;
   let cached=null;
   try{ cached=await idbGet(OL_IDB);
@@ -11909,15 +12019,20 @@ async function olOpen(){
   }catch(e){ olStatus('Could not load from Supabase: '+e.message,true); ld.classList.remove('on'); }
   olBusy=false;
   /* nothing published yet: build the first copy from the sheet */
-  if(!OL_META&&!(cached&&cached.txt)) await olRefreshFromSheet();
+  if(!OL_META&&!(cached&&cached.txt)){
+    if(olIsMaster()) await olRefreshFromSheet();
+    else olStatus('No data published yet — the master admin needs to click Refresh once.',true);
+  }
   if(typeof LHR_RAW!=='undefined'&&!LHR_RAW.length&&typeof gsSyncCN==='function'){
     try{ if(await gsSyncCN(true)&&D) render(); }catch(e){}
   }
-  else if(!OL_META) olStatus(olEl('src').textContent.replace(' · checking for newer data…','')+' · not yet in Supabase — click Refresh to publish it');
+  else if(!OL_META) olStatus(olEl('src').textContent.replace(' · checking for newer data…','')+(olIsMaster()?' · not yet in Supabase — click Refresh to publish it':''));
 }
 olEl('refreshBtn').onclick=olRefreshFromSheet;
 olEl('refreshBtn').title='Pull the latest data from the Google Sheet and save it to Supabase for everyone';
 window.olfyOpen=olOpen;
+window.olfyApplyRole=olApplyRole;
+olApplyRole();
 
 })();
 </script>
