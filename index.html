@@ -3422,13 +3422,21 @@ const laneKey=v=>String(v||'').toLowerCase().replace(/\s*[-–—]\s*/g,' - ').r
 const FEEDER_SET=new Set(FEEDER_LANES.map(laneKey));
 const isFeederLane=lane=>FEEDER_SET.has(laneKey(lane));
 
+/* Lane Type / movement type spellings that mean the same thing, folded into one
+   name so filters and pivots show a single entry. Compared on letters only, so
+   "Intercity FM RTS", "Intracity FM RTS" and "Intracity-FM/RTS" all match. */
+const LT_ALIAS={intercityfmrts:'Intracity-FM/RTS',intracityfmrts:'Intracity-FM/RTS'};
+function canonLaneType(v){
+  const k=String(v==null?'':v).toLowerCase().replace(/[^a-z0-9]/g,'');
+  return LT_ALIAS[k]||v;
+}
 function normalize(r){
   const age=+r['intransit_ageing']||0;
   const mk=mitKeyOf(r), bagAge=mk?bagAgeDays(r[mk]):null;
   let fl=s(r.flag).toLowerCase();
   fl = fl.includes('rev')?'Reverse':'Forward';
   return {Zone:s(r.Zone)||'Unknown',
-    movement_type:isFeederLane(r['Lane Code'])?FEEDER_MOVE:(s(r.movement_type)||'Unknown'),
+    movement_type:isFeederLane(r['Lane Code'])?FEEDER_MOVE:(canonLaneType(s(r.movement_type))||'Unknown'),
     Movement:isFeederLane(r['Lane Code'])?FEEDER_MOVEMENT:(s(r[MOVE_KEY])||''),
     Awb_number:s(r.Awb_number),MM_origin:s(r.MM_origin)||'Unknown',MM_origin_type:s(r.MM_origin_type)||'Unknown',
     MM_destination:s(r.MM_destination)||'Unknown',MM_destination_type:s(r.MM_destination_type)||'Unknown',
@@ -3437,7 +3445,7 @@ function normalize(r){
     vehicle_number:s(r.vehicle_number),vendor_name:s(r.vendor_name)||'Unknown',
     'POD Name':s(r['POD Name'])||'Unknown',Volumetric_flag:s(r.Volumetric_flag)||'Normal',
     Manifest_code:s(r.Manifest_code),trip_code:s(r.trip_code),MM_code:s(r.MM_code),
-    'Lane Type':s(r['Lane Type'])||'Unknown',seal_number:s(r.seal_number),Client:s(r.Client)||'Unknown',
+    'Lane Type':canonLaneType(s(r['Lane Type']))||'Unknown',seal_number:s(r.seal_number),Client:s(r.Client)||'Unknown',
     'IT Date':excelDate(r['IT Date']),'IT Time':excelTime(r['IT Time']),
     Manifest_origin:s(r.Manifest_origin)||'Unknown',Manifest_Destination:s(r.Manifest_Destination)||'Unknown',
     Manifest_status:s(r.Manifest_status)||'Unknown',
