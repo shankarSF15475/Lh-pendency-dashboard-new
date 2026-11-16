@@ -1527,6 +1527,14 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
 #page-olfy .ol-h1 span{color:var(--ol-acc)}
 #page-olfy .src{color:var(--ol-muted);font-size:12px}
 #page-olfy .src.err{color:var(--ol-warn);font-weight:600}
+.ol-up{margin-top:16px;border:1px dashed #C7CCF5;border-radius:14px;padding:14px 16px;background:#FAFBFF;text-align:left;}
+.ol-up-h{font-weight:800;font-size:14px;color:var(--ink,#1b2430);}
+.ol-up-h span{font-weight:600;font-size:11.5px;color:#B45309;margin-left:6px;}
+.ol-up-sub{font-size:12px;color:var(--mut,#66727f);margin-top:4px;line-height:1.5;}
+.ol-up-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;}
+#olUpStatus{font-size:12px;color:var(--mut,#66727f);}
+#olUpStatus.ok{color:#15803D;font-weight:700;}
+#olUpStatus.err{color:#B91C1C;font-weight:700;}
 #page-olfy .ol-btn{background:var(--ol-panel2);color:var(--ol-text);border:1px solid var(--ol-line);border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap;width:auto;height:auto}
 #page-olfy .ol-btn:hover{border-color:var(--ol-acc)}
 #page-olfy .ol-btn.primary{background:var(--ol-acc);color:#fff;border-color:var(--ol-acc);font-weight:600}
@@ -1850,6 +1858,15 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           <button class="btn btn-lime" id="browseBtn">Browse file…</button>
           <button class="btn btn-ghost" id="sampleBtn">Load sample data (preview)</button>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple style="display:none">
+        </div>
+      </div>
+      <div id="olUpBlock" class="ol-up" style="display:none">
+        <div class="ol-up-h">📉 Overall_loss_FY_2026 data <span>monthly / weekly — not the daily file</span></div>
+        <div class="ol-up-sub">Upload <b>Overall_loss.csv</b> here. It only updates the Overall_loss_FY_2026 page and leaves today's Dashboard data untouched. Each upload replaces the previous one, so always upload the full file (all months to date).</div>
+        <div class="ol-up-row">
+          <button class="btn btn-ghost" id="olUpBtn">Browse Overall_loss.csv…</button>
+          <input type="file" id="olUpFile" accept=".csv" style="display:none">
+          <span id="olUpStatus"></span>
         </div>
       </div>
       <div id="uploadWaitMsg">Today's data isn't loaded yet. Please check back in a moment, or contact your admin if this persists.</div>
@@ -3190,9 +3207,9 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
             <div class="src" id="ol-src">Loading…</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input type="file" id="ol-file" accept=".xlsx,.xlsm,.csv" hidden>
-            <button class="ol-btn primary" id="ol-refreshBtn" title="Pull the latest data from the Google Sheet">⟳ Refresh</button>
-            <button class="ol-btn" id="ol-loadBtn" title="Load an Excel / CSV export instead of the live sheet">⬆ Upload data (Excel / CSV)</button>
+            <input type="file" id="ol-file" accept=".csv" hidden>
+            <button class="ol-btn" id="ol-refreshBtn" title="Reload the published data">⟳ Reload</button>
+            <button class="ol-btn primary" id="ol-loadBtn" title="Upload a new Overall_loss.csv and publish it for everyone">⬆ Upload Overall_loss CSV</button>
             <button class="ol-btn" id="ol-expRaw">Export filtered rows</button>
             <button class="ol-btn" id="ol-resetBtn">Reset filters</button>
           </div>
@@ -3208,7 +3225,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
         <section class="ol-grid" id="ol-cards"></section>
       </div>
       <div class="ol-foot">
-        Source: Google Sheet <b>Overall_loss_FY_2026</b>, tab <b>Base</b>, read through a private Apps Script feed (only the columns this page needs).
+        Source: <b>Overall_loss.csv</b>, uploaded by the master admin (monthly / weekly, separate from the daily Dashboard file) and published to Supabase — only the columns this page needs are kept.
         Rules applied on load: text values trimmed · blank values shown as “(Blank)” · non-numeric debit_value counted as 0 · pickup month taken from picked_month + picked_year, falling back to picked_date.
         Tip: click a month tile or any row to filter every view by it; click a column header to sort; drag and drop an Excel / CSV file anywhere on the page to load it.
       </div>
@@ -9935,6 +9952,8 @@ function applyAdminAccess(u){
   /* New file button: admin only */
   const reUp=$('#reUpload');
   if(reUp) reUp.style.display=isMaster?'':'none';
+  const olUp=$('#olUpBlock');
+  if(olUp) olUp.style.display=isMaster?'':'none';
   /* the Supabase refresh button was removed — users get fresh data on login,
      or by refreshing the page */
 }
@@ -11400,7 +11419,9 @@ if(document.readyState!=='loading')ltWire();
    the private "Base" tab, cached in IndexedDB; Excel / CSV upload
    stays available as a fallback.
 ============================================================= */
-const OL_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwqUDi7OQXNfydI3SBOZAE06fJweHgQUydrI6QV8CXjlJroJ0D1SiwrvtOsGdQpdIZw/exec';                                      // Apps Script /exec URL (paste after deploying)
+/* Google Sheet feed disconnected 2026-11-16: the data now comes from an
+   Overall_loss.csv upload (monthly / weekly), published to Supabase. */
+const OL_SCRIPT_URL='';
 const OL_SCRIPT_KEY='olk_7Qm2_FY26_vRb9XkT4pLs8wNcZ3hD';      // must match ACCESS_KEY in the Apps Script
 (function(){
 const OLS={};
@@ -11817,7 +11838,96 @@ olEl('resetBtn').onclick=()=>{ if(!D)return;FILTERS.forEach(f=>F[f.key].clear())
 
 /* ---------- loading ---------- */
 const ld=olEl('loading'), lm=olEl('loadMsg');
+/* Overall_loss.csv is ~160 MB / ~100 columns. It is streamed, never held whole:
+   each record is parsed as it arrives and only the columns this page uses are
+   kept, re-written as compact CSV in 25,000-row slices. */
+const OL_KEEP=['awb_number','debit_value','product_value','Loss Bucket Sub Tagging','Lane Type','Lane Code',
+  'vehicle_number','vendor_name','manifest_destination','client_name','picked_month','picked_year','picked_date'];
+const OL_SLICE=25000;
+async function olStreamCsv(file,progress){
+  const nrm=h=>String(h||'').replace(/^\uFEFF/,'').trim().toLowerCase().replace(/[\s_]+/g,'');
+  const q=v=>/[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+  let idx=null, header='', parts=[], cur=[], rows=0, read=0;
+  let field='', rec=[], inQ=false, pendingQ=false;
+  const endRecord=()=>{
+    rec.push(field); field='';
+    if(!idx){
+      const want=OL_KEEP.map(k=>rec.findIndex(h=>nrm(h)===nrm(k)));
+      if(want[OL_KEEP.indexOf('debit_value')]<0) throw new Error('column "debit_value" not found — is this the Overall_loss file?');
+      idx=want.map((w,i)=>({w,name:OL_KEEP[i]})).filter(x=>x.w>=0);
+      header=idx.map(x=>q(String(rec[x.w]).trim())).join(',');
+    }else if(rec.length>1||rec[0]!==''){
+      cur.push(idx.map(x=>q(rec[x.w]==null?'':rec[x.w])).join(','));
+      rows++;
+      if(cur.length>=OL_SLICE){parts.push(cur.join('\n'));cur=[];}
+    }
+    rec=[];
+  };
+  /* Excel often saves CSV as Windows-1252, not UTF-8; check a sample first so
+     names with special characters are not turned into question marks */
+  let enc='utf-8';
+  try{ new TextDecoder('utf-8',{fatal:true}).decode(await file.slice(0,4*1024*1024).arrayBuffer(),{stream:true}); }
+  catch(e){ enc='windows-1252'; }
+  const reader=file.stream().pipeThrough(new TextDecoderStream(enc)).getReader();
+  for(;;){
+    const {done,value}=await reader.read();
+    if(done)break;
+    read+=value.length;
+    for(let i=0;i<value.length;i++){
+      const ch=value[i];
+      if(pendingQ){ pendingQ=false; if(ch==='"'){field+='"';continue;} inQ=false; }
+      if(inQ){ if(ch==='"'){pendingQ=true;} else field+=ch; continue; }
+      if(ch==='"') inQ=true;
+      else if(ch===',') {rec.push(field);field='';}
+      else if(ch==='\n') endRecord();
+      else if(ch!=='\r') field+=ch;
+    }
+    if(progress)progress(Math.min(99,Math.round(read/Math.max(1,file.size)*100)),rows);
+  }
+  if(pendingQ)inQ=false;
+  if(field!==''||rec.length)endRecord();
+  if(cur.length)parts.push(cur.join('\n'));
+  if(!idx)throw new Error('the file is empty');
+  if(!parts.length)parts.push('');
+  parts[0]=header+(parts[0]?'\n'+parts[0]:'');
+  return {parts,rows};
+}
+/* used by both the upload screen and this page */
+async function olPublishFile(file,say){
+  if(!olIsMaster())throw new Error('only the master admin can upload this file');
+  if(!/\.csv$/i.test(file.name))throw new Error('please upload the CSV export (Overall_loss.csv)');
+  say=say||(()=>{});
+  say('Reading '+file.name+' · 0%');
+  const {parts,rows}=await olStreamCsv(file,(pct,n)=>say('Reading '+file.name+' · '+pct+'% · '+n.toLocaleString('en-IN')+' rows'));
+  const synced=new Date().toISOString();
+  say('Saving '+rows.toLocaleString('en-IN')+' rows to Supabase…');
+  const meta=await olPublish(parts,rows,synced);
+  meta.file=file.name;
+  OL_META=meta;
+  const csv=parts.join('\n');
+  try{idbSet(OL_IDB,{txt:csv,at:synced,meta});}catch(e){}
+  return {meta,csv,rows};
+}
+window.olfyPublishFile=async function(file,say){
+  const r=await olPublishFile(file,say);
+  /* if the page has been opened already, show the new data straight away */
+  if(olStarted){ olEl('cards').innerHTML=''; olEl('cardsTop').innerHTML=''; olUseCsv(r.csv,olLabel(r.meta)); }
+  return r;
+};
 async function loadFile(file){
+  if(!olIsMaster())return;
+  if(olBusy)return; olBusy=true;
+  ld.classList.add('on'); lm.textContent='Loading '+file.name+'…';
+  await new Promise(r=>setTimeout(r,30));
+  try{
+    const r=await olPublishFile(file,t=>{lm.textContent=t;});
+    lm.textContent='Building the view…'; await new Promise(x=>setTimeout(x,20));
+    olEl('cards').innerHTML=''; olEl('cardsTop').innerHTML='';
+    olUseCsv(r.csv,olLabel(r.meta));
+  }catch(e){alert('Could not upload: '+e.message)}
+  ld.classList.remove('on'); olBusy=false;
+}
+async function loadFileLocalOnly_unused(file){
   if(!olIsMaster())return;
   ld.classList.add('on'); lm.textContent='Loading '+file.name+'…';
   await new Promise(r=>setTimeout(r,30));
@@ -11944,7 +12054,7 @@ async function olLoadSupa(meta){
   ld.classList.remove('on');
 }
 function olLabel(meta){
-  return 'Overall_loss_FY_2026 · data as of '+olFmt(meta.synced)+(meta.byName?' (refreshed by '+meta.byName+')':'');
+  return 'Overall_loss_FY_2026 · uploaded '+olFmt(meta.synced)+(meta.byName?' by '+meta.byName:'');
 }
 
 /* ---- 2. Google Sheet → Supabase ---- */
@@ -11984,7 +12094,16 @@ async function olPublish(parts,rows,synced){
 function olIsMaster(){return !!(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.isMaster);}
 function olApplyRole(){
   const m=olIsMaster();
-  ['refreshBtn','loadBtn'].forEach(id=>{const b=olEl(id);if(b)b.style.display=m?'':'none';});
+  const lb=olEl('loadBtn'); if(lb)lb.style.display=m?'':'none';
+}
+async function olReload(){
+  if(olBusy)return; olBusy=true;
+  try{
+    OL_META=await olReadMeta();
+    if(OL_META) await olLoadSupa(OL_META);
+    else olStatus('No Overall_loss data published yet'+(olIsMaster()?' — upload Overall_loss.csv.':' — ask the master admin to upload it.'),true);
+  }catch(e){ olStatus('Could not load from Supabase: '+e.message,true); ld.classList.remove('on'); }
+  olBusy=false;
 }
 async function olRefreshFromSheet(){
   if(!olIsMaster())return;
@@ -12026,22 +12145,35 @@ async function olOpen(){
     }
   }catch(e){ olStatus('Could not load from Supabase: '+e.message,true); ld.classList.remove('on'); }
   olBusy=false;
-  /* nothing published yet: build the first copy from the sheet */
-  if(!OL_META&&!(cached&&cached.txt)){
-    if(olIsMaster()) await olRefreshFromSheet();
-    else olStatus('No data published yet — the master admin needs to click Refresh once.',true);
+  if(!OL_META){
+    if(cached&&cached.txt) olStatus(olEl('src').textContent.replace(' · checking for newer data…',''));
+    else olStatus('No Overall_loss data published yet'+(olIsMaster()?' — upload Overall_loss.csv with the button above.':' — ask the master admin to upload it.'),true);
   }
   if(typeof LHR_RAW!=='undefined'&&!LHR_RAW.length&&typeof gsSyncCN==='function'){
     try{ if(await gsSyncCN(true)&&D) render(); }catch(e){}
   }
-  else if(!OL_META) olStatus(olEl('src').textContent.replace(' · checking for newer data…','')+(olIsMaster()?' · not yet in Supabase — click Refresh to publish it':''));
 }
-olEl('refreshBtn').onclick=olRefreshFromSheet;
-olEl('refreshBtn').title='Pull the latest data from the Google Sheet and save it to Supabase for everyone';
+olEl('refreshBtn').onclick=olReload;
 window.olfyOpen=olOpen;
 window.olfyApplyRole=olApplyRole;
 olApplyRole();
 
+})();
+/* upload-screen block for Overall_loss.csv (separate from the daily file) */
+(function(){
+  const btn=document.getElementById('olUpBtn'), inp=document.getElementById('olUpFile'), st=document.getElementById('olUpStatus');
+  if(!btn||!inp)return;
+  btn.onclick=()=>inp.click();
+  inp.onchange=async()=>{
+    const f=inp.files[0]; inp.value=''; if(!f)return;
+    btn.disabled=true; st.className=''; 
+    try{
+      const r=await window.olfyPublishFile(f,t=>{st.textContent=t;});
+      st.className='ok';
+      st.textContent='✓ Published '+r.rows.toLocaleString('en-IN')+' rows to Overall_loss_FY_2026.';
+    }catch(e){ st.className='err'; st.textContent='Could not upload: '+e.message; }
+    btn.disabled=false;
+  };
 })();
 </script>
 </body>
