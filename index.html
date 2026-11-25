@@ -9819,10 +9819,9 @@ const AUTH_USERS={
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'919180203317'},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:true, lhRecovery:true, remarks:true, wa:'917019052918'},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, wa:'916363726152'},
-  'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:true, lhRecovery:true, remarks:true, wa:'9953227741'},
-  'valmiki.rohit@shadowfax.in':   {pass:'SF18584',  name:'Valmiki Rohit',     isAdmin:true, lhRecovery:false, remarks:true, wa:'8698541508'},
+   'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:true, lhRecovery:true, remarks:true, wa:'9953227741'},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, wa:'917879065834'},
-  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918597503303'},
+  'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, overview:true, wa:'918597503303'},
   'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918960267035'},
   'isham.dawood@shadowfax.in':   {pass:'isham@13201',  name:'Isham Dawood',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918098440612'},
   'idharmraj.kumar@shadowfax.in':   {pass:'idharmraj@13286',  name:'Idharmraj Kumar',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'919267907661'},
@@ -9923,15 +9922,17 @@ function applyAdminAccess(u){
       }
     }
   });
-  /* Lock Analysis and Executive Overview are master-admin only */
+  /* Lock Analysis is master-admin only; Executive Overview is master admin
+     plus users with overview:true */
+  const canOverview=isMaster||!!(u&&u.overview);
   ['lock','overview'].forEach(pg=>{
     const b=document.querySelector('.nav button[data-page="'+pg+'"]');
-    if(b)b.style.display=isMaster?'':'none';
+    if(b)b.style.display=(isMaster||(pg==='overview'&&canOverview))?'':'none';
   });
   /* if anyone but the master admin is on a master-only page (the default
      Executive Overview, or a stale hash), send them to their home page */
   if(!isMaster){
-    ['rootcause','lock','overview','pendency','value'].forEach(id=>{
+    ['rootcause','lock','overview','pendency','value'].filter(id=>!(id==='overview'&&canOverview)).forEach(id=>{
       const pg=document.getElementById('page-'+id);
       if(pg&&pg.classList.contains('active')&&typeof navTo==='function'){
         try{navTo(homePage());}catch(e){}
