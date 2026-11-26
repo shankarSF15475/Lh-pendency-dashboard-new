@@ -435,7 +435,8 @@ body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar,body.bagfb-page .filterbar,body.olfy-page .filterbar,body.projection-page .filterbar,
 body.tasks-page .filterbar,body.team-page .filterbar,
 body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
-.lhr-summary-row{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch}
+/* table kept compact (month + value side by side) so the arrow chart gets the width */
+.lhr-summary-row{display:grid;grid-template-columns:minmax(280px,340px) 1fr;gap:18px;align-items:stretch}
 .lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
 /* Recovery Amount · roomier rows, month in ink, total in indigo */
 #lhrSummaryBody td{padding:13px 16px;font-size:13px}
@@ -448,6 +449,7 @@ body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
 .lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:470px;border:1px solid var(--line);
   border-radius:12px;box-shadow:0 2px 10px rgba(10,42,30,.06);background:#fff}
 .lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
+.lhr-summary-row .lhr-tbl{height:100%}
 .lhr-chart-pane{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px;
   box-shadow:0 2px 10px rgba(10,42,30,.06);
   height:100%;min-height:470px;display:flex;flex-direction:column;box-sizing:border-box}
@@ -2767,7 +2769,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
         <div class="lhr-summary-row">
           <div>
           <div class="lhr-tbl-wrap" style="max-width:620px">
-            <table class="lhr-tbl" style="min-width:420px">
+            <table class="lhr-tbl" style="min-width:0">
               <thead><tr class="hdr"><th>Month</th><th class="num">CN Received Value</th></tr></thead>
               <tbody id="lhrSummaryBody"></tbody>
               <tfoot id="lhrSummaryFoot"></tfoot>
