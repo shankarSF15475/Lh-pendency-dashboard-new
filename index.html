@@ -5819,36 +5819,75 @@ function lhrRenderSummary(){
     : '';
   lhrRenderChart(rows);
 }
-/* ---- Table 2: line chart of the same series ----
-   Values are printed permanently next to every dot (month on top, value below)
-   rather than only appearing on hover. Drawn by a local plugin so the page
-   keeps working offline — no extra CDN dependency. */
-const lhrPointLabels={
-  id:'lhrPointLabels',
+/* ---- Table 2: zigzag arrow chart of the same series ----
+   Straight segment from each month to the next, each ending in an arrowhead:
+   green when CN Received Value went up, red when it went down. Every point is
+   labelled with its value in lakh (₹x.xx L); months sit on the x-axis.
+   Drawn by a local plugin so the page keeps working offline. */
+const LHR_UP='#16A34A', LHR_DOWN='#DC2626', LHR_FLAT='#8A8699';
+const lhrLakh=v=>'₹'+((+v||0)/1e5).toFixed(2)+' L';
+const lhrZigzag={
+  id:'lhrZigzag',
   afterDatasetsDraw(chart){
     const meta=chart.getDatasetMeta(0);
     if(!meta||!meta.data||!meta.data.length)return;
     const ctx=chart.ctx, area=chart.chartArea;
-    const labels=chart.data.labels||[], data=chart.data.datasets[0].data||[];
+    const data=chart.data.datasets[0].data||[];
+    const pts=meta.data.map(p=>({x:p.x,y:p.y}));
+    const colOf=i=>data[i]>data[i-1]?LHR_UP:(data[i]<data[i-1]?LHR_DOWN:LHR_FLAT);
+    const R=5;                                    // point radius
     ctx.save();
-    ctx.textAlign='center';
-    meta.data.forEach((pt,i)=>{
-      const month=String(labels[i]==null?'':labels[i]);
-      const val=fmtINR(data[i]||0);
-      /* place above the dot; flip below if it would clip the top of the plot */
-      let yTop=pt.y-30, below=false;
-      if(yTop<area.top+4){ yTop=pt.y+12; below=true; }
-      /* keep the text inside the plot horizontally */
-      const x=Math.min(Math.max(pt.x,area.left+30),area.right-30);
-      const rows=[{t:month,f:'600 9.5px Inter,system-ui,sans-serif',c:'#8A8699'},
-                  {t:val,  f:'800 11px Inter,system-ui,sans-serif',  c:'#166534'}];
-      rows.forEach((r,k)=>{
-        const y=yTop+(k*13)+(below?4:0);
-        ctx.font=r.f;
-        ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineJoin='round';
-        ctx.strokeText(r.t,x,y);
-        ctx.fillStyle=r.c; ctx.fillText(r.t,x,y);
-      });
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    /* 1. segments + arrowheads */
+    for(let i=1;i<pts.length;i++){
+      const a=pts[i-1], b=pts[i], c=colOf(i);
+      const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy);
+      if(len<2*R+4)continue;
+      const ux=dx/len, uy=dy/len;
+      const sx=a.x+ux*(R+2), sy=a.y+uy*(R+2);    // start just outside the dot
+      const ex=b.x-ux*(R+3), ey=b.y-uy*(R+3);    // arrow tip just before the next dot
+      const H=10, W=5;                            // arrowhead length / half-width
+      ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex-ux*H*0.6,ey-uy*H*0.6); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ex,ey);
+      ctx.lineTo(ex-ux*H-uy*W, ey-uy*H+ux*W);
+      ctx.lineTo(ex-ux*H+uy*W, ey-uy*H-ux*W);
+      ctx.closePath(); ctx.fill();
+    }
+    /* 2. hollow dots, ringed in the colour of the move into that month */
+    pts.forEach((p,i)=>{
+      const c=i===0?(pts.length>1?colOf(1):LHR_UP):colOf(i);
+      ctx.beginPath(); ctx.arc(p.x,p.y,R,0,Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.lineWidth=2.5; ctx.strokeStyle=c; ctx.stroke();
+    });
+    /* 3. value labels in the empty side of each point: above a peak, below a
+          dip, and up-left / up-right of a point the line just passes through */
+    ctx.font='700 11px Inter,system-ui,sans-serif';
+    pts.forEach((p,i)=>{
+      const prev=i>0?data[i-1]:null, next=i<data.length-1?data[i+1]:null, v=data[i];
+      let pos='above';
+      if(prev!=null&&next!=null){
+        if(v<prev&&v<next) pos='below';
+        else if(v>prev&&v>next) pos='above';
+        else if(prev<v&&v<next) pos='upleft';       // rising through
+        else if(prev>v&&v>next) pos='upright';      // falling through
+      } else if(prev!=null) pos=v>=prev?'above':'below';
+      else if(next!=null) pos=v>=next?'above':'below';
+      let x=p.x, y=pos==='below'?p.y+20:p.y-12, align='center';
+      if(pos==='upleft'){x=p.x-8;y=p.y-6;align='right';}
+      if(pos==='upright'){x=p.x+8;y=p.y-6;align='left';}
+      if(y<area.top+10) y=p.y+20;
+      if(y>area.bottom-4) y=p.y-12;
+      const t=lhrLakh(v), w=ctx.measureText(t).width;
+      if(align==='center') x=Math.min(Math.max(x,area.left+w/2+2),area.right-w/2-2);
+      else if(align==='right'&&x-w<area.left+2){x=p.x+8;align='left';}
+      else if(align==='left'&&x+w>area.right-2){x=p.x-8;align='right';}
+      ctx.textAlign=align;
+      ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.95)';
+      ctx.strokeText(t,x,y);
+      ctx.fillStyle='#1F2937'; ctx.fillText(t,x,y);
     });
     ctx.restore();
   }
@@ -5858,19 +5897,16 @@ function lhrRenderChart(rows){
   const cfg={type:'line',
     data:{labels:rows.map(o=>o.month),
       datasets:[{label:'CN Received Value',data:rows.map(o=>o.value),
-        borderColor:'#2DBE74',backgroundColor:'rgba(45,190,116,.14)',
-        fill:true,tension:.34,borderWidth:2.5,
-        pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#2DBE74',
-        pointBorderColor:'#fff',pointBorderWidth:2}]},
+        showLine:false,pointRadius:0,pointHoverRadius:0,borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,
-      /* headroom so the labels above the highest dot are never clipped */
-      layout:{padding:{top:30,left:4,right:14,bottom:2}},
+      /* headroom so labels around the highest / lowest dot are never clipped */
+      layout:{padding:{top:24,left:6,right:18,bottom:2}},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
-      scales:{x:{grid:{display:false},ticks:{color:'#6B667D'}},
+      scales:{x:{offset:true,grid:{display:false},ticks:{color:'#6B667D'}},
               y:{beginAtZero:true,grace:'12%',grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}},
-    plugins:[lhrPointLabels]};
-  if(lhrSummaryChart){lhrSummaryChart.data=cfg.data;lhrSummaryChart.options=cfg.options;lhrSummaryChart.update();}
-  else lhrSummaryChart=new Chart(ctx,cfg);
+    plugins:[lhrZigzag]};
+  if(lhrSummaryChart){lhrSummaryChart.destroy();lhrSummaryChart=null;}
+  lhrSummaryChart=new Chart(ctx,cfg);
 }
 
 /* ---- Table 3: Pending for Recovery — rows whose CN Received Date is blank ---- */
@@ -6237,7 +6273,7 @@ const DOC_SECTIONS=[
   fields:'<code>CN Received Date</code>, <code>CN Received Value</code>',
   logic:'keep only rows where CN Received Date is present\nmonth  = month of CN Received Date, shown as Mon\u0027YY\nvalue  = SUM(CN Received Value)\nsorted oldest month first, with a Total row',
   note:'Rows whose CN Received Date cannot be read are skipped rather than counted. The counts behind that are kept in LHR_DIAG, so if this table ever disagrees with the sheet\u0027s own pivot, log LHR_DIAG in the browser console to see how many rows were skipped and why.'},
- {t:'chart', n:'Month vs CN Received Value', what:'The same series as a line chart.',
+ {t:'chart', n:'Month vs CN Received Value', what:'The same series as a zigzag arrow chart: green arrow = value went up from the previous month, red arrow = went down. Each point shows the value in lakh.',
   logic:'identical data to the Recovery Amount table, plotted in month order'},
  {t:'table', n:'Pending for Recovery', what:'Escalations where nothing has been recovered yet.',
   fields:'<code>Email Escalation</code>, <code>Impacted awb</code>, <code>Impacted Product value</code>, <code>CN Received Date</code>',
@@ -9819,8 +9855,7 @@ const AUTH_USERS={
   'anup.pandey1@shadowfax.in':{pass:'Superman@123', name:'Anup Pandey', isAdmin:true, lhRecovery:true, remarks:true, tasks:true, wa:'919180203317'},
   'sachin.r1@shadowfax.in':   {pass:'sachin@11585',name:'Sachin R',    isAdmin:true, lhRecovery:true, remarks:true, wa:'917019052918'},
   'anna.roy@shadowfax.in':   {pass:'annaria@00',  name:'Anna Roy',     isAdmin:false, lhRecovery:false, remarks:true, wa:'916363726152'},
-  'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:true, lhRecovery:true, remarks:true, wa:'9953227741'},
-   'valmiki.rohit@shadowfax.in':   {pass:'SF18584',  name:'Rahul',     isAdmin:false, lhRecovery:false, remarks:true, wa:'8698541508'},
+   'rahul.gautam@shadowfax.in':   {pass:'Pacific@123456',  name:'Rahul',     isAdmin:true, lhRecovery:true, remarks:true, wa:'9953227741'},
   'indrajeet.chouhan@shadowfax.in':{pass:'indrajeet@12508', name:'Indrajeet Chouhan',isAdmin:false,lhRecovery:false, remarks:true, wa:'917879065834'},
   'saikat.ghosh@shadowfax.in':   {pass:'saikat@12654',  name:'Saikat Ghosh',    isAdmin:false,  lhRecovery:false, remarks:true, overview:true, wa:'918597503303'},
   'anupam.sharma@shadowfax.in':   {pass:'anupam@13153',  name:'Anupam Sharma',    isAdmin:false,  lhRecovery:false, remarks:true, wa:'918960267035'},
@@ -9867,6 +9902,7 @@ const AUTH_USERS={
   'arunesh.kumar@shadowfax.in':{pass:'arunesh@123',  name:'Arunesh kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'nikhil.kumar4@shadowfax.in':{pass:'nikhil@123',  name:'Nikhil kumar',    isAdmin:false,  lhRecovery:false, remarks:true},
   'mohammad.alam@shadowfax.in':{pass:'Alam@54321',  name:'Mohammad Alam',    isAdmin:false,  lhRecovery:false, remarks:true},
+  'valmiki.rohit@shadowfax.in':   {pass:'SF18584',  name:'Rahul',     isAdmin:false, lhRecovery:false, remarks:true, wa:'8698541508'},
 };
 let CURRENT_USER=null;
 /* When the admin last published the data — read from Supabase meta.json so
