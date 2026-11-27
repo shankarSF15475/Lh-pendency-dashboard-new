@@ -435,28 +435,26 @@ body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar,body.bagfb-page .filterbar,body.olfy-page .filterbar,body.projection-page .filterbar,
 body.tasks-page .filterbar,body.team-page .filterbar,
 body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
-/* table kept compact (month + value side by side) so the arrow chart gets the width */
-.lhr-summary-row{display:grid;grid-template-columns:minmax(280px,340px) 1fr;gap:18px;align-items:stretch}
-.lhr-chart-ttl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
-/* Recovery Amount · roomier rows, month in ink, total in indigo */
-#lhrSummaryBody td{padding:13px 16px;font-size:13px}
-#lhrSummaryBody td:first-child{font-weight:700;color:var(--ink)}
-#lhrSummaryBody td.num{font-family:'Consolas','SF Mono',ui-monospace,monospace;
-  font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
-#lhrSummaryBody tr:last-child td{border-bottom:none}
-#lhrSummaryFoot td{padding:14px 16px;font-size:13.5px;font-weight:800}
-.lhr-summary-row>div:first-child{display:flex;flex-direction:column;min-width:0}
-.lhr-summary-row .lhr-tbl-wrap{flex:1;min-height:470px;border:1px solid var(--line);
-  border-radius:12px;box-shadow:0 2px 10px rgba(10,42,30,.06);background:#fff}
-.lhr-summary-row .lhr-tbl-wrap{max-width:none!important;margin:0!important}
-.lhr-summary-row .lhr-tbl{height:100%}
-.lhr-chart-pane{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px;
-  box-shadow:0 2px 10px rgba(10,42,30,.06);
-  height:100%;min-height:470px;display:flex;flex-direction:column;box-sizing:border-box}
-.lhr-chart-body{flex:1;min-height:0;border:1px solid var(--line);border-radius:8px;
-  padding:10px 12px 6px;background:#fff}
-.lhr-chart-pane canvas{width:100%!important;height:100%!important;max-height:none}
-@media(max-width:900px){.lhr-summary-row{grid-template-columns:1fr}}
+/* Recovery Amount · KPI tiles, legend, bar + trend chart */
+.lhr-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 16px}
+.lhr-rk{background:#F5F6FA;border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.lhr-rk .l{font-size:12px;color:var(--mut);font-weight:500}
+.lhr-rk .v{font-size:24px;font-weight:700;color:var(--ink);margin:4px 0 4px;font-variant-numeric:tabular-nums}
+.lhr-rk .s{font-size:11.5px;color:var(--mut)}
+.lhr-pill{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:600;margin:0 2px}
+.lhr-pill.up{background:#DCFCE7;color:#15803D}.lhr-pill.down{background:#FEE2E2;color:#B91C1C}
+.lhr-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--mut);margin:0 0 6px}
+.lhr-legend span{display:inline-flex;align-items:center;gap:6px}
+.lhr-legend .sw{display:inline-block;width:11px;height:11px;border-radius:2px}
+.lhr-legend .sw.bar{background:#5B8DEF}
+.lhr-legend .sw.trend{width:16px;height:2px;border-radius:0;background:#E8590C;position:relative}
+.lhr-legend .sw.trend:after{content:'';position:absolute;left:5px;top:-2px;width:6px;height:6px;border-radius:50%;background:#E8590C}
+.lhr-legend .sw.avg{width:16px;height:0;border-radius:0;border-top:1.5px dashed #9CA3AF}
+.lhr-legend .sw.mtd{background:rgba(91,141,239,.22);border:1.3px dashed #5B8DEF}
+.lhr-trend-body{position:relative;height:400px}
+.lhr-trend-body canvas{width:100%!important;height:100%!important}
+.lhr-trend-empty{display:none;text-align:center;padding:24px;color:var(--mut)}
+@media(max-width:900px){.lhr-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.lhr-trend-body{height:320px}}
 .hov-dashboard-head{margin-top:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .hov-dashboard-head h3{font-size:16px;color:var(--ink)}
 .hov-dashboard-head .sub{display:block;font-size:11.5px;color:var(--mut);margin-top:4px}
@@ -2757,7 +2755,7 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
       </div>
       <div class="lhr-src-err" id="lhrSrcErr"></div>
 
-      <!-- ===== Table 1 + Table 2 : Recovery Amount by month + line chart ===== -->
+      <!-- ===== Recovery Amount : KPI tiles + monthly bars with trend line ===== -->
       <div class="card" style="margin-top:12px;padding:18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
@@ -2766,21 +2764,10 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
           </div>
           <div class="card-tools"><button class="tool" id="lhrSummaryCsv" title="Download summary CSV">CSV</button></div>
         </div>
-        <div class="lhr-summary-row">
-          <div>
-          <div class="lhr-tbl-wrap" style="max-width:620px">
-            <table class="lhr-tbl" style="min-width:0">
-              <thead><tr class="hdr"><th>Month</th><th class="num">CN Received Value</th></tr></thead>
-              <tbody id="lhrSummaryBody"></tbody>
-              <tfoot id="lhrSummaryFoot"></tfoot>
-            </table>
-          </div>
-          </div>
-          <div class="lhr-chart-pane">
-            <span class="lhr-chart-ttl">Month vs CN Received Value</span>
-            <div class="lhr-chart-body"><canvas id="lhrSummaryChart"></canvas></div>
-          </div>
-        </div>
+        <div class="lhr-kpis" id="lhrKpis"></div>
+        <div class="lhr-legend" id="lhrLegend"></div>
+        <div class="lhr-trend-body"><canvas id="lhrSummaryChart"></canvas></div>
+        <div class="lhr-trend-empty" id="lhrSummaryEmpty"></div>
       </div>
 
       <!-- ===== Table 3 : Pending for Recovery (CN Received Date blank) ===== -->
@@ -5812,103 +5799,103 @@ function lhrSummaryRows(){
   return out;
 }
 function lhrRenderSummary(){
-  const rows=lhrSummaryRows();
-  $('#lhrSummaryBody').innerHTML=rows.map(o=>
-    `<tr><td><b>${o.month}</b></td><td class="num">${fmtINR(o.value)}</td></tr>`).join('')
-    || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">No CN Received Date values found.</td></tr>`;
-  $('#lhrSummaryFoot').innerHTML=rows.length
-    ? `<tr><td>Total</td><td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
-    : '';
+  const rows=lhrSummaryRows(), empty=$('#lhrSummaryEmpty'), body=$('.lhr-trend-body');
+  if(empty){empty.style.display=rows.length?'none':'block';
+    if(!rows.length)empty.innerHTML='No CN Received Date values found.';}
+  if(body)body.style.display=rows.length?'':'none';
+  lhrRenderKpis(rows);
   lhrRenderChart(rows);
 }
-/* ---- Table 2: zigzag arrow chart of the same series ----
-   Straight segment from each month to the next, each ending in an arrowhead:
-   green when CN Received Value went up, red when it went down. Every point is
-   labelled with its value in lakh (₹x.xx L); months sit on the x-axis.
-   Drawn by a local plugin so the page keeps working offline. */
-const LHR_UP='#16A34A', LHR_DOWN='#DC2626', LHR_FLAT='#8A8699';
+/* ---- Recovery Amount: KPI tiles + monthly bars with trend line ----
+   Same series as before (lhrSummaryRows). Bars = CN Received Value per month,
+   labelled ₹x.xx L; orange line = trend through the bar tops; dashed grey line
+   = monthly average. If the latest month is the current calendar month it is
+   still filling up, so its bar is drawn pale with a dashed outline and the
+   trend into it is dashed. Drawn locally so the page keeps working offline. */
 const lhrLakh=v=>'₹'+((+v||0)/1e5).toFixed(2)+' L';
-const lhrZigzag={
-  id:'lhrZigzag',
+const LHR_BAR='#5B8DEF', LHR_BAR_MTD='rgba(91,141,239,.22)', LHR_TREND='#E8590C';
+const lhrMonSp=m=>String(m||'').replace("'"," '");          // Nov'26 -> Nov '26
+function lhrTrendStats(rows){
+  const now=new Date(), curKey=now.getFullYear()*100+now.getMonth()+1;
+  const n=rows.length, total=rows.reduce((a,o)=>a+o.value,0), avg=n?total/n:0;
+  const partial=n>0&&rows[n-1].key===curKey?n-1:-1;
+  let best=0; rows.forEach((o,i)=>{if(o.value>rows[best].value)best=i;});
+  return {n,total,avg,partial,best,day:now.getDate(),
+          above:rows.filter(o=>o.value>avg).length};
+}
+const lhrPct=(a,b)=>b?Math.round((a/b-1)*100):null;
+function lhrRenderKpis(rows){
+  const el=$('#lhrKpis'); if(!el)return;
+  if(!rows.length){el.innerHTML='';return;}
+  const s=lhrTrendStats(rows), last=rows[s.n-1], prev=s.n>1?rows[s.n-2]:null;
+  const pill=p=>p==null?'':`<span class="lhr-pill ${p>=0?'up':'down'}">${p>=0?'+':'−'}${Math.abs(p)}%`;
+  const bestP=lhrPct(rows[s.best].value,s.avg), lastP=prev?lhrPct(last.value,prev.value):null;
+  const span=s.n>1?`${rows[0].month.split("'")[0]}–${lhrMonSp(last.month)}`:lhrMonSp(last.month);
+  el.innerHTML=[
+    ['Total recovery',lhrLakh(s.total),`${span} · ${s.n} month${s.n>1?'s':''}`],
+    ['Monthly average',lhrLakh(s.avg),`${s.above} of ${s.n} months above avg`],
+    ['Best month',lhrLakh(rows[s.best].value),`${lhrMonSp(rows[s.best].month)} ${pill(bestP)}${bestP==null?'':' vs avg</span>'}`],
+    [s.partial>=0?`${lhrMonSp(last.month)} so far`:`Latest · ${lhrMonSp(last.month)}`,lhrLakh(last.value),
+      (lastP==null?'':`${pill(lastP)} vs ${prev.month.split("'")[0]}</span>`)+(s.partial>=0?` ${s.day} days`:'')]
+  ].map(([l,v,sub])=>`<div class="lhr-rk"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`).join('');
+  const lg=$('#lhrLegend');
+  if(lg)lg.innerHTML=`<span><i class="sw bar"></i>CN received value</span><span><i class="sw trend"></i>Trend</span>`+
+    `<span><i class="sw avg"></i>Avg ${lhrLakh(s.avg)}</span>`+
+    (s.partial>=0?`<span><i class="sw mtd"></i>${last.month.split("'")[0]} month to date</span>`:'');
+}
+const lhrTrendPlugin={
+  id:'lhrTrend',
+  beforeDatasetsDraw(chart){                        // dashed average line, behind the bars
+    const avg=chart.$lhrAvg; if(!avg)return;
+    const y=chart.scales.y.getPixelForValue(avg), a=chart.chartArea, ctx=chart.ctx;
+    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle='#9CA3AF'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(a.left,y); ctx.lineTo(a.right,y); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle='#8A8699'; ctx.font='500 10.5px Inter,system-ui,sans-serif';
+    ctx.textAlign='right'; ctx.fillText('avg',a.right,y-5); ctx.restore();
+  },
   afterDatasetsDraw(chart){
-    const meta=chart.getDatasetMeta(0);
-    if(!meta||!meta.data||!meta.data.length)return;
-    const ctx=chart.ctx, area=chart.chartArea;
-    const data=chart.data.datasets[0].data||[];
-    const pts=meta.data.map(p=>({x:p.x,y:p.y}));
-    const colOf=i=>data[i]>data[i-1]?LHR_UP:(data[i]<data[i-1]?LHR_DOWN:LHR_FLAT);
-    const R=5;                                    // point radius
+    const bars=chart.getDatasetMeta(0), line=chart.getDatasetMeta(1);
+    if(!bars||!bars.data.length)return;
+    const ctx=chart.ctx, data=chart.data.datasets[0].data, pi=chart.$lhrPartial;
     ctx.save();
-    ctx.lineCap='round'; ctx.lineJoin='round';
-    /* 1. segments + arrowheads */
-    for(let i=1;i<pts.length;i++){
-      const a=pts[i-1], b=pts[i], c=colOf(i);
-      const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy);
-      if(len<2*R+4)continue;
-      const ux=dx/len, uy=dy/len;
-      const sx=a.x+ux*(R+2), sy=a.y+uy*(R+2);    // start just outside the dot
-      const ex=b.x-ux*(R+3), ey=b.y-uy*(R+3);    // arrow tip just before the next dot
-      const H=10, W=5;                            // arrowhead length / half-width
-      ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=2.5;
-      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex-ux*H*0.6,ey-uy*H*0.6); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(ex,ey);
-      ctx.lineTo(ex-ux*H-uy*W, ey-uy*H+ux*W);
-      ctx.lineTo(ex-ux*H+uy*W, ey-uy*H-ux*W);
-      ctx.closePath(); ctx.fill();
+    if(pi>=0&&bars.data[pi]){                       // dashed outline on the month-to-date bar
+      const b=bars.data[pi], w=b.width;
+      ctx.setLineDash([4,3]); ctx.strokeStyle=LHR_BAR; ctx.lineWidth=1.4;
+      ctx.strokeRect(b.x-w/2,b.y,w,b.base-b.y); ctx.setLineDash([]);
     }
-    /* 2. hollow dots, ringed in the colour of the move into that month */
-    pts.forEach((p,i)=>{
-      const c=i===0?(pts.length>1?colOf(1):LHR_UP):colOf(i);
-      ctx.beginPath(); ctx.arc(p.x,p.y,R,0,Math.PI*2);
-      ctx.fillStyle='#fff'; ctx.fill();
-      ctx.lineWidth=2.5; ctx.strokeStyle=c; ctx.stroke();
-    });
-    /* 3. value labels in the empty side of each point: above a peak, below a
-          dip, and up-left / up-right of a point the line just passes through */
-    ctx.font='700 11px Inter,system-ui,sans-serif';
-    pts.forEach((p,i)=>{
-      const prev=i>0?data[i-1]:null, next=i<data.length-1?data[i+1]:null, v=data[i];
-      let pos='above';
-      if(prev!=null&&next!=null){
-        if(v<prev&&v<next) pos='below';
-        else if(v>prev&&v>next) pos='above';
-        else if(prev<v&&v<next) pos='upleft';       // rising through
-        else if(prev>v&&v>next) pos='upright';      // falling through
-      } else if(prev!=null) pos=v>=prev?'above':'below';
-      else if(next!=null) pos=v>=next?'above':'below';
-      let x=p.x, y=pos==='below'?p.y+20:p.y-12, align='center';
-      if(pos==='upleft'){x=p.x-8;y=p.y-6;align='right';}
-      if(pos==='upright'){x=p.x+8;y=p.y-6;align='left';}
-      if(y<area.top+10) y=p.y+20;
-      if(y>area.bottom-4) y=p.y-12;
-      const t=lhrLakh(v), w=ctx.measureText(t).width;
-      if(align==='center') x=Math.min(Math.max(x,area.left+w/2+2),area.right-w/2-2);
-      else if(align==='right'&&x-w<area.left+2){x=p.x+8;align='left';}
-      else if(align==='left'&&x+w>area.right-2){x=p.x-8;align='right';}
-      ctx.textAlign=align;
-      ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.95)';
-      ctx.strokeText(t,x,y);
-      ctx.fillStyle='#1F2937'; ctx.fillText(t,x,y);
+    ctx.textAlign='center'; ctx.font='600 11px Inter,system-ui,sans-serif';
+    bars.data.forEach((b,i)=>{
+      const p=line&&line.data[i]?line.data[i].y:b.y, y=Math.min(b.y,p)-9, t=lhrLakh(data[i]);
+      ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.strokeText(t,b.x,y);
+      ctx.fillStyle='#1F2937'; ctx.fillText(t,b.x,y);
     });
     ctx.restore();
   }
 };
 function lhrRenderChart(rows){
   const ctx=$('#lhrSummaryChart'); if(!ctx)return;
-  const cfg={type:'line',
-    data:{labels:rows.map(o=>o.month),
-      datasets:[{label:'CN Received Value',data:rows.map(o=>o.value),
-        showLine:false,pointRadius:0,pointHoverRadius:0,borderWidth:0}]},
+  const s=lhrTrendStats(rows), vals=rows.map(o=>o.value), pi=s.partial;
+  const cfg={
+    data:{labels:rows.map(o=>o.month),datasets:[
+      {type:'bar',label:'CN received value',data:vals,order:2,
+        backgroundColor:vals.map((_,i)=>i===pi?LHR_BAR_MTD:LHR_BAR),
+        borderRadius:{topLeft:3,topRight:3},borderSkipped:'bottom',
+        categoryPercentage:.8,barPercentage:.82,maxBarThickness:64},
+      {type:'line',label:'Trend',data:vals,order:1,borderColor:LHR_TREND,borderWidth:2,
+        tension:.4,cubicInterpolationMode:'monotone',pointRadius:3.5,pointHoverRadius:5,
+        pointBackgroundColor:LHR_TREND,pointBorderColor:'#fff',pointBorderWidth:1.5,
+        segment:{borderDash:c=>c.p1DataIndex===pi?[4,4]:undefined}}]},
     options:{responsive:true,maintainAspectRatio:false,
-      /* headroom so labels around the highest / lowest dot are never clipped */
-      layout:{padding:{top:24,left:6,right:18,bottom:2}},
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      scales:{x:{offset:true,grid:{display:false},ticks:{color:'#6B667D'}},
-              y:{beginAtZero:true,grace:'12%',grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B667D',callback:v=>fmtShort(v)}}}},
-    plugins:[lhrZigzag]};
+      layout:{padding:{top:26,left:4,right:8,bottom:0}},
+      plugins:{legend:{display:false},
+        tooltip:{mode:'index',intersect:false,filter:it=>it.datasetIndex===0,
+          callbacks:{label:it=>' '+lhrLakh(it.raw)+(it.dataIndex===pi?' (month to date)':'')}}},
+      scales:{x:{grid:{display:false},border:{color:'#E5E7EB'},ticks:{color:'#6B667D'}},
+              y:{display:false,beginAtZero:true,grace:'10%'}}},
+    plugins:[lhrTrendPlugin]};
   if(lhrSummaryChart){lhrSummaryChart.destroy();lhrSummaryChart=null;}
   lhrSummaryChart=new Chart(ctx,cfg);
+  lhrSummaryChart.$lhrAvg=s.avg; lhrSummaryChart.$lhrPartial=pi; lhrSummaryChart.draw();
 }
 
 /* ---- Table 3: Pending for Recovery — rows whose CN Received Date is blank ---- */
@@ -5962,8 +5949,9 @@ function lhrRenderPending(){
 }
 function renderLHRecovery(){
   if(!LHR_RAW.length){
-    $('#lhrSummaryBody').innerHTML=`<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--mut)">Waiting for the <b>CN Working</b> sheet — press <b>REFRESH NOW</b> above, or upload <b>CN_Working.csv</b> with the daily file.</td></tr>`;
-    $('#lhrSummaryFoot').innerHTML='';
+    $('#lhrSummaryEmpty').style.display='block';
+    $('#lhrSummaryEmpty').innerHTML=`Waiting for the <b>CN Working</b> sheet — press <b>REFRESH NOW</b> above, or upload <b>CN_Working.csv</b> with the daily file.`;
+    $('.lhr-trend-body').style.display='none'; $('#lhrKpis').innerHTML=''; $('#lhrLegend').innerHTML='';
     $('#lhrPendBody').innerHTML=`<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mut)">No CN Working rows loaded yet.</td></tr>`;
     $('#lhrPendFoot').innerHTML=''; $('#lhrPendCount').textContent='';
     $('#lhrTblBody').innerHTML=`<tr><td style="text-align:center;padding:24px;color:var(--mut)">No CN Working sheet detected.</td></tr>`;
@@ -6275,7 +6263,7 @@ const DOC_SECTIONS=[
   fields:'<code>CN Received Date</code>, <code>CN Received Value</code>',
   logic:'keep only rows where CN Received Date is present\nmonth  = month of CN Received Date, shown as Mon\u0027YY\nvalue  = SUM(CN Received Value)\nsorted oldest month first, with a Total row',
   note:'Rows whose CN Received Date cannot be read are skipped rather than counted. The counts behind that are kept in LHR_DIAG, so if this table ever disagrees with the sheet\u0027s own pivot, log LHR_DIAG in the browser console to see how many rows were skipped and why.'},
- {t:'chart', n:'Month vs CN Received Value', what:'The same series as a zigzag arrow chart: green arrow = value went up from the previous month, red arrow = went down. Each point shows the value in lakh.',
+ {t:'chart', n:'Month vs CN Received Value', what:'Replaces the old month table. Four tiles (total recovery, monthly average, best month, latest month) above monthly bars of CN Received Value labelled in lakh, with an orange trend line and a dashed average line. A month still in progress is drawn pale with a dashed outline.',
   logic:'identical data to the Recovery Amount table, plotted in month order'},
  {t:'table', n:'Pending for Recovery', what:'Escalations where nothing has been recovered yet.',
   fields:'<code>Email Escalation</code>, <code>Impacted awb</code>, <code>Impacted Product value</code>, <code>CN Received Date</code>',
