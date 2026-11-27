@@ -435,6 +435,23 @@ body.activity-page .filterbar,body.docs-page .filterbar,
 body.remarks-page .filterbar,body.bagfb-page .filterbar,body.olfy-page .filterbar,body.projection-page .filterbar,
 body.tasks-page .filterbar,body.team-page .filterbar,
 body.reference-page .filterbar,body.livetracker-page .filterbar{display:none}
+/* Pending for Recovery · clickable numbers (no underline) + drill-through popup */
+#lhrPendBody td.lhr-dr,#lhrPendFoot td.lhr-dr{cursor:pointer;color:#4338CA;text-decoration:none}
+#lhrPendBody td.lhr-dr:hover,#lhrPendFoot td.lhr-dr:hover{background:#EEF2FF!important;border-radius:4px}
+.lhr-dd-ov{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
+.lhr-dd-ov.open{display:flex}
+.lhr-dd{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(1200px,100%);max-height:88vh;display:flex;flex-direction:column}
+.lhr-dd-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.lhr-dd-head h4{margin:0;font-size:15px;color:var(--ink)}
+.lhr-dd-head .sub{font-size:12px;color:var(--mut)}
+.lhr-dd-head .sp{flex:1}
+.lhr-dd-x{border:none;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:var(--mut);padding:0 4px}
+.lhr-dd-body{overflow:auto;padding:0 0 4px}
+.lhr-dd-body table{border-collapse:collapse;font-size:12px;width:100%}
+.lhr-dd-body th{position:sticky;top:0;background:#F1F3FB;color:var(--pine);text-align:left;font-size:10.5px;text-transform:uppercase;padding:9px 10px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.lhr-dd-body td{padding:7px 10px;border-bottom:1px solid #F0F1F5;white-space:nowrap}
+.lhr-dd-body tr:hover td{background:#FAFAFE}
+.lhr-dd-note{font-size:11.5px;color:var(--mut);padding:8px 18px}
 /* Recovery Amount · KPI tiles, legend, bar + trend chart */
 .lhr-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 16px}
 .lhr-rk{background:#F5F6FA;border:1px solid var(--line);border-radius:12px;padding:12px 16px}
@@ -2793,6 +2810,19 @@ tr.pj-in-gap td:first-child{box-shadow:inset 3px 0 0 #E23636;}
             <tbody id="lhrPendBody"></tbody>
             <tfoot id="lhrPendFoot"></tfoot>
           </table>
+        </div>
+      </div>
+      <!-- Drill-through popup for Pending for Recovery numbers -->
+      <div class="lhr-dd-ov" id="lhrDdOv">
+        <div class="lhr-dd" role="dialog" aria-modal="true" aria-labelledby="lhrDdTtl">
+          <div class="lhr-dd-head">
+            <div><h4 id="lhrDdTtl">Pending for Recovery</h4><span class="sub" id="lhrDdSub"></span></div>
+            <span class="sp"></span>
+            <button class="tool" id="lhrDdCsv" title="Download these rows as CSV">CSV</button>
+            <button class="lhr-dd-x" id="lhrDdX" title="Close" aria-label="Close">&times;</button>
+          </div>
+          <div class="lhr-dd-body" id="lhrDdBody"></div>
+          <div class="lhr-dd-note" id="lhrDdNote"></div>
         </div>
       </div>
 
@@ -5923,17 +5953,17 @@ function lhrRenderPending(){
   const rows=lhrPendingRows();
   const k=lhrPendSort.k,d=lhrPendSort.dir;
   rows.sort((a,b)=>((a[k]||0)-(b[k]||0))*d);
+  const dc=(o,v)=>`<td class="num lhr-dr" data-m="${o.esc||'\u2014'}" title="Show the escalations behind this number">${v}</td>`;
   $('#lhrPendBody').innerHTML=rows.map(o=>
     `<tr><td><b>${o.esc||'—'}</b></td>`+
-    `<td class="num">${fmtN(o.count)}</td>`+
-    `<td class="num">${fmtN(o.awb)}</td>`+
-    `<td class="num">${fmtINR(o.value)}</td></tr>`).join('')
+    dc(o,fmtN(o.count))+dc(o,fmtN(o.awb))+dc(o,fmtINR(o.value))+'</tr>').join('')
     || `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mut)">Nothing pending — every escalation has a CN Received Date.</td></tr>`;
   $('#lhrPendFoot').innerHTML=rows.length
-    ? `<tr><td>Total</td><td class="num">${fmtN(rows.reduce((a,o)=>a+o.count,0))}</td>`+
-      `<td class="num">${fmtN(rows.reduce((a,o)=>a+o.awb,0))}</td>`+
-      `<td class="num">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
+    ? `<tr><td>Total</td><td class="num lhr-dr" data-m="*" title="Show every pending escalation">${fmtN(rows.reduce((a,o)=>a+o.count,0))}</td>`+
+      `<td class="num lhr-dr" data-m="*" title="Show every pending escalation">${fmtN(rows.reduce((a,o)=>a+o.awb,0))}</td>`+
+      `<td class="num lhr-dr" data-m="*" title="Show every pending escalation">${fmtINR(rows.reduce((a,o)=>a+o.value,0))}</td></tr>`
     : '';
+  $$('#lhrPendBody td.lhr-dr,#lhrPendFoot td.lhr-dr').forEach(td=>td.onclick=()=>lhrPendDrill(td.dataset.m));
   const escN=rows.reduce((a,o)=>a+o.count,0);
   $('#lhrPendCount').textContent=fmtN(escN)+' pending · '+fmtN(rows.length)+' month'+(rows.length===1?'':'s');
   /* sortable headers */
@@ -5947,6 +5977,46 @@ function lhrRenderPending(){
     };
   });
 }
+/* Drill-through: the CN Working rows behind a Pending for Recovery number.
+   Every number in a month's row comes from the same escalation rows, so any of
+   the three opens that month; Total opens every pending row. All sheet columns
+   are shown and the CSV carries exactly the rows in the popup. */
+let LHR_DD_ROWS=[], LHR_DD_NAME='';
+function lhrPendDrillRows(m){
+  const esc=lhrColEsc();
+  return LHR_RAW.filter(r=>{
+    if(lhrHasCN(r))return false;
+    if(m==='*')return true;
+    const label=esc?lhrMonLabel(r[esc]):'';
+    return (label||'\u2014')===m;
+  });
+}
+function lhrPendDrill(m){
+  const rows=lhrPendDrillRows(m), cols=LHR_COLS, cap=2000;
+  const awb=lhrColAwb(), ipv=lhrColImpValue();
+  const h=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const label=m==='*'?'All months':(m==='\u2014'?'No escalation date':m);
+  LHR_DD_ROWS=rows;
+  LHR_DD_NAME='lh_pending_recovery_'+(m==='*'?'all':(m==='\u2014'?'no_date':m.replace(/'/,'_')));
+  $('#lhrDdTtl').textContent='Pending for Recovery \u00b7 '+label;
+  $('#lhrDdSub').textContent=fmtN(rows.length)+' escalation'+(rows.length===1?'':'s')+
+    (awb?' \u00b7 '+fmtN(rows.reduce((a,r)=>a+lhrNum(r[awb]),0))+' impacted AWB':'')+
+    (ipv?' \u00b7 '+fmtINR(rows.reduce((a,r)=>a+lhrNum(r[ipv]),0)):'');
+  $('#lhrDdBody').innerHTML=rows.length
+    ? '<table><thead><tr>'+cols.map(c=>`<th>${h(c)}</th>`).join('')+'</tr></thead><tbody>'+
+      rows.slice(0,cap).map(r=>'<tr>'+cols.map(c=>`<td>${h(r[c])}</td>`).join('')+'</tr>').join('')+'</tbody></table>'
+    : '<div style="padding:24px;text-align:center;color:var(--mut)">No rows.</div>';
+  $('#lhrDdNote').textContent=rows.length>cap?`Showing the first ${fmtN(cap)} rows. The CSV has all ${fmtN(rows.length)}.`:'';
+  $('#lhrDdOv').classList.add('open');
+}
+function lhrPendDrillClose(){ $('#lhrDdOv').classList.remove('open'); }
+document.addEventListener('click',e=>{
+  const id=e.target&&e.target.id;
+  if(id==='lhrDdOv'||id==='lhrDdX')lhrPendDrillClose();
+  if(id==='lhrDdCsv'&&LHR_DD_ROWS.length)
+    lvExport(LHR_DD_ROWS.map(r=>{const o={};LHR_COLS.forEach(c=>o[c]=r[c]==null?'':r[c]);return o;}),'csv',LHR_DD_NAME,'pending');
+});
+document.addEventListener('keydown',e=>{ const ov=$('#lhrDdOv'); if(e.key==='Escape'&&ov&&ov.classList.contains('open'))lhrPendDrillClose(); });
 function renderLHRecovery(){
   if(!LHR_RAW.length){
     $('#lhrSummaryEmpty').style.display='block';
