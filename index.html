@@ -5735,6 +5735,13 @@ function setLHRData(rows){
   LHR_COLS = LHR_RAW.length
     ? Object.keys(LHR_RAW[0]).filter(c=>c&&!/^__EMPTY/.test(c)&&String(c).trim()!=='')
     : [];
+  /* hide columns that are blank on every row (e.g. the sheet's empty
+     COLUMN_13 … COLUMN_33), so the detail table, the Pending drill-through
+     and their CSVs show only columns that hold data. The columns the
+     calculations read are always kept. */
+  const lhrKeep=/email\s*escalation|cn\s*received|impacted\s*awb|impacted\s*product\s*value/i;
+  const lhrFilled=v=>v!=null&&String(v).trim()!=='';
+  LHR_COLS = LHR_COLS.filter(c=>lhrKeep.test(c)||LHR_RAW.some(r=>lhrFilled(r[c])));
   lhrBuildHeaders();
   renderLHRecovery();
 }
@@ -6040,7 +6047,7 @@ function lhrPendingExport(){
     .map(o=>({Escalation_month:o.esc||'(no date)',Escalations:o.count,
               Impacted_awb:o.awb,Impacted_Product_value:Math.round(o.value)}));
 }
-function lhrDetailExport(){ return lhrFilterRows(); }
+function lhrDetailExport(){ return lhrFilterRows().map(r=>{const o={};LHR_COLS.forEach(c=>o[c]=r[c]==null?'':r[c]);return o;}); }
 </script>
 <script>
 /* =============================================================
